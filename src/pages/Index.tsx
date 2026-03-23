@@ -1,16 +1,418 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeSelector } from '@/components/ThemeSelector';
+import { SearchHistory } from '@/components/SearchHistory';
+import { WindCharts } from '@/components/WindCharts';
+import {
+  type WeatherData, type MarineData, type SearchHistoryItem,
+  windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
+  WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
+  addToSearchHistory,
+} from '@/lib/weather-helpers';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+export default function Index() {
+  const [lat, setLat] = useState<number | null>(null);
+  const [lon, setLon] = useState<number | null>(null);
+  const [name, setName] = useState('WindRadar');
+  const [date, setDate] = useState(localDateStr(new Date()));
+  const [wx, setWx] = useState<WeatherData | null>(null);
+  const [mar, setMar] = useState<MarineData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('');
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const today = localDateStr(new Date());
+  const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
+
+  const fetchWeather = useCallback(async (latitude: number, longitude: number) => {
+    setLoadingText('Descargando previsión meteorológica...');
+    const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
+    const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
+
+    const [wxRes, marRes] = await Promise.all([
+      fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+      fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+
+    if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
+    setWx(wxRes);
+    setMar(marRes);
+    setLoading(false);
+  }, []);
+
+  const doSearch = useCallback(async (query?: string, latOverride?: number, lonOverride?: number) => {
+    const q = query || searchQuery.trim();
+    if (!q && !latOverride) { setError('Escribe una ubicación para buscar.'); return; }
+    setError('');
+    setLoading(true);
+
+    try {
+      let searchLat = latOverride;
+      let searchLon = lonOverride;
+      let searchName = q;
+
+      if (!searchLat) {
+        setLoadingText(`Buscando "${q}"...`);
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=es&format=json`;
+        const geoRes = await fetch(geoUrl);
+        if (!geoRes.ok) throw new Error('HTTP ' + geoRes.status);
+        const geoData = await geoRes.json();
+        if (!geoData.results?.length) {
+          setLoading(false);
+          setError(`No se encontró "${q}". Prueba con otro nombre o añade el país.`);
+          return;
+        }
+        const loc = geoData.results[0];
+        searchLat = loc.latitude;
+        searchLon = loc.longitude;
+        const parts = [loc.name, loc.admin1, loc.country].filter(Boolean);
+        searchName = parts.join(', ');
+      }
+
+      setLat(searchLat!);
+      setLon(searchLon!);
+      setName(searchName);
+      addToSearchHistory({ name: searchName, lat: searchLat!, lon: searchLon! });
+      await fetchWeather(searchLat!, searchLon!);
+    } catch (e: any) {
+      setLoading(false);
+      setError('Error: ' + e.message);
+    }
+  }, [searchQuery, fetchWeather]);
+
+  const selectHistory = useCallback((item: SearchHistoryItem) => {
+    setSearchQuery(item.name);
+    doSearch(item.name, item.lat, item.lon);
+  }, [doSearch]);
+
+  // Compute table data
+  const h = wx?.hourly;
+  const dayIdxs: number[] = [];
+  if (h) {
+    for (let i = 0; i < h.time.length; i++) {
+      if (h.time[i].slice(0, 10) === date) dayIdxs.push(i);
+    }
+  }
+  let curRow = -1;
+  if (h && date === today) {
+    const nowH = new Date().getHours();
+    for (let j = 0; j < dayIdxs.length; j++) {
+      if (parseInt(h.time[dayIdxs[j]].slice(11, 13), 10) === nowH) { curRow = j; break; }
+    }
+  }
+  const refI = curRow >= 0 ? dayIdxs[curRow] : (dayIdxs.length > 0 ? dayIdxs[0] : 0);
+
+  const marVal = (key: string, i: number): number | null => {
+    if (mar?.hourly && (mar.hourly as any)[key]) {
+      const v = (mar.hourly as any)[key][i];
+      return v !== undefined && v !== null ? v : null;
+    }
+    return null;
+  };
+
+  // Card data
+  const cardData = h ? (() => {
+    const ws = h.wind_speed_10m[refI] || 0;
+    const wd = h.wind_direction_10m[refI] || 0;
+    const wg = h.wind_gusts_10m[refI] || 0;
+    const wh = marVal('wave_height', refI) || 0;
+    const swh = marVal('swell_wave_height', refI);
+    const sst = marVal('sea_surface_temperature', refI);
+    const temp = h.temperature_2m[refI];
+    const code = h.weathercode[refI] || 0;
+    const prec = h.precipitation[refI] || 0;
+    const b = bft(ws);
+    const wi = windInfo(wd);
+    const bftColors = ['#7bb8d8','#7bb8d8','#44cc88','#44cc88','#ffcc44','#ffcc44','#ff8c00','#ff8c00','#ff5533','#ff5533','#ff3366','#ff3366','#ff3366'];
+    return { ws, wd, wg, wh, swh, sst, temp, code, prec, b, wi, bftColor: bftColors[b[0]] };
+  })() : null;
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="relative z-[1] min-h-screen">
+      {/* Spinner */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 bg-background/90 backdrop-blur-lg"
+          >
+            <div className="h-11 w-11 rounded-full border-[3px] border-border border-t-primary animate-spin" />
+            <div className="text-xs tracking-widest text-muted-foreground">{loadingText}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex flex-wrap items-center gap-3 border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-2xl md:px-5">
+        <div className="flex-shrink-0 font-display text-xl font-extrabold tracking-tight">
+          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">🌬️ WindRadar</span>
+        </div>
+        <div className="relative flex min-w-[180px] max-w-[380px] flex-1" ref={searchRef}>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onFocus={() => setHistoryOpen(true)}
+            onKeyDown={e => { if (e.key === 'Enter') { doSearch(); setHistoryOpen(false); } }}
+            className="w-full rounded-lg border border-border bg-secondary px-3.5 py-2 font-mono text-[0.82rem] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+            placeholder="Buscar lugar... ej: Gavà, Barcelona"
+          />
+          <SearchHistory open={historyOpen} onSelect={selectHistory} onClose={() => setHistoryOpen(false)} />
+        </div>
+        <button onClick={() => { doSearch(); setHistoryOpen(false); }} className="whitespace-nowrap rounded-lg bg-primary px-4 py-2 font-display text-[0.78rem] font-bold tracking-wider text-primary-foreground transition-all hover:-translate-y-0.5 hover:brightness-110">
+          BUSCAR
+        </button>
+        <input
+          type="date"
+          value={date}
+          min={today}
+          max={maxDate}
+          onChange={e => setDate(e.target.value)}
+          className="rounded-lg border border-border bg-secondary px-2.5 py-2 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+        />
+        <ThemeSelector />
+      </header>
+
+      {/* Main */}
+      <main className="relative z-[1] mx-auto max-w-[1300px] px-3 py-6 md:px-5">
+        {/* Location bar */}
+        <div className="mb-5 flex flex-wrap items-baseline gap-3">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">{name}</h1>
+          {lat !== null && (
+            <span className="text-[0.7rem] text-muted-foreground">
+              {lat.toFixed(4)}°N {Math.abs(lon!).toFixed(4)}°{lon! < 0 ? 'O' : 'E'}
+            </span>
+          )}
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[0.65rem] uppercase tracking-widest text-primary">
+            {wx ? 'EN VIVO' : 'LISTO'}
+          </span>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Section: Current conditions */}
+        <SectionTitle>Condiciones actuales</SectionTitle>
+
+        {!wx ? (
+          <div className="mb-6 rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            Introduce una ubicación y pulsa <strong className="text-primary">BUSCAR</strong> para cargar la previsión
+          </div>
+        ) : cardData && (
+          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
+            <NowCard highlight label="Viento" value={`${Math.round(cardData.ws)}`} unit="km/h" sub={`${Math.round(kmhToKnots(cardData.ws))} kn · Ráf: ${Math.round(cardData.wg)} km/h (${Math.round(kmhToKnots(cardData.wg))} kn)`} color={windColor(cardData.ws)} />
+            <NowCard label="Dirección" value={`${dirArrow(cardData.wd)} ${cardData.wi.short}`} sub={`${cardData.wi.full} · ${Math.round(cardData.wd)}°`} />
+            <NowCard label="Beaufort" value={`${cardData.b[0]}`} unit="BFT" sub={cardData.b[1]} color={cardData.bftColor} />
+            <NowCard label="Altura ola" value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
+            <NowCard label="Temp. aire" value={safeNum(cardData.temp, 1)} unit="°C" />
+            <NowCard label="Temp. agua" value={safeNum(cardData.sst, 1)} unit="°C" sub="Superficie mar" color="#4dd9ff" />
+            <NowCard label="Tiempo" value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
+            <NowCard label="Precipitación" value={cardData.prec.toFixed(1)} unit="mm" sub="Última hora" />
+          </div>
+        )}
+
+        {/* Actions */}
+        {wx && (
+          <div className="mb-5 flex flex-wrap gap-2">
+            <ActionBtn onClick={() => shareWA(wx, mar, name, date)} emoji="📲">Compartir WhatsApp</ActionBtn>
+            <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Reportes por email</ActionBtn>
+            <ActionBtn onClick={() => window.print()} emoji="🖨️">Exportar / Imprimir</ActionBtn>
+          </div>
+        )}
+
+        {/* Email panel */}
+        <AnimatePresence>
+          {emailOpen && wx && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-5 overflow-hidden rounded-lg border border-border bg-card p-4">
+              <EmailPanel wx={wx} mar={mar} name={name} date={date} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Table */}
+        <SectionTitle>Previsión horaria — {humanDate(date)}</SectionTitle>
+        <div className="mb-6 overflow-x-auto rounded-lg border border-border">
+          <table className="w-full min-w-[1050px] border-collapse font-mono text-[0.76rem]">
+            <thead>
+              <tr className="bg-secondary">
+                {['HORA','🌡️ AIRE','💧 AGUA','💨 VIENTO (km/h)','💨 VIENTO (kn)','⚡ RÁFAGA (km/h)','⚡ RÁFAGA (kn)','🧭 DIRECCIÓN','⛵ NOMBRE','🌊 OLA','🌊 DIR.','☁️ TIEMPO','☔ PRECIP.','BFT'].map(th => (
+                  <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {!h || dayIdxs.length === 0 ? (
+                <tr><td colSpan={14} className="py-7 text-center text-sm text-muted-foreground">Sin datos — introduce una ubicación y pulsa Buscar</td></tr>
+              ) : dayIdxs.map((idx, ri) => {
+                const ws = h.wind_speed_10m[idx] || 0;
+                const wd = h.wind_direction_10m[idx] || 0;
+                const wg = h.wind_gusts_10m[idx] || 0;
+                const wh = marVal('wave_height', idx) || 0;
+                const wd2 = marVal('wave_direction', idx);
+                const sst = marVal('sea_surface_temperature', idx);
+                const temp = h.temperature_2m[idx];
+                const code = h.weathercode[idx] || 0;
+                const prec = h.precipitation[idx] || 0;
+                const b = bft(ws);
+                const wi = windInfo(wd);
+                const wdir2 = wd2 !== null ? windInfo(wd2).short : '—';
+                const hour = h.time[idx].slice(11, 16);
+                const isCur = ri === curRow;
+
+                return (
+                  <tr key={idx} className={`border-b border-border/40 transition-colors hover:bg-primary/[0.03] ${isCur ? 'bg-primary/[0.06]' : ''}`}>
+                    <td className={`py-2 pl-3.5 text-left text-[0.68rem] text-muted-foreground ${isCur ? 'border-l-2 border-primary' : ''}`}>{isCur ? '▶ ' : ''}{hour}</td>
+                    <td className="text-center">{safeNum(temp, 1)}°</td>
+                    <td className="text-center" style={{ color: '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
+                    <td className="text-center font-semibold" style={{ color: windColor(ws) }}>{Math.round(ws)}</td>
+                    <td className="text-center font-semibold" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))}</td>
+                    <td className="text-center" style={{ color: windColor(wg), opacity: 0.85 }}>{Math.round(wg)}</td>
+                    <td className="text-center" style={{ color: windColor(wg), opacity: 0.85 }}>{Math.round(kmhToKnots(wg))}</td>
+                    <td className="text-center">{dirArrow(wd)} {wi.short} <span className="text-[0.62rem] text-muted-foreground">{Math.round(wd)}°</span></td>
+                    <td className="text-center text-[0.7rem]" style={{ color: windColor(ws) }}>{wi.full}</td>
+                    <td className="text-center" style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
+                    <td className="text-center text-[0.68rem] text-muted-foreground">{wdir2}</td>
+                    <td className="text-center">{WX_ICON[code] || ''} <span className="text-[0.65rem] text-muted-foreground">{WX_DESC[code] || ''}</span></td>
+                    <td className="text-center" style={{ color: prec > 0.5 ? '#4dd9ff' : undefined }}>{prec.toFixed(1)}</td>
+                    <td className="text-center"><span className="font-bold" style={{ color: windColor(ws) }}>{b[0]}</span> <span className="text-[0.65rem] text-muted-foreground">{b[1]}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Charts */}
+        {wx && (
+          <>
+            <SectionTitle>Gráficos — próximas 48h</SectionTitle>
+            <div className="mb-6 grid grid-cols-1 gap-3.5 md:grid-cols-2">
+              <WindCharts wx={wx} mar={mar} />
+            </div>
+          </>
+        )}
+
+        <div className="text-center text-[0.65rem] tracking-wider text-muted-foreground">
+          Open-Meteo API · GFS + ECMWF · Copernicus Marine · Sin API key · Datos gratuitos
+        </div>
+      </main>
     </div>
   );
-};
+}
 
-const Index = PlaceholderIndex;
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-2.5 flex items-center gap-2 font-display text-[0.65rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+      {children}
+      <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+    </div>
+  );
+}
 
-export default Index;
+function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
+  label: string; value: string; unit?: string; sub?: string; color?: string; highlight?: boolean; isEmoji?: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50`}
+    >
+      <div className={`absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent ${highlight ? 'opacity-100' : 'opacity-30'}`} />
+      <div className="mb-1 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`font-display font-bold leading-none ${isEmoji ? 'text-3xl' : 'text-2xl'}`} style={color ? { color } : undefined}>
+        {value}{unit && <span className="text-xs font-normal text-muted-foreground"> {unit}</span>}
+      </div>
+      {sub && <div className="mt-1 text-[0.62rem] text-muted-foreground">{sub}</div>}
+    </motion.div>
+  );
+}
+
+function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: string; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} className="rounded-lg border border-border bg-transparent px-4 py-2 font-display text-[0.78rem] font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary">
+      {emoji} {children}
+    </button>
+  );
+}
+
+function shareWA(wx: WeatherData, mar: MarineData | null, name: string, date: string) {
+  const h = wx.hourly;
+  const now = new Date();
+  const todayStr = localDateStr(now);
+  let idx = -1;
+  for (let i = 0; i < h.time.length; i++) {
+    if (h.time[i].slice(0, 10) === todayStr && parseInt(h.time[i].slice(11, 13), 10) === now.getHours()) { idx = i; break; }
+  }
+  if (idx < 0) {
+    for (let j = 0; j < h.time.length; j++) {
+      if (h.time[j].slice(0, 10) === date) { idx = j; break; }
+    }
+  }
+  if (idx < 0) return;
+
+  const ws = Math.round(h.wind_speed_10m[idx] || 0);
+  const wg = Math.round(h.wind_gusts_10m[idx] || 0);
+  const wd = h.wind_direction_10m[idx] || 0;
+  const wi = windInfo(wd);
+  const b = bft(ws);
+  const wh = mar?.hourly?.wave_height?.[idx] ?? null;
+  const sst = mar?.hourly?.sea_surface_temperature?.[idx] ?? null;
+  const temp = h.temperature_2m[idx];
+  const code = h.weathercode[idx] || 0;
+
+  const msg = `🌬️ *WindRadar – ${name}*\n📅 ${humanDate(date)}\n\n💨 *Viento:* ${ws} km/h / ${Math.round(kmhToKnots(ws))} kn (ráf. ${wg} km/h / ${Math.round(kmhToKnots(wg))} kn)\n🧭 *Dirección:* ${wi.full} (${wi.short} ${Math.round(wd)}°)\n⚡ *Beaufort:* ${b[0]} – ${b[1]}\n🌊 *Ola:* ${wh !== null ? wh.toFixed(1) + 'm' : 'sin datos marinos'}\n🌡️ *Aire:* ${safeNum(temp, 1)}°C | *Agua:* ${safeNum(sst, 1)}°C\n${WX_ICON[code] || ''} ${WX_DESC[code] || ''}\n\n_WindRadar · Open-Meteo (GFS+ECMWF+Marine)_`;
+
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function EmailPanel({ wx, mar, name, date }: { wx: WeatherData; mar: MarineData | null; name: string; date: string }) {
+  const [email, setEmail] = useState('');
+
+  const send = () => {
+    if (!email || !email.includes('@')) { alert('Introduce un email válido'); return; }
+    const h = wx.hourly;
+    const dayIdxs: number[] = [];
+    for (let i = 0; i < h.time.length; i++) {
+      if (h.time[i].slice(0, 10) === date) dayIdxs.push(i);
+    }
+    const sep = '────────────────────────────────────────────────────\n';
+    let body = `PREVISIÓN WINDRADAR\n${name}\n${humanDate(date)}\n${sep}\nHORA   VIENTO     NUDOS    RÁFAGA     NUDOS    DIRECCIÓN                OLA    TEMP\n${sep}`;
+    for (const ii of dayIdxs) {
+      const ws = Math.round(h.wind_speed_10m[ii] || 0);
+      const wg = Math.round(h.wind_gusts_10m[ii] || 0);
+      const wi = windInfo(h.wind_direction_10m[ii] || 0);
+      const wh = mar?.hourly?.wave_height?.[ii] ?? null;
+      const t = h.temperature_2m[ii];
+      const hr = h.time[ii].slice(11, 16);
+      body += `${hr}   ${String(ws).padStart(5)} km/h ${String(Math.round(kmhToKnots(ws))).padStart(5)} kn   ${String(wg).padStart(5)} km/h ${String(Math.round(kmhToKnots(wg))).padStart(5)} kn   ${wi.full}  ${wh !== null ? wh.toFixed(1) + 'm' : '—'}    ${safeNum(t, 1)}°C\n`;
+    }
+    body += `\n${sep}Fuente: Open-Meteo API\nWindRadar`;
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(`WindRadar · ${name} · ${humanDate(date)}`)}&body=${encodeURIComponent(body)}`;
+  };
+
+  return (
+    <>
+      <h3 className="mb-3 font-display text-sm text-primary">📧 REPORTES AUTOMÁTICOS DIARIOS</h3>
+      <div className="mb-2 flex flex-wrap items-end gap-2.5">
+        <div className="flex min-w-[160px] flex-1 flex-col gap-1">
+          <label className="text-[0.62rem] uppercase tracking-widest text-muted-foreground">Tu email</label>
+          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="tu@email.com" className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
+        </div>
+        <button onClick={send} className="rounded-lg bg-primary px-4 py-2 font-display text-[0.78rem] font-bold text-primary-foreground transition-all hover:brightness-110">Generar informe</button>
+      </div>
+      <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+        <strong className="text-primary">ℹ️ Cómo funciona:</strong> Al pulsar "Generar informe" se abre tu cliente de correo con el resumen meteorológico completo.
+      </div>
+    </>
+  );
+}
