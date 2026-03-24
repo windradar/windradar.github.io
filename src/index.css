@@ -7,18 +7,18 @@
 @layer base {
   /* DARK THEME (default) */
   :root, [data-theme="dark"] {
-    --background: 215 60% 4%;
-    --foreground: 207 100% 90%;
-    --card: 215 45% 7%;
-    --card-foreground: 207 100% 90%;
-    --popover: 215 45% 7%;
-    --popover-foreground: 207 100% 90%;
+    --background: 220 50% 5%;
+    --foreground: 210 40% 95%;
+    --card: 220 40% 8%;
+    --card-foreground: 210 40% 95%;
+    --popover: 220 40% 8%;
+    --popover-foreground: 210 40% 95%;
     --primary: 192 100% 50%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 215 50% 12%;
-    --secondary-foreground: 207 100% 90%;
-    --muted: 210 25% 18%;
-    --muted-foreground: 210 30% 45%;
+    --secondary: 220 40% 12%;
+    --secondary-foreground: 210 40% 92%;
+    --muted: 215 25% 18%;
+    --muted-foreground: 210 25% 55%;
     --accent: 30 100% 50%;
     --accent-foreground: 0 0% 0%;
     --destructive: 345 100% 60%;
