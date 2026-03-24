@@ -1,10 +1,11 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeSelector } from '@/components/ThemeSelector';
-import { SearchHistory } from '@/components/SearchHistory';
+import { WindRose } from '@/components/WindRose';
+import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
 import {
-  type WeatherData, type MarineData, type SearchHistoryItem,
+  type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
   addToSearchHistory,
@@ -20,10 +21,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
 
   const today = localDateStr(new Date());
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
@@ -44,50 +42,20 @@ export default function Index() {
     setLoading(false);
   }, []);
 
-  const doSearch = useCallback(async (query?: string, latOverride?: number, lonOverride?: number) => {
-    const q = query || searchQuery.trim();
-    if (!q && !latOverride) { setError('Escribe una ubicación para buscar.'); return; }
+  const doSearch = useCallback(async (searchName: string, searchLat: number, searchLon: number) => {
     setError('');
     setLoading(true);
-
     try {
-      let searchLat = latOverride;
-      let searchLon = lonOverride;
-      let searchName = q;
-
-      if (!searchLat) {
-        setLoadingText(`Buscando "${q}"...`);
-        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=es&format=json`;
-        const geoRes = await fetch(geoUrl);
-        if (!geoRes.ok) throw new Error('HTTP ' + geoRes.status);
-        const geoData = await geoRes.json();
-        if (!geoData.results?.length) {
-          setLoading(false);
-          setError(`No se encontró "${q}". Prueba con otro nombre o añade el país.`);
-          return;
-        }
-        const loc = geoData.results[0];
-        searchLat = loc.latitude;
-        searchLon = loc.longitude;
-        const parts = [loc.name, loc.admin1, loc.country].filter(Boolean);
-        searchName = parts.join(', ');
-      }
-
-      setLat(searchLat!);
-      setLon(searchLon!);
+      setLat(searchLat);
+      setLon(searchLon);
       setName(searchName);
-      addToSearchHistory({ name: searchName, lat: searchLat!, lon: searchLon! });
-      await fetchWeather(searchLat!, searchLon!);
+      addToSearchHistory({ name: searchName, lat: searchLat, lon: searchLon });
+      await fetchWeather(searchLat, searchLon);
     } catch (e: any) {
       setLoading(false);
       setError('Error: ' + e.message);
     }
-  }, [searchQuery, fetchWeather]);
-
-  const selectHistory = useCallback((item: SearchHistoryItem) => {
-    setSearchQuery(item.name);
-    doSearch(item.name, item.lat, item.lon);
-  }, [doSearch]);
+  }, [fetchWeather]);
 
   // Compute table data
   const h = wx?.hourly;
@@ -149,46 +117,35 @@ export default function Index() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 flex flex-wrap items-center gap-3 border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-2xl md:px-5">
-        <div className="flex-shrink-0 font-display text-xl font-extrabold tracking-tight">
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">🌬️ WindRadar</span>
-        </div>
-        <div className="relative flex min-w-[180px] max-w-[380px] flex-1" ref={searchRef}>
+      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-2xl">
+        <div className="mx-auto flex max-w-[1300px] flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5">
+          <div className="flex-shrink-0 font-display text-lg font-extrabold tracking-tight sm:text-xl">
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">🌬️ WindRadar</span>
+          </div>
+          <SearchWithSuggestions onSelect={doSearch} />
           <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onFocus={() => setHistoryOpen(true)}
-            onKeyDown={e => { if (e.key === 'Enter') { doSearch(); setHistoryOpen(false); } }}
-            className="w-full rounded-lg border border-border bg-secondary px-3.5 py-2 font-mono text-[0.82rem] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-            placeholder="Buscar lugar... ej: Gavà, Barcelona"
+            type="date"
+            value={date}
+            min={today}
+            max={maxDate}
+            onChange={e => setDate(e.target.value)}
+            className="rounded-lg border border-border bg-secondary px-2 py-2 font-mono text-xs text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
           />
-          <SearchHistory open={historyOpen} onSelect={selectHistory} onClose={() => setHistoryOpen(false)} />
+          <ThemeSelector />
         </div>
-        <button onClick={() => { doSearch(); setHistoryOpen(false); }} className="whitespace-nowrap rounded-lg bg-primary px-4 py-2 font-display text-[0.78rem] font-bold tracking-wider text-primary-foreground transition-all hover:-translate-y-0.5 hover:brightness-110">
-          BUSCAR
-        </button>
-        <input
-          type="date"
-          value={date}
-          min={today}
-          max={maxDate}
-          onChange={e => setDate(e.target.value)}
-          className="rounded-lg border border-border bg-secondary px-2.5 py-2 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
-        />
-        <ThemeSelector />
       </header>
 
       {/* Main */}
-      <main className="relative z-[1] mx-auto max-w-[1300px] px-3 py-6 md:px-5">
+      <main className="relative z-[1] mx-auto max-w-[1300px] px-3 py-4 sm:py-6 md:px-5">
         {/* Location bar */}
-        <div className="mb-5 flex flex-wrap items-baseline gap-3">
-          <h1 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">{name}</h1>
+        <div className="mb-4 flex flex-wrap items-baseline gap-2 sm:gap-3">
+          <h1 className="font-display text-xl font-extrabold tracking-tight sm:text-2xl md:text-3xl">{name}</h1>
           {lat !== null && (
-            <span className="text-[0.7rem] text-muted-foreground">
+            <span className="text-[0.65rem] text-muted-foreground sm:text-[0.7rem]">
               {lat.toFixed(4)}°N {Math.abs(lon!).toFixed(4)}°{lon! < 0 ? 'O' : 'E'}
             </span>
           )}
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[0.65rem] uppercase tracking-widest text-primary">
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]">
             {wx ? 'EN VIVO' : 'LISTO'}
           </span>
         </div>
@@ -204,28 +161,33 @@ export default function Index() {
         <SectionTitle>Condiciones actuales</SectionTitle>
 
         {!wx ? (
-          <div className="mb-6 rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          <div className="mb-6 rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground sm:p-8">
             Introduce una ubicación y pulsa <strong className="text-primary">BUSCAR</strong> para cargar la previsión
           </div>
         ) : cardData && (
-          <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
-            <NowCard highlight label="Viento" value={`${Math.round(cardData.ws)}`} unit="km/h" sub={`${Math.round(kmhToKnots(cardData.ws))} kn · Ráf: ${Math.round(cardData.wg)} km/h (${Math.round(kmhToKnots(cardData.wg))} kn)`} color={windColor(cardData.ws)} />
-            <NowCard label="Dirección" value={`${dirArrow(cardData.wd)} ${cardData.wi.short}`} sub={`${cardData.wi.full} · ${Math.round(cardData.wd)}°`} />
-            <NowCard label="Beaufort" value={`${cardData.b[0]}`} unit="BFT" sub={cardData.b[1]} color={cardData.bftColor} />
-            <NowCard label="Altura ola" value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
-            <NowCard label="Temp. aire" value={safeNum(cardData.temp, 1)} unit="°C" />
-            <NowCard label="Temp. agua" value={safeNum(cardData.sst, 1)} unit="°C" sub="Superficie mar" color="#4dd9ff" />
-            <NowCard label="Tiempo" value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
-            <NowCard label="Precipitación" value={cardData.prec.toFixed(1)} unit="mm" sub="Última hora" />
+          <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
+            <NowCard highlight label="💨 Viento" value={`${Math.round(cardData.ws)}`} unit="km/h" sub={`${Math.round(kmhToKnots(cardData.ws))} kn · Ráf: ${Math.round(cardData.wg)} km/h (${Math.round(kmhToKnots(cardData.wg))} kn)`} color={windColor(cardData.ws)} />
+            
+            {/* Wind Rose - spans 2 cols on mobile, 1 on larger */}
+            <div className="col-span-2 sm:col-span-1 lg:row-span-2">
+              <WindRose degrees={cardData.wd} speed={cardData.ws} gustSpeed={cardData.wg} />
+            </div>
+
+            <NowCard label="⚡ Beaufort" value={`${cardData.b[0]}`} unit="BFT" sub={cardData.b[1]} color={cardData.bftColor} />
+            <NowCard label="🌊 Altura ola" value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
+            <NowCard label="🌡️ Temp. aire" value={safeNum(cardData.temp, 1)} unit="°C" />
+            <NowCard label="🌊 Temp. agua" value={safeNum(cardData.sst, 1)} unit="°C" sub="Superficie mar" color="#4dd9ff" />
+            <NowCard label="☁️ Tiempo" value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
+            <NowCard label="☔ Precipitación" value={cardData.prec.toFixed(1)} unit="mm" sub="Última hora" />
           </div>
         )}
 
         {/* Actions */}
         {wx && (
-          <div className="mb-5 flex flex-wrap gap-2">
-            <ActionBtn onClick={() => shareWA(wx, mar, name, date)} emoji="📲">Compartir WhatsApp</ActionBtn>
-            <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Reportes por email</ActionBtn>
-            <ActionBtn onClick={() => window.print()} emoji="🖨️">Exportar / Imprimir</ActionBtn>
+          <div className="mb-4 flex flex-wrap gap-2">
+            <ActionBtn onClick={() => shareWA(wx, mar, name, date)} emoji="📲">Compartir</ActionBtn>
+            <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Email</ActionBtn>
+            <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
           </div>
         )}
 
@@ -240,12 +202,14 @@ export default function Index() {
 
         {/* Table */}
         <SectionTitle>Previsión horaria — {humanDate(date)}</SectionTitle>
-        <div className="mb-6 overflow-x-auto rounded-lg border border-border">
+        
+        {/* Mobile cards + Desktop table */}
+        <div className="mb-6 hidden overflow-x-auto rounded-lg border border-border md:block">
           <table className="w-full min-w-[1050px] border-collapse font-mono text-[0.76rem]">
             <thead>
               <tr className="bg-secondary">
                 {['HORA','🌡️ AIRE','💧 AGUA','💨 VIENTO (km/h)','💨 VIENTO (kn)','⚡ RÁFAGA (km/h)','⚡ RÁFAGA (kn)','🧭 DIRECCIÓN','⛵ NOMBRE','🌊 OLA','🌊 DIR.','☁️ TIEMPO','☔ PRECIP.','BFT'].map(th => (
-                  <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
+                  <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
             </thead>
@@ -291,6 +255,64 @@ export default function Index() {
           </table>
         </div>
 
+        {/* Mobile hourly cards */}
+        <div className="mb-6 space-y-2 md:hidden">
+          {!h || dayIdxs.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">Sin datos</div>
+          ) : dayIdxs.map((idx, ri) => {
+            const ws = h.wind_speed_10m[idx] || 0;
+            const wd = h.wind_direction_10m[idx] || 0;
+            const wg = h.wind_gusts_10m[idx] || 0;
+            const wh = marVal('wave_height', idx) || 0;
+            const sst = marVal('sea_surface_temperature', idx);
+            const temp = h.temperature_2m[idx];
+            const code = h.weathercode[idx] || 0;
+            const prec = h.precipitation[idx] || 0;
+            const b = bft(ws);
+            const wi = windInfo(wd);
+            const hour = h.time[idx].slice(11, 16);
+            const isCur = ri === curRow;
+
+            return (
+              <div key={idx} className={`rounded-lg border bg-card p-3 ${isCur ? 'border-primary/50 bg-primary/[0.04]' : 'border-border'}`}>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-display text-sm font-bold text-foreground">{isCur ? '▶ ' : ''}{hour}</span>
+                  <span className="text-lg">{WX_ICON[code] || ''}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 text-[0.72rem]">
+                  <div>
+                    <span className="text-muted-foreground">💨 </span>
+                    <span className="font-semibold" style={{ color: windColor(ws) }}>{Math.round(ws)} km/h</span>
+                    <span className="text-muted-foreground"> / {Math.round(kmhToKnots(ws))} kn</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">⚡ </span>
+                    <span style={{ color: windColor(wg) }}>{Math.round(wg)} km/h</span>
+                    <span className="text-muted-foreground"> / {Math.round(kmhToKnots(wg))} kn</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">🧭 </span>
+                    <span>{dirArrow(wd)} {wi.short}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">🌊 </span>
+                    <span style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">🌡️ </span>
+                    <span>{safeNum(temp, 1)}°</span>
+                    {sst !== null && <span className="text-muted-foreground"> / {safeNum(sst, 1)}°</span>}
+                  </div>
+                  <div>
+                    <span className="font-bold" style={{ color: windColor(ws) }}>BFT {b[0]}</span>
+                    {prec > 0 && <span className="text-muted-foreground"> · ☔{prec.toFixed(1)}</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Charts */}
         {wx && (
           <>
@@ -301,7 +323,7 @@ export default function Index() {
           </>
         )}
 
-        <div className="text-center text-[0.65rem] tracking-wider text-muted-foreground">
+        <div className="pb-4 text-center text-[0.6rem] tracking-wider text-muted-foreground sm:text-[0.65rem]">
           Open-Meteo API · GFS + ECMWF · Copernicus Marine · Sin API key · Datos gratuitos
         </div>
       </main>
@@ -325,21 +347,21 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50`}
+      className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
     >
       <div className={`absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent ${highlight ? 'opacity-100' : 'opacity-30'}`} />
       <div className="mb-1 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`font-display font-bold leading-none ${isEmoji ? 'text-3xl' : 'text-2xl'}`} style={color ? { color } : undefined}>
-        {value}{unit && <span className="text-xs font-normal text-muted-foreground"> {unit}</span>}
+      <div className={`font-display font-bold leading-none ${isEmoji ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`} style={color ? { color } : undefined}>
+        {value}{unit && <span className="text-[0.65rem] font-normal text-muted-foreground sm:text-xs"> {unit}</span>}
       </div>
-      {sub && <div className="mt-1 text-[0.62rem] text-muted-foreground">{sub}</div>}
+      {sub && <div className="mt-1 text-[0.58rem] text-muted-foreground sm:text-[0.62rem]">{sub}</div>}
     </motion.div>
   );
 }
 
 function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: string; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} className="rounded-lg border border-border bg-transparent px-4 py-2 font-display text-[0.78rem] font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary">
+    <button onClick={onClick} className="rounded-lg border border-border bg-transparent px-3 py-2 font-display text-[0.72rem] font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary sm:px-4 sm:text-[0.78rem]">
       {emoji} {children}
     </button>
   );
