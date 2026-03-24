@@ -123,7 +123,7 @@ export function SearchWithSuggestions({ onSelect }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-12 top-full z-50 mt-1 max-h-[320px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl sm:right-20"
+            className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[320px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl"
           >
             {loading && (
               <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
