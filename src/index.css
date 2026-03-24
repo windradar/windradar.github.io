@@ -138,18 +138,18 @@
 
   /* GREEN THEME */
   [data-theme="green"] {
-    --background: 150 40% 4%;
-    --foreground: 140 30% 88%;
-    --card: 150 35% 8%;
-    --card-foreground: 140 30% 88%;
-    --popover: 150 35% 8%;
-    --popover-foreground: 140 30% 88%;
+    --background: 150 35% 4%;
+    --foreground: 140 25% 92%;
+    --card: 150 30% 8%;
+    --card-foreground: 140 25% 92%;
+    --popover: 150 30% 8%;
+    --popover-foreground: 140 25% 92%;
     --primary: 150 80% 45%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 150 30% 13%;
-    --secondary-foreground: 140 30% 88%;
-    --muted: 150 20% 17%;
-    --muted-foreground: 150 15% 45%;
+    --secondary: 150 25% 13%;
+    --secondary-foreground: 140 25% 90%;
+    --muted: 150 18% 17%;
+    --muted-foreground: 150 12% 50%;
     --accent: 80 70% 50%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 80% 55%;
