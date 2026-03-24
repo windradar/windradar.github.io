@@ -109,18 +109,18 @@
 
   /* RED THEME */
   [data-theme="red"] {
-    --background: 0 40% 5%;
-    --foreground: 0 30% 90%;
-    --card: 0 35% 9%;
-    --card-foreground: 0 30% 90%;
-    --popover: 0 35% 9%;
-    --popover-foreground: 0 30% 90%;
+    --background: 0 35% 5%;
+    --foreground: 0 20% 93%;
+    --card: 0 30% 9%;
+    --card-foreground: 0 20% 93%;
+    --popover: 0 30% 9%;
+    --popover-foreground: 0 20% 93%;
     --primary: 0 85% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 30% 14%;
-    --secondary-foreground: 0 30% 90%;
-    --muted: 0 20% 18%;
-    --muted-foreground: 0 15% 50%;
+    --secondary: 0 25% 14%;
+    --secondary-foreground: 0 20% 90%;
+    --muted: 0 18% 18%;
+    --muted-foreground: 0 12% 55%;
     --accent: 25 100% 55%;
     --accent-foreground: 0 0% 0%;
     --destructive: 345 100% 60%;
