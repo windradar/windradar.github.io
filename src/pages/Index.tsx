@@ -22,7 +22,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState('');
-  const [emailOpen, setEmailOpen] = useState(false);
+
 
   const today = localDateStr(new Date());
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
