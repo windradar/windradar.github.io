@@ -275,9 +275,11 @@ export default function Index() {
             const wi = windInfo(wd);
             const hour = h.time[idx].slice(11, 16);
             const isCur = ri === curRow;
+            const mobileKnots = Math.round(kmhToKnots(ws));
+            const mobileRowStyle = windRowStyle(mobileKnots);
 
             return (
-              <div key={idx} className={`rounded-lg border bg-card p-3 ${isCur ? 'border-primary/50 bg-primary/[0.04]' : 'border-border'}`}>
+              <div key={idx} className={`rounded-lg border p-3 ${isCur ? 'border-primary/50' : 'border-border'}`} style={{ backgroundColor: mobileRowStyle.backgroundColor || undefined, color: mobileRowStyle.color || undefined }}>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-display text-sm font-bold text-foreground">{isCur ? '▶ ' : ''}{hour}</span>
                   <span className="text-lg">{WX_ICON[code] || ''}</span>
