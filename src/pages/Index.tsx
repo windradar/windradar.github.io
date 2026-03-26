@@ -10,6 +10,7 @@ import {
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
   addToSearchHistory,
 } from '@/lib/weather-helpers';
+import { windRowStyle } from '@/lib/wind-row-color';
 
 export default function Index() {
   const [lat, setLat] = useState<number | null>(null);
