@@ -10,6 +10,7 @@ import {
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
   addToSearchHistory,
 } from '@/lib/weather-helpers';
+import { windRowStyle } from '@/lib/wind-row-color';
 
 export default function Index() {
   const [lat, setLat] = useState<number | null>(null);
@@ -21,7 +22,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState('');
-  const [emailOpen, setEmailOpen] = useState(false);
+
 
   const today = localDateStr(new Date());
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
@@ -194,21 +195,9 @@ export default function Index() {
 
         {/* Actions */}
         {wx && (
-          <div className="mb-4 flex flex-wrap gap-2">
-            <ActionBtn onClick={() => shareWA(wx, mar, name, date)} emoji="📲">Compartir</ActionBtn>
-            <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Email</ActionBtn>
-            <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
-          </div>
+          <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={dayIdxs} />
         )}
 
-        {/* Email panel */}
-        <AnimatePresence>
-          {emailOpen && wx && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-5 overflow-hidden rounded-lg border border-border bg-card p-4">
-              <EmailPanel wx={wx} mar={mar} name={name} date={date} />
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Table */}
         <SectionTitle>Previsión horaria — {humanDate(date)}</SectionTitle>
@@ -242,22 +231,26 @@ export default function Index() {
                 const hour = h.time[idx].slice(11, 16);
                 const isCur = ri === curRow;
 
+                const knots = Math.round(kmhToKnots(ws));
+                const rowStyle = windRowStyle(knots);
+
                 return (
-                  <tr key={idx} className={`border-b border-border/40 transition-colors hover:bg-primary/[0.03] ${isCur ? 'bg-primary/[0.06]' : ''}`}>
+                  <tr key={idx} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
                     <td className={`py-2 pl-3.5 text-left text-[0.68rem] text-muted-foreground ${isCur ? 'border-l-2 border-primary' : ''}`}>{isCur ? '▶ ' : ''}{hour}</td>
-                    <td className="text-center">{safeNum(temp, 1)}°</td>
-                    <td className="text-center" style={{ color: '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
-                    <td className="text-center font-semibold" style={{ color: windColor(ws) }}>{Math.round(ws)}</td>
-                    <td className="text-center font-semibold" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))}</td>
-                    <td className="text-center" style={{ color: windColor(wg), opacity: 0.85 }}>{Math.round(wg)}</td>
-                    <td className="text-center" style={{ color: windColor(wg), opacity: 0.85 }}>{Math.round(kmhToKnots(wg))}</td>
-                    <td className="text-center">{dirArrow(wd)} {wi.short} <span className="text-[0.62rem] text-muted-foreground">{Math.round(wd)}°</span></td>
-                    <td className="text-center text-[0.7rem]" style={{ color: windColor(ws) }}>{wi.full}</td>
-                    <td className="text-center" style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
-                    <td className="text-center text-[0.68rem] text-muted-foreground">{wdir2}</td>
-                    <td className="text-center">{WX_ICON[code] || ''} <span className="text-[0.65rem] text-muted-foreground">{WX_DESC[code] || ''}</span></td>
-                    <td className="text-center" style={{ color: prec > 0.5 ? '#4dd9ff' : undefined }}>{prec.toFixed(1)}</td>
-                    <td className="text-center"><span className="font-bold" style={{ color: windColor(ws) }}>{b[0]}</span> <span className="text-[0.65rem] text-muted-foreground">{b[1]}</span></td>
+                    <td className={`py-2 pl-3.5 text-left text-[0.68rem] ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || undefined }}>{safeNum(temp, 1)}°</td>
+                    <td className="text-center" style={{ color: rowStyle.color || '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{Math.round(ws)}</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{Math.round(kmhToKnots(ws))}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(wg)}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.62rem]">{Math.round(wd)}°</span></td>
+                    <td className="text-center text-[0.7rem]" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
+                    <td className="text-center text-[0.68rem]" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{wdir2}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.65rem]">{WX_DESC[code] || ''}</span></td>
+                    <td className="text-center" style={{ color: rowStyle.color || (prec > 0.5 ? '#4dd9ff' : undefined) }}>{prec.toFixed(1)}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}><span className="font-bold">{b[0]}</span> <span className="text-[0.65rem]">{b[1]}</span></td>
                   </tr>
                 );
               })}
@@ -282,9 +275,11 @@ export default function Index() {
             const wi = windInfo(wd);
             const hour = h.time[idx].slice(11, 16);
             const isCur = ri === curRow;
+            const mobileKnots = Math.round(kmhToKnots(ws));
+            const mobileRowStyle = windRowStyle(mobileKnots);
 
             return (
-              <div key={idx} className={`rounded-lg border bg-card p-3 ${isCur ? 'border-primary/50 bg-primary/[0.04]' : 'border-border'}`}>
+              <div key={idx} className={`rounded-lg border p-3 ${isCur ? 'border-primary/50' : 'border-border'}`} style={{ backgroundColor: mobileRowStyle.backgroundColor || undefined, color: mobileRowStyle.color || undefined }}>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-display text-sm font-bold text-foreground">{isCur ? '▶ ' : ''}{hour}</span>
                   <span className="text-lg">{WX_ICON[code] || ''}</span>
@@ -377,34 +372,62 @@ function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: s
   );
 }
 
-function shareWA(wx: WeatherData, mar: MarineData | null, name: string, date: string) {
+function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; mar: MarineData | null; name: string; date: string; dayIdxs: number[] }) {
   const h = wx.hourly;
-  const now = new Date();
-  const todayStr = localDateStr(now);
-  let idx = -1;
-  for (let i = 0; i < h.time.length; i++) {
-    if (h.time[i].slice(0, 10) === todayStr && parseInt(h.time[i].slice(11, 13), 10) === now.getHours()) { idx = i; break; }
-  }
-  if (idx < 0) {
-    for (let j = 0; j < h.time.length; j++) {
-      if (h.time[j].slice(0, 10) === date) { idx = j; break; }
+  const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
+  const [fromH, setFromH] = useState(hours[0] || '00:00');
+  const [toH, setToH] = useState(hours[hours.length - 1] || '23:00');
+  const [emailOpen, setEmailOpen] = useState(false);
+
+  const share = () => {
+    const idxs = dayIdxs.filter(i => {
+      const hr = h.time[i].slice(11, 16);
+      return hr >= fromH && hr <= toH;
+    });
+    if (!idxs.length) return;
+
+    let msg = `🌬️ *WindRadar – ${name}*\n📅 ${humanDate(date)} (${fromH}–${toH})\n\n`;
+    for (const idx of idxs) {
+      const ws = Math.round(h.wind_speed_10m[idx] || 0);
+      const wg = Math.round(h.wind_gusts_10m[idx] || 0);
+      const wd = h.wind_direction_10m[idx] || 0;
+      const wi = windInfo(wd);
+      const wh = mar?.hourly?.wave_height?.[idx] ?? null;
+      const hr = h.time[idx].slice(11, 16);
+      msg += `⏰ *${hr}* — 💨 ${ws}km/h (${Math.round(kmhToKnots(ws))}kn) ⚡ráf.${wg}km/h (${Math.round(kmhToKnots(wg))}kn) 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '—'}\n`;
     }
-  }
-  if (idx < 0) return;
+    msg += `\n_WindRadar · Open-Meteo_`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+  };
 
-  const ws = Math.round(h.wind_speed_10m[idx] || 0);
-  const wg = Math.round(h.wind_gusts_10m[idx] || 0);
-  const wd = h.wind_direction_10m[idx] || 0;
-  const wi = windInfo(wd);
-  const b = bft(ws);
-  const wh = mar?.hourly?.wave_height?.[idx] ?? null;
-  const sst = mar?.hourly?.sea_surface_temperature?.[idx] ?? null;
-  const temp = h.temperature_2m[idx];
-  const code = h.weathercode[idx] || 0;
-
-  const msg = `🌬️ *WindRadar – ${name}*\n📅 ${humanDate(date)}\n\n💨 *Viento:* ${ws} km/h / ${Math.round(kmhToKnots(ws))} kn (ráf. ${wg} km/h / ${Math.round(kmhToKnots(wg))} kn)\n🧭 *Dirección:* ${wi.full} (${wi.short} ${Math.round(wd)}°)\n⚡ *Beaufort:* ${b[0]} – ${b[1]}\n🌊 *Ola:* ${wh !== null ? wh.toFixed(1) + 'm' : 'sin datos marinos'}\n🌡️ *Aire:* ${safeNum(temp, 1)}°C | *Agua:* ${safeNum(sst, 1)}°C\n${WX_ICON[code] || ''} ${WX_DESC[code] || ''}\n\n_WindRadar · Open-Meteo (GFS+ECMWF+Marine)_`;
-
-  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+  return (
+    <div className="mb-4">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Desde</label>
+          <select value={fromH} onChange={e => setFromH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+            {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Hasta</label>
+          <select value={toH} onChange={e => setToH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+            {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+          </select>
+        </div>
+        <ActionBtn onClick={share} emoji="📲">Compartir</ActionBtn>
+        <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Email</ActionBtn>
+        <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
+      </div>
+      <AnimatePresence>
+        {emailOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-3 overflow-hidden rounded-lg border border-border bg-card p-4">
+            <EmailPanel wx={wx} mar={mar} name={name} date={date} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 function EmailPanel({ wx, mar, name, date }: { wx: WeatherData; mar: MarineData | null; name: string; date: string }) {

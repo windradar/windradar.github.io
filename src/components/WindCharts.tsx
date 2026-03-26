@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +12,7 @@ import {
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
-import { waveColor, localDateStr } from '@/lib/weather-helpers';
+import { waveColor, localDateStr, kmhToKnots } from '@/lib/weather-helpers';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
@@ -44,13 +43,13 @@ export function WindCharts({ wx, mar }: Props) {
     return `${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, '0')}h`;
   });
 
-  const ws = sl(h.wind_speed_10m);
-  const wg = sl(h.wind_gusts_10m);
+  const wsKmh = sl(h.wind_speed_10m);
+  const wgKmh = sl(h.wind_gusts_10m);
+  const wsKn = wsKmh.map(v => v != null ? Math.round(kmhToKnots(v) * 10) / 10 : null);
+  const wgKn = wgKmh.map(v => v != null ? Math.round(kmhToKnots(v) * 10) / 10 : null);
   const wv = mar?.hourly ? sl(mar.hourly.wave_height) : new Array(48).fill(null);
   const temp = sl(h.temperature_2m);
   const sst = mar?.hourly ? sl(mar.hourly.sea_surface_temperature) : new Array(48).fill(null);
-
-  const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted-foreground').trim();
 
   const baseOpts: any = {
     responsive: true,
@@ -67,13 +66,13 @@ export function WindCharts({ wx, mar }: Props) {
   return (
     <>
       <div className="rounded-lg border border-border bg-card p-4 col-span-full">
-        <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">💨 Viento y ráfagas (km/h)</div>
+        <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">💨 Viento y ráfagas (nudos)</div>
         <Line
           data={{
             labels: labs,
             datasets: [
-              { label: 'Viento km/h', data: ws, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
-              { label: 'Ráfagas km/h', data: wg, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
+              { label: 'Viento (kn)', data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+              { label: 'Ráfagas (kn)', data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
             ]
           }}
           options={baseOpts}
