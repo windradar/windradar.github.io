@@ -195,11 +195,7 @@ export default function Index() {
 
         {/* Actions */}
         {wx && (
-          <div className="mb-4 flex flex-wrap gap-2">
-            <ActionBtn onClick={() => shareWA(wx, mar, name, date)} emoji="📲">Compartir</ActionBtn>
-            <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Email</ActionBtn>
-            <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
-          </div>
+          <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={dayIdxs} />
         )}
 
         {/* Email panel */}
@@ -243,8 +239,11 @@ export default function Index() {
                 const hour = h.time[idx].slice(11, 16);
                 const isCur = ri === curRow;
 
+                const knots = Math.round(kmhToKnots(ws));
+                const rowStyle = windRowStyle(knots);
+
                 return (
-                  <tr key={idx} className={`border-b border-border/40 transition-colors hover:bg-primary/[0.03] ${isCur ? 'bg-primary/[0.06]' : ''}`}>
+                  <tr key={idx} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
                     <td className={`py-2 pl-3.5 text-left text-[0.68rem] text-muted-foreground ${isCur ? 'border-l-2 border-primary' : ''}`}>{isCur ? '▶ ' : ''}{hour}</td>
                     <td className="text-center">{safeNum(temp, 1)}°</td>
                     <td className="text-center" style={{ color: '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
