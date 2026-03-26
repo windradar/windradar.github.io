@@ -245,19 +245,20 @@ export default function Index() {
                 return (
                   <tr key={idx} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
                     <td className={`py-2 pl-3.5 text-left text-[0.68rem] text-muted-foreground ${isCur ? 'border-l-2 border-primary' : ''}`}>{isCur ? '▶ ' : ''}{hour}</td>
-                    <td className="text-center">{safeNum(temp, 1)}°</td>
-                    <td className="text-center" style={{ color: '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
-                    <td className="text-center font-semibold" style={{ color: windColor(ws) }}>{Math.round(ws)}</td>
-                    <td className="text-center font-semibold" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))}</td>
-                    <td className="text-center" style={{ color: windColor(wg), opacity: 0.85 }}>{Math.round(wg)}</td>
-                    <td className="text-center" style={{ color: windColor(wg), opacity: 0.85 }}>{Math.round(kmhToKnots(wg))}</td>
-                    <td className="text-center">{dirArrow(wd)} {wi.short} <span className="text-[0.62rem] text-muted-foreground">{Math.round(wd)}°</span></td>
-                    <td className="text-center text-[0.7rem]" style={{ color: windColor(ws) }}>{wi.full}</td>
-                    <td className="text-center" style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
-                    <td className="text-center text-[0.68rem] text-muted-foreground">{wdir2}</td>
-                    <td className="text-center">{WX_ICON[code] || ''} <span className="text-[0.65rem] text-muted-foreground">{WX_DESC[code] || ''}</span></td>
-                    <td className="text-center" style={{ color: prec > 0.5 ? '#4dd9ff' : undefined }}>{prec.toFixed(1)}</td>
-                    <td className="text-center"><span className="font-bold" style={{ color: windColor(ws) }}>{b[0]}</span> <span className="text-[0.65rem] text-muted-foreground">{b[1]}</span></td>
+                    <td className={`py-2 pl-3.5 text-left text-[0.68rem] ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || undefined }}>{safeNum(temp, 1)}°</td>
+                    <td className="text-center" style={{ color: rowStyle.color || '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{Math.round(ws)}</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{Math.round(kmhToKnots(ws))}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(wg)}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.62rem]">{Math.round(wd)}°</span></td>
+                    <td className="text-center text-[0.7rem]" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
+                    <td className="text-center text-[0.68rem]" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{wdir2}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.65rem]">{WX_DESC[code] || ''}</span></td>
+                    <td className="text-center" style={{ color: rowStyle.color || (prec > 0.5 ? '#4dd9ff' : undefined) }}>{prec.toFixed(1)}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}><span className="font-bold">{b[0]}</span> <span className="text-[0.65rem]">{b[1]}</span></td>
                   </tr>
                 );
               })}
