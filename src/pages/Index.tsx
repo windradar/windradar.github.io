@@ -198,14 +198,6 @@ export default function Index() {
           <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={dayIdxs} />
         )}
 
-        {/* Email panel */}
-        <AnimatePresence>
-          {emailOpen && wx && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mb-5 overflow-hidden rounded-lg border border-border bg-card p-4">
-              <EmailPanel wx={wx} mar={mar} name={name} date={date} />
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Table */}
         <SectionTitle>Previsión horaria — {humanDate(date)}</SectionTitle>
