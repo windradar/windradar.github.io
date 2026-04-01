@@ -4,6 +4,7 @@ import { ThemeSelector } from '@/components/ThemeSelector';
 import { WindRose } from '@/components/WindRose';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
+import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
@@ -22,7 +23,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState('');
-
+  const [settings, setSettings] = useState<AppSettings>(loadSettings);
 
   const today = localDateStr(new Date());
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
@@ -60,12 +61,20 @@ export default function Index() {
 
   // Compute table data
   const h = wx?.hourly;
-  const dayIdxs: number[] = [];
+  const allDayIdxs: number[] = [];
   if (h) {
     for (let i = 0; i < h.time.length; i++) {
-      if (h.time[i].slice(0, 10) === date) dayIdxs.push(i);
+      if (h.time[i].slice(0, 10) === date) allDayIdxs.push(i);
     }
   }
+
+  // Filter by settings hour range
+  const dayIdxs = allDayIdxs.filter(i => {
+    if (!h) return false;
+    const hr = h.time[i].slice(11, 16);
+    return hr >= settings.gridFromHour && hr <= settings.gridToHour;
+  });
+
   let curRow = -1;
   if (h && date === today) {
     const nowH = new Date().getHours();
@@ -120,12 +129,10 @@ export default function Index() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-2xl">
         <div className="mx-auto max-w-[1300px] px-3 py-2.5 sm:px-5">
-          {/* Top row: logo, date, theme */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex-shrink-0 font-display text-lg font-extrabold tracking-tight sm:text-xl">
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">🌬️ WindRadar</span>
             </div>
-            {/* Search on desktop inline */}
             <div className="hidden min-w-0 flex-1 sm:block">
               <SearchWithSuggestions onSelect={doSearch} />
             </div>
@@ -139,7 +146,6 @@ export default function Index() {
             />
             <ThemeSelector />
           </div>
-          {/* Search on mobile: full-width second row */}
           <div className="mt-2 sm:hidden">
             <SearchWithSuggestions onSelect={doSearch} />
           </div>
@@ -161,14 +167,12 @@ export default function Index() {
           </span>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             ⚠️ {error}
           </div>
         )}
 
-        {/* Section: Current conditions */}
         <SectionTitle>Condiciones actuales</SectionTitle>
 
         {!wx ? (
@@ -177,13 +181,10 @@ export default function Index() {
           </div>
         ) : cardData && (
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
-            <NowCard highlight label="💨 Viento" value={`${Math.round(cardData.ws)}`} unit="km/h" sub={`${Math.round(kmhToKnots(cardData.ws))} kn · Ráf: ${Math.round(cardData.wg)} km/h (${Math.round(kmhToKnots(cardData.wg))} kn)`} color={windColor(cardData.ws)} />
-            
-            {/* Wind Rose - spans 2 cols on mobile, 1 on larger */}
+            <NowCard highlight label="💨 Viento" value={`${Math.round(kmhToKnots(cardData.ws))}`} unit="kn" sub={`Ráf: ${Math.round(kmhToKnots(cardData.wg))} kn · ${Math.round(cardData.ws)} km/h`} color={windColor(cardData.ws)} />
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
               <WindRose degrees={cardData.wd} speed={cardData.ws} gustSpeed={cardData.wg} />
             </div>
-
             <NowCard label="⚡ Beaufort" value={`${cardData.b[0]}`} unit="BFT" sub={cardData.b[1]} color={cardData.bftColor} />
             <NowCard label="🌊 Altura ola" value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
             <NowCard label="🌡️ Temp. aire" value={safeNum(cardData.temp, 1)} unit="°C" />
@@ -193,28 +194,30 @@ export default function Index() {
           </div>
         )}
 
-        {/* Actions */}
+        {/* Actions row */}
         {wx && (
-          <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={dayIdxs} />
+          <div className="mb-4 flex flex-wrap items-end gap-2">
+            <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={allDayIdxs} />
+            <SettingsPanel settings={settings} onChange={setSettings} />
+          </div>
         )}
-
 
         {/* Table */}
         <SectionTitle>Previsión horaria — {humanDate(date)}</SectionTitle>
-        
-        {/* Mobile cards + Desktop table */}
+
+        {/* Desktop table */}
         <div className="mb-6 hidden overflow-x-auto rounded-lg border border-border md:block">
-          <table className="w-full min-w-[1050px] border-collapse font-mono text-[0.76rem]">
+          <table className="w-full min-w-[850px] border-collapse font-mono text-[0.76rem]">
             <thead>
               <tr className="bg-secondary">
-                {['HORA','🌡️ AIRE','💧 AGUA','💨 VIENTO (km/h)','💨 VIENTO (kn)','⚡ RÁFAGA (km/h)','⚡ RÁFAGA (kn)','🧭 DIRECCIÓN','⛵ NOMBRE','🌊 OLA','🌊 DIR.','☁️ TIEMPO','☔ PRECIP.','BFT'].map(th => (
+                {['HORA','🌡️ AIRE','💧 AGUA','💨 VIENTO (kn)','⚡ RÁFAGA (kn)','🧭 DIRECCIÓN','⛵ NOMBRE','🌊 OLA','🌊 DIR.','☁️ TIEMPO','☔ PRECIP.','BFT'].map(th => (
                   <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {!h || dayIdxs.length === 0 ? (
-                <tr><td colSpan={14} className="py-7 text-center text-sm text-muted-foreground">Sin datos — introduce una ubicación y pulsa Buscar</td></tr>
+                <tr><td colSpan={12} className="py-7 text-center text-sm text-muted-foreground">Sin datos — introduce una ubicación y pulsa Buscar</td></tr>
               ) : dayIdxs.map((idx, ri) => {
                 const ws = h.wind_speed_10m[idx] || 0;
                 const wd = h.wind_direction_10m[idx] || 0;
@@ -232,17 +235,14 @@ export default function Index() {
                 const isCur = ri === curRow;
 
                 const knots = Math.round(kmhToKnots(ws));
-                const rowStyle = windRowStyle(knots);
+                const rowStyle = windRowStyle(knots, settings.minWindKn);
 
                 return (
                   <tr key={idx} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
-                    <td className={`py-2 pl-3.5 text-left text-[0.68rem] text-muted-foreground ${isCur ? 'border-l-2 border-primary' : ''}`}>{isCur ? '▶ ' : ''}{hour}</td>
                     <td className={`py-2 pl-3.5 text-left text-[0.68rem] ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
                     <td className="text-center" style={{ color: rowStyle.color || undefined }}>{safeNum(temp, 1)}°</td>
                     <td className="text-center" style={{ color: rowStyle.color || '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
-                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{Math.round(ws)}</td>
-                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{Math.round(kmhToKnots(ws))}</td>
-                    <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(wg)}</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
                     <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.62rem]">{Math.round(wd)}°</span></td>
                     <td className="text-center text-[0.7rem]" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
@@ -276,7 +276,7 @@ export default function Index() {
             const hour = h.time[idx].slice(11, 16);
             const isCur = ri === curRow;
             const mobileKnots = Math.round(kmhToKnots(ws));
-            const mobileRowStyle = windRowStyle(mobileKnots);
+            const mobileRowStyle = windRowStyle(mobileKnots, settings.minWindKn);
 
             return (
               <div key={idx} className={`rounded-lg border p-3 ${isCur ? 'border-primary/50' : 'border-border'}`} style={{ backgroundColor: mobileRowStyle.backgroundColor || undefined, color: mobileRowStyle.color || undefined }}>
@@ -287,13 +287,11 @@ export default function Index() {
                 <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 text-[0.72rem]">
                   <div>
                     <span className="text-muted-foreground">💨 </span>
-                    <span className="font-semibold" style={{ color: windColor(ws) }}>{Math.round(ws)} km/h</span>
-                    <span className="text-muted-foreground"> / {Math.round(kmhToKnots(ws))} kn</span>
+                    <span className="font-semibold" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))} kn</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">⚡ </span>
-                    <span style={{ color: windColor(wg) }}>{Math.round(wg)} km/h</span>
-                    <span className="text-muted-foreground"> / {Math.round(kmhToKnots(wg))} kn</span>
+                    <span style={{ color: windColor(wg) }}>{Math.round(kmhToKnots(wg))} kn</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">🧭 </span>
@@ -377,7 +375,6 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; ma
   const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
   const [fromH, setFromH] = useState(hours[0] || '00:00');
   const [toH, setToH] = useState(hours[hours.length - 1] || '23:00');
-  const [emailOpen, setEmailOpen] = useState(false);
 
   const share = () => {
     const idxs = dayIdxs.filter(i => {
@@ -394,80 +391,28 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; ma
       const wi = windInfo(wd);
       const wh = mar?.hourly?.wave_height?.[idx] ?? null;
       const hr = h.time[idx].slice(11, 16);
-      msg += `⏰ *${hr}* — 💨 ${ws}km/h (${Math.round(kmhToKnots(ws))}kn) ⚡ráf.${wg}km/h (${Math.round(kmhToKnots(wg))}kn) 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '—'}\n`;
+      msg += `⏰ *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡ráf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '—'}\n`;
     }
     msg += `\n_WindRadar · Open-Meteo_`;
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
   };
 
   return (
-    <div className="mb-4">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Desde</label>
-          <select value={fromH} onChange={e => setFromH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-            {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Hasta</label>
-          <select value={toH} onChange={e => setToH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-            {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-          </select>
-        </div>
-        <ActionBtn onClick={share} emoji="📲">Compartir</ActionBtn>
-        <ActionBtn onClick={() => setEmailOpen(!emailOpen)} emoji="📧">Email</ActionBtn>
-        <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
-      </div>
-      <AnimatePresence>
-        {emailOpen && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="mt-3 overflow-hidden rounded-lg border border-border bg-card p-4">
-            <EmailPanel wx={wx} mar={mar} name={name} date={date} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function EmailPanel({ wx, mar, name, date }: { wx: WeatherData; mar: MarineData | null; name: string; date: string }) {
-  const [email, setEmail] = useState('');
-
-  const send = () => {
-    if (!email || !email.includes('@')) { alert('Introduce un email válido'); return; }
-    const h = wx.hourly;
-    const dayIdxs: number[] = [];
-    for (let i = 0; i < h.time.length; i++) {
-      if (h.time[i].slice(0, 10) === date) dayIdxs.push(i);
-    }
-    const sep = '────────────────────────────────────────────────────\n';
-    let body = `PREVISIÓN WINDRADAR\n${name}\n${humanDate(date)}\n${sep}\nHORA   VIENTO     NUDOS    RÁFAGA     NUDOS    DIRECCIÓN                OLA    TEMP\n${sep}`;
-    for (const ii of dayIdxs) {
-      const ws = Math.round(h.wind_speed_10m[ii] || 0);
-      const wg = Math.round(h.wind_gusts_10m[ii] || 0);
-      const wi = windInfo(h.wind_direction_10m[ii] || 0);
-      const wh = mar?.hourly?.wave_height?.[ii] ?? null;
-      const t = h.temperature_2m[ii];
-      const hr = h.time[ii].slice(11, 16);
-      body += `${hr}   ${String(ws).padStart(5)} km/h ${String(Math.round(kmhToKnots(ws))).padStart(5)} kn   ${String(wg).padStart(5)} km/h ${String(Math.round(kmhToKnots(wg))).padStart(5)} kn   ${wi.full}  ${wh !== null ? wh.toFixed(1) + 'm' : '—'}    ${safeNum(t, 1)}°C\n`;
-    }
-    body += `\n${sep}Fuente: Open-Meteo API\nWindRadar`;
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(`WindRadar · ${name} · ${humanDate(date)}`)}&body=${encodeURIComponent(body)}`;
-  };
-
-  return (
     <>
-      <h3 className="mb-3 font-display text-sm text-primary">📧 REPORTES AUTOMÁTICOS DIARIOS</h3>
-      <div className="mb-2 flex flex-wrap items-end gap-2.5">
-        <div className="flex min-w-[160px] flex-1 flex-col gap-1">
-          <label className="text-[0.62rem] uppercase tracking-widest text-muted-foreground">Tu email</label>
-          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="tu@email.com" className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
-        </div>
-        <button onClick={send} className="rounded-lg bg-primary px-4 py-2 font-display text-[0.78rem] font-bold text-primary-foreground transition-all hover:brightness-110">Generar informe</button>
+      <div className="flex flex-col gap-1">
+        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Desde</label>
+        <select value={fromH} onChange={e => setFromH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+          {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+        </select>
       </div>
-      <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
-        <strong className="text-primary">ℹ️ Cómo funciona:</strong> Al pulsar "Generar informe" se abre tu cliente de correo con el resumen meteorológico completo.
+      <div className="flex flex-col gap-1">
+        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Hasta</label>
+        <select value={toH} onChange={e => setToH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+          {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+        </select>
       </div>
+      <ActionBtn onClick={share} emoji="📲">Compartir</ActionBtn>
+      <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
     </>
   );
 }
