@@ -4,6 +4,7 @@ import { ThemeSelector } from '@/components/ThemeSelector';
 import { WindRose } from '@/components/WindRose';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
+import { WindCompareChart } from '@/components/WindCompareChart';
 import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import {
   type WeatherData, type MarineData,
@@ -358,6 +359,9 @@ export default function Index() {
             <SectionTitle>Gráficos — próximas 48h</SectionTitle>
             <div className="mb-6 grid grid-cols-1 gap-3.5 md:grid-cols-2">
               <WindCharts wx={wx} mar={mar} />
+              {lat !== null && lon !== null && (
+                <WindCompareChart lat={lat} lon={lon} />
+              )}
             </div>
           </>
         )}
