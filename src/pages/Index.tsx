@@ -359,6 +359,9 @@ export default function Index() {
             <SectionTitle>Gráficos — próximas 48h</SectionTitle>
             <div className="mb-6 grid grid-cols-1 gap-3.5 md:grid-cols-2">
               <WindCharts wx={wx} mar={mar} />
+              {lat !== null && lon !== null && (
+                <WindCompareChart lat={lat} lon={lon} />
+              )}
             </div>
           </>
         )}
