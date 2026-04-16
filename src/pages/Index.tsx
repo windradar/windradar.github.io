@@ -4,6 +4,7 @@ import { ThemeSelector } from '@/components/ThemeSelector';
 import { WindRose } from '@/components/WindRose';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
+import { WindCompareChart } from '@/components/WindCompareChart';
 import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import {
   type WeatherData, type MarineData,
