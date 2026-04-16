@@ -165,8 +165,9 @@ export default function Index() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-2xl">
         <div className="mx-auto max-w-[1300px] px-3 py-2.5 sm:px-5">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex-shrink-0 font-display text-lg font-extrabold tracking-tight sm:text-xl">
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">🌬️ WindRadar</span>
+            <div className="flex-shrink-0 flex items-center gap-1.5">
+              <img src={logoFlow} alt="WindFlowRadar" className="h-8 w-8 rounded-full sm:h-9 sm:w-9" />
+              <span className="font-display text-base font-extrabold tracking-tight sm:text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">WindFlowRadar</span>
             </div>
             <div className="hidden min-w-0 flex-1 sm:block">
               <SearchWithSuggestions onSelect={doSearch} />
@@ -174,9 +175,9 @@ export default function Index() {
             <input
               type="date"
               value={date}
-              min={today}
+              min={minDate}
               max={maxDate}
-              onChange={e => setDate(e.target.value)}
+              onChange={e => handleDateChange(e.target.value)}
               className="rounded-lg border border-border bg-secondary px-2 py-2 font-mono text-xs text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
             />
             <ThemeSelector />
@@ -242,7 +243,7 @@ export default function Index() {
 
         {/* Desktop table */}
         <div className="mb-6 hidden overflow-x-auto rounded-lg border border-border md:block">
-          <table className="w-full min-w-[850px] border-collapse font-mono text-[0.76rem]">
+          <table className="w-full min-w-[850px] border-collapse font-mono text-[0.88rem]">
             <thead>
               <tr className="bg-secondary">
                 {['HORA','🌡️ AIRE','💧 AGUA','💨 VIENTO (kn)','⚡ RÁFAGA (kn)','🧭 DIRECCIÓN','⛵ NOMBRE','🌊 OLA','🌊 DIR.','☁️ TIEMPO','☔ PRECIP.','BFT'].map(th => (
@@ -274,18 +275,18 @@ export default function Index() {
 
                 return (
                   <tr key={idx} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
-                    <td className={`py-2 pl-3.5 text-left text-[0.68rem] ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
+                    <td className={`py-2.5 pl-3.5 text-left ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
                     <td className="text-center" style={{ color: rowStyle.color || undefined }}>{safeNum(temp, 1)}°</td>
-                    <td className="text-center" style={{ color: rowStyle.color || '#4dd9ff' }}>{safeNum(sst, 1)}°</td>
-                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
-                    <td className="text-center" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
-                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.62rem]">{Math.round(wd)}°</span></td>
-                    <td className="text-center text-[0.7rem]" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
-                    <td className="text-center" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
-                    <td className="text-center text-[0.68rem]" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{wdir2}</td>
-                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.65rem]">{WX_DESC[code] || ''}</span></td>
+                    <td className="text-center font-medium" style={{ color: rowStyle.color || '#0ea5e9' }}>{safeNum(sst, 1)}°</td>
+                    <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.72rem]">{Math.round(wd)}°</span></td>
+                    <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
+                    <td className="text-center font-medium" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{wdir2}</td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.75rem]">{WX_DESC[code] || ''}</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || (prec > 0.5 ? '#4dd9ff' : undefined) }}>{prec.toFixed(1)}</td>
-                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}><span className="font-bold">{b[0]}</span> <span className="text-[0.65rem]">{b[1]}</span></td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}><span className="font-bold">{b[0]}</span> <span className="text-[0.75rem]">{b[1]}</span></td>
                   </tr>
                 );
               })}
@@ -319,27 +320,27 @@ export default function Index() {
                   <span className="font-display text-sm font-bold text-foreground">{isCur ? '▶ ' : ''}{hour}</span>
                   <span className="text-lg">{WX_ICON[code] || ''}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 text-[0.72rem]">
+                <div className="grid grid-cols-3 gap-x-3 gap-y-2 text-[0.82rem]">
                   <div>
-                    <span className="text-muted-foreground">💨 </span>
-                    <span className="font-semibold" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))} kn</span>
+                    <span className="text-muted-foreground text-[0.7rem]">💨 </span>
+                    <span className="font-bold text-[0.9rem]" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))} kn</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">⚡ </span>
-                    <span style={{ color: windColor(wg) }}>{Math.round(kmhToKnots(wg))} kn</span>
+                    <span className="text-muted-foreground text-[0.7rem]">⚡ </span>
+                    <span className="font-semibold text-[0.9rem]" style={{ color: windColor(wg) }}>{Math.round(kmhToKnots(wg))} kn</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">🧭 </span>
-                    <span>{dirArrow(wd)} {wi.short}</span>
+                    <span className="text-muted-foreground text-[0.7rem]">🧭 </span>
+                    <span className="font-medium">{dirArrow(wd)} {wi.short}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">🌊 </span>
-                    <span style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</span>
+                    <span className="text-muted-foreground text-[0.7rem]">🌊 </span>
+                    <span className="font-medium" style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">🌡️ </span>
+                    <span className="text-muted-foreground text-[0.7rem]">🌡️ </span>
                     <span>{safeNum(temp, 1)}°</span>
-                    {sst !== null && <span className="text-muted-foreground"> / {safeNum(sst, 1)}°</span>}
+                    {sst !== null && <span className="font-medium" style={{ color: '#0ea5e9' }}> / {safeNum(sst, 1)}°</span>}
                   </div>
                   <div>
                     <span className="font-bold" style={{ color: windColor(ws) }}>BFT {b[0]}</span>
@@ -363,6 +364,7 @@ export default function Index() {
 
         <div className="pb-4 text-center text-[0.6rem] tracking-wider text-muted-foreground sm:text-[0.65rem]">
           Open-Meteo API · GFS + ECMWF · Copernicus Marine · Sin API key · Datos gratuitos
+          {apiUpdateTime && <span className="ml-2">· 🕐 {apiUpdateTime}</span>}
         </div>
       </main>
     </div>
