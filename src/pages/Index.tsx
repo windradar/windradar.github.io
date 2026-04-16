@@ -12,11 +12,12 @@ import {
   addToSearchHistory,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
+import logoFlow from '@/assets/logo-flow.png';
 
 export default function Index() {
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
-  const [name, setName] = useState('WindRadar');
+  const [name, setName] = useState('WindFlowRadar');
   const [date, setDate] = useState(localDateStr(new Date()));
   const [wx, setWx] = useState<WeatherData | null>(null);
   const [mar, setMar] = useState<MarineData | null>(null);
@@ -24,14 +25,27 @@ export default function Index() {
   const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState('');
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
+  const [apiUpdateTime, setApiUpdateTime] = useState<string | null>(null);
 
   const today = localDateStr(new Date());
+  const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
 
-  const fetchWeather = useCallback(async (latitude: number, longitude: number) => {
+  const fetchWeather = useCallback(async (latitude: number, longitude: number, selectedDate?: string) => {
     setLoadingText('Descargando previsión meteorológica...');
-    const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
-    const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
+    const targetDate = selectedDate || localDateStr(new Date());
+    const isPast = targetDate < localDateStr(new Date());
+
+    let wxUrl: string;
+    let marUrl: string;
+
+    if (isPast) {
+      wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+    } else {
+      wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
+      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
+    }
 
     const [wxRes, marRes] = await Promise.all([
       fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
@@ -39,6 +53,12 @@ export default function Index() {
     ]);
 
     if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
+
+    // Extract API generation time
+    const genTime = wxRes.generationtime_ms;
+    const updateStr = genTime ? `Generado en ${genTime.toFixed(0)}ms` : null;
+    setApiUpdateTime(updateStr);
+
     setWx(wxRes);
     setMar(marRes);
     setLoading(false);
@@ -52,12 +72,27 @@ export default function Index() {
       setLon(searchLon);
       setName(searchName);
       addToSearchHistory({ name: searchName, lat: searchLat, lon: searchLon });
-      await fetchWeather(searchLat, searchLon);
+      await fetchWeather(searchLat, searchLon, date);
     } catch (e: any) {
       setLoading(false);
       setError('Error: ' + e.message);
     }
-  }, [fetchWeather]);
+  }, [fetchWeather, date]);
+
+  // Reload data when date changes and we have coordinates
+  const handleDateChange = useCallback(async (newDate: string) => {
+    setDate(newDate);
+    if (lat !== null && lon !== null) {
+      setError('');
+      setLoading(true);
+      try {
+        await fetchWeather(lat, lon, newDate);
+      } catch (e: any) {
+        setLoading(false);
+        setError('Error: ' + e.message);
+      }
+    }
+  }, [lat, lon, fetchWeather]);
 
   // Compute table data
   const h = wx?.hourly;
