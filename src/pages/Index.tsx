@@ -420,7 +420,7 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; ma
     });
     if (!idxs.length) return;
 
-    let msg = `🌬️ *WindRadar – ${name}*\n📅 ${humanDate(date)} (${fromH}–${toH})\n\n`;
+    let msg = `🌬️ *WindFlowRadar – ${name}*\n📅 ${humanDate(date)} (${fromH}–${toH})\n\n`;
     for (const idx of idxs) {
       const ws = Math.round(h.wind_speed_10m[idx] || 0);
       const wg = Math.round(h.wind_gusts_10m[idx] || 0);
@@ -430,7 +430,7 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; ma
       const hr = h.time[idx].slice(11, 16);
       msg += `⏰ *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡ráf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '—'}\n`;
     }
-    msg += `\n_WindRadar · Open-Meteo_`;
+    msg += `\n_WindFlowRadar · Open-Meteo_`;
     window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
   };
 
