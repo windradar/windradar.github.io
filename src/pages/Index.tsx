@@ -6,6 +6,7 @@ import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
 import { WindCompareChart } from '@/components/WindCompareChart';
 import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
+import { UserMenu } from '@/components/UserMenu';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
@@ -182,6 +183,7 @@ export default function Index() {
               className="rounded-lg border border-border bg-secondary px-2 py-2 font-mono text-xs text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
             />
             <ThemeSelector />
+            <UserMenu />
           </div>
           <div className="mt-2 sm:hidden">
             <SearchWithSuggestions onSelect={doSearch} />
