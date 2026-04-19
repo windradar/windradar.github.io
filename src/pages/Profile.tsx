@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
+import MaterialsManager from '@/components/MaterialsManager';
 
 const passwordSchema = z.string()
   .min(10, 'Mínimo 10 caracteres')
@@ -109,6 +110,14 @@ export default function Profile() {
               </button>
             </div>
           </div>
+        </section>
+
+        <section className="mb-6 rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-1 font-display text-sm font-bold uppercase tracking-wider">🛠️ Materiales</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión.
+          </p>
+          <MaterialsManager />
         </section>
       </div>
     </div>
