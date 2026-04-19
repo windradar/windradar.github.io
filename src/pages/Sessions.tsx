@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink, Pencil, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -45,6 +45,7 @@ export default function Sessions() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null); // null = nueva, id = editando
 
   // form state
   const [date, setDate] = useState(localDateStr(new Date()));
@@ -59,6 +60,9 @@ export default function Sessions() {
   const [trackingUrl, setTrackingUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // tracking de "ubicación/fecha/hora cambiadas desde la carga" para auto-invalidar snapshot al editar
+  const [origKey, setOrigKey] = useState<string>('');
 
   const loadSessions = useCallback(async () => {
     if (!user) return;
@@ -83,11 +87,9 @@ export default function Sessions() {
     try {
       const today = localDateStr(new Date());
       const isPast = date < today;
-      const isFuture = date > today;
-      const inForecast = !isPast || (today.localeCompare(date) <= 7);
 
       let url: string;
-      if (isFuture || date === today) {
+      if (!isPast) {
         url = `https://api.open-meteo.com/v1/forecast?latitude=${locLat}&longitude=${locLon}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&start_date=${date}&end_date=${date}`;
       } else {
         url = `https://archive-api.open-meteo.com/v1/archive?latitude=${locLat}&longitude=${locLon}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&start_date=${date}&end_date=${date}`;
@@ -119,6 +121,8 @@ export default function Sessions() {
       }
       if (!snap.length) throw new Error('No hay datos para ese rango horario');
       setSnapshot(snap);
+      // actualizar origKey al refrescar manualmente
+      setOrigKey(`${date}|${startH}|${endH}|${locLat}|${locLon}`);
       toast.success(`${snap.length} h cargadas`);
     } catch (e: any) {
       toast.error(e.message || 'Error cargando datos');
@@ -128,11 +132,49 @@ export default function Sessions() {
     }
   }, [locLat, locLon, date, startH, endH]);
 
+  // Auto-invalidar snapshot cuando cambian fecha/hora/ubicación respecto al origen
+  useEffect(() => {
+    if (!showForm || !origKey) return;
+    const currentKey = `${date}|${startH}|${endH}|${locLat}|${locLon}`;
+    if (currentKey !== origKey && snapshot) {
+      setSnapshot(null);
+      toast.info('Datos meteo descartados: pulsa "Cargar datos" para actualizar.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, startH, endH, locLat, locLon]);
+
   const resetForm = () => {
     setDate(localDateStr(new Date())); setStartH('10:00'); setEndH('13:00');
     setLocName(''); setLocLat(null); setLocLon(null); setSnapshot(null);
     setMaterials({ 1: '', 2: '', 3: '', 4: '' });
     setTrackingUrl(''); setNotes('');
+    setEditingId(null);
+    setOrigKey('');
+  };
+
+  const openNewForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const openEditForm = (s: Session) => {
+    setEditingId(s.id);
+    setDate(s.session_date);
+    setStartH(s.start_time);
+    setEndH(s.end_time);
+    setLocName(s.location_name || '');
+    setLocLat(s.location_lat);
+    setLocLon(s.location_lon);
+    setSnapshot(Array.isArray(s.weather_snapshot) ? s.weather_snapshot : null);
+    setMaterials({
+      1: s.material_1 || '', 2: s.material_2 || '',
+      3: s.material_3 || '', 4: s.material_4 || '',
+    });
+    setTrackingUrl(s.tracking_url || '');
+    setNotes(s.notes || '');
+    setOrigKey(`${s.session_date}|${s.start_time}|${s.end_time}|${s.location_lat}|${s.location_lon}`);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const saveSession = async () => {
@@ -145,9 +187,7 @@ export default function Sessions() {
       if (!u.success) { toast.error('URL de tracking no válida'); return; }
     }
 
-    setSaving(true);
-    const { error } = await supabase.from('training_sessions').insert({
-      user_id: user.id,
+    const payload = {
       session_date: date,
       start_time: startH,
       end_time: endH,
@@ -161,11 +201,19 @@ export default function Sessions() {
       material_4: materials[4]?.trim() || null,
       tracking_url: trackingUrl.trim() || null,
       notes: notes.trim() || null,
-    });
+    };
+
+    setSaving(true);
+    let error;
+    if (editingId) {
+      ({ error } = await supabase.from('training_sessions').update(payload).eq('id', editingId));
+    } else {
+      ({ error } = await supabase.from('training_sessions').insert({ user_id: user.id, ...payload }));
+    }
     setSaving(false);
 
     if (error) { toast.error(error.message); return; }
-    toast.success('Sesión guardada');
+    toast.success(editingId ? 'Sesión actualizada' : 'Sesión guardada');
     resetForm();
     setShowForm(false);
     loadSessions();
@@ -188,21 +236,24 @@ export default function Sessions() {
 
         <div className="mb-6 flex items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold">⛵ Sesiones</h1>
-          <button onClick={() => setShowForm(s => !s)}
+          <button
+            onClick={() => showForm ? (resetForm(), setShowForm(false)) : openNewForm()}
             className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110">
-            <Plus size={16} /> {showForm ? 'Cerrar' : 'Nueva'}
+            {showForm ? <><X size={16} /> Cerrar</> : <><Plus size={16} /> Nueva</>}
           </button>
         </div>
 
         {showForm && (
           <section className="mb-6 rounded-xl border border-primary/30 bg-card p-5">
-            <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-wider">Registrar sesión</h2>
+            <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-wider">
+              {editingId ? '✏️ Editar sesión' : 'Registrar sesión'}
+            </h2>
 
             <div className="space-y-4">
               {/* Location search */}
               <div>
                 <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Ubicación</label>
-                <SearchWithSuggestions onSelect={(name, lat, lon) => { setLocName(name); setLocLat(lat); setLocLon(lon); setSnapshot(null); }} />
+                <SearchWithSuggestions onSelect={(name, lat, lon) => { setLocName(name); setLocLat(lat); setLocLon(lon); }} />
                 {locName && <p className="mt-1 text-xs text-primary">📍 {locName}</p>}
               </div>
 
@@ -210,19 +261,19 @@ export default function Sessions() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Fecha</label>
-                  <input type="date" value={date} onChange={e => { setDate(e.target.value); setSnapshot(null); }}
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary" />
                 </div>
                 <div>
                   <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Inicio</label>
-                  <select value={startH} onChange={e => { setStartH(e.target.value); setSnapshot(null); }}
+                  <select value={startH} onChange={e => setStartH(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary">
                     {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Fin</label>
-                  <select value={endH} onChange={e => { setEndH(e.target.value); setSnapshot(null); }}
+                  <select value={endH} onChange={e => setEndH(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary">
                     {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
@@ -231,7 +282,7 @@ export default function Sessions() {
 
               <button onClick={fetchWeatherSnapshot} disabled={loadingSnap || !locLat}
                 className="w-full rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20 disabled:opacity-50">
-                {loadingSnap ? 'Cargando...' : '🌬️ Cargar datos meteo del rango'}
+                {loadingSnap ? 'Cargando...' : snapshot ? '🔄 Recargar datos meteo' : '🌬️ Cargar datos meteo del rango'}
               </button>
 
               {snapshot && (
@@ -269,10 +320,18 @@ export default function Sessions() {
                   className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
               </div>
 
-              <button onClick={saveSession} disabled={saving}
-                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
-                {saving ? 'Guardando...' : 'Guardar sesión'}
-              </button>
+              <div className="flex gap-2">
+                <button onClick={saveSession} disabled={saving}
+                  className="flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
+                  {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Guardar sesión'}
+                </button>
+                {editingId && (
+                  <button onClick={() => { resetForm(); setShowForm(false); }}
+                    className="rounded-md border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary">
+                    Cancelar
+                  </button>
+                )}
+              </div>
             </div>
           </section>
         )}
@@ -290,7 +349,7 @@ export default function Sessions() {
           ) : (
             <div className="space-y-3">
               {sessions.map(s => (
-                <div key={s.id} className="rounded-lg border border-border bg-card p-4">
+                <div key={s.id} className={`rounded-lg border bg-card p-4 ${editingId === s.id ? 'border-primary' : 'border-border'}`}>
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-display text-sm font-bold">{s.location_name || 'Sin ubicación'}</h3>
@@ -298,10 +357,18 @@ export default function Sessions() {
                         {humanDate(s.session_date)} · {s.start_time}–{s.end_time}
                       </p>
                     </div>
-                    <button onClick={() => deleteSession(s.id)}
-                      className="text-muted-foreground hover:text-destructive">
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => openEditForm(s)}
+                        title="Editar"
+                        className="text-muted-foreground hover:text-primary">
+                        <Pencil size={15} />
+                      </button>
+                      <button onClick={() => deleteSession(s.id)}
+                        title="Eliminar"
+                        className="text-muted-foreground hover:text-destructive">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
 
                   {s.weather_snapshot && Array.isArray(s.weather_snapshot) && s.weather_snapshot.length > 0 && (
