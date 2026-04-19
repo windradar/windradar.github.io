@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/weather-helpers';
+import MaterialSelect from '@/components/MaterialSelect';
 
 interface Snapshot {
   hour: string;
@@ -54,8 +55,7 @@ export default function Sessions() {
   const [locLon, setLocLon] = useState<number | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot[] | null>(null);
   const [loadingSnap, setLoadingSnap] = useState(false);
-  const [m1, setM1] = useState(''); const [m2, setM2] = useState('');
-  const [m3, setM3] = useState(''); const [m4, setM4] = useState('');
+  const [materials, setMaterials] = useState<Record<number, string>>({ 1: '', 2: '', 3: '', 4: '' });
   const [trackingUrl, setTrackingUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -131,7 +131,8 @@ export default function Sessions() {
   const resetForm = () => {
     setDate(localDateStr(new Date())); setStartH('10:00'); setEndH('13:00');
     setLocName(''); setLocLat(null); setLocLon(null); setSnapshot(null);
-    setM1(''); setM2(''); setM3(''); setM4(''); setTrackingUrl(''); setNotes('');
+    setMaterials({ 1: '', 2: '', 3: '', 4: '' });
+    setTrackingUrl(''); setNotes('');
   };
 
   const saveSession = async () => {
@@ -154,10 +155,10 @@ export default function Sessions() {
       location_lat: locLat,
       location_lon: locLon,
       weather_snapshot: snapshot as any,
-      material_1: m1.trim() || null,
-      material_2: m2.trim() || null,
-      material_3: m3.trim() || null,
-      material_4: m4.trim() || null,
+      material_1: materials[1]?.trim() || null,
+      material_2: materials[2]?.trim() || null,
+      material_3: materials[3]?.trim() || null,
+      material_4: materials[4]?.trim() || null,
       tracking_url: trackingUrl.trim() || null,
       notes: notes.trim() || null,
     });
@@ -250,16 +251,10 @@ export default function Sessions() {
               {/* Material */}
               <div>
                 <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-2">Material utilizado</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={m1} onChange={e => setM1(e.target.value)} placeholder="Material 1 (ej: Tabla 130L)" maxLength={100}
-                    className="rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-                  <input value={m2} onChange={e => setM2(e.target.value)} placeholder="Material 2 (ej: Vela 6.5)" maxLength={100}
-                    className="rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-                  <input value={m3} onChange={e => setM3(e.target.value)} placeholder="Material 3 (ej: Aleta 32)" maxLength={100}
-                    className="rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-                  <input value={m4} onChange={e => setM4(e.target.value)} placeholder="Material 4 (ej: Arnés)" maxLength={100}
-                    className="rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-                </div>
+                <MaterialSelect
+                  values={materials}
+                  onChange={(slot, value) => setMaterials(m => ({ ...m, [slot]: value }))}
+                />
               </div>
 
               <div>
