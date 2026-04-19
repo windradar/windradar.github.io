@@ -73,6 +73,7 @@ export default function MaterialSelect({ values, onChange }: Props) {
           const cat = cats.find(c => c.slot === slot);
           const catItems = cat ? items.filter(i => i.category_id === cat.id) : [];
           const label = cat?.name || DEFAULT_NAMES[slot - 1];
+          const selectedItem = catItems.find(it => it.name === values[slot]);
           return (
             <div key={slot}>
               <label className="mb-1 flex items-center gap-2">
@@ -80,12 +81,22 @@ export default function MaterialSelect({ values, onChange }: Props) {
                   {label}
                 </span>
               </label>
-              <div className="flex gap-1">
+              <div className="flex items-stretch gap-1">
+                {selectedItem?.photo_url && (
+                  <img
+                    src={selectedItem.photo_url}
+                    alt={selectedItem.name}
+                    className="h-auto w-10 rounded-md border border-border object-cover"
+                    loading="lazy"
+                  />
+                )}
                 <select value={values[slot] || ''} onChange={e => onChange(slot, e.target.value)}
                   className="flex-1 rounded-md border border-border bg-secondary px-2 py-2 text-sm outline-none focus:border-primary">
                   <option value="">— ninguno —</option>
                   {catItems.map(it => (
-                    <option key={it.id} value={it.name}>{it.name}</option>
+                    <option key={it.id} value={it.name}>
+                      {it.photo_url ? '🖼️ ' : ''}{it.name}
+                    </option>
                   ))}
                 </select>
                 <button type="button" onClick={() => { setDialogSlot(slot); setNewItemName(''); }}

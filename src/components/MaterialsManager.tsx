@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react';
+import MaterialPhoto from './MaterialPhoto';
 
 export interface MaterialCategory {
   id: string;
@@ -13,6 +14,7 @@ export interface MaterialItem {
   id: string;
   category_id: string;
   name: string;
+  photo_url?: string | null;
 }
 
 const DEFAULT_NAMES = ['Tabla', 'Vela', 'Aleta', 'Otro'];
@@ -91,9 +93,21 @@ export default function MaterialsManager() {
   };
 
   const deleteItem = async (id: string) => {
+    const it = items.find(x => x.id === id);
+    if (it?.photo_url) {
+      const marker = '/material-photos/';
+      const idx = it.photo_url.indexOf(marker);
+      if (idx !== -1) {
+        await supabase.storage.from('material-photos').remove([it.photo_url.slice(idx + marker.length)]);
+      }
+    }
     const { error } = await supabase.from('material_items').delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
     setItems(is => is.filter(x => x.id !== id));
+  };
+
+  const updateItemPhoto = (id: string, newUrl: string | null) => {
+    setItems(is => is.map(x => x.id === id ? { ...x, photo_url: newUrl } : x));
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Cargando materiales...</p>;
@@ -134,22 +148,24 @@ export default function MaterialsManager() {
               )}
             </div>
 
-            {cat && (
-              <>
-                {catItems.length > 0 && (
-                  <ul className="mb-2 flex flex-wrap gap-1.5">
-                    {catItems.map(it => (
-                      <li key={it.id} className="group flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs">
-                        {it.name}
-                        <button onClick={() => deleteItem(it.id)}
-                          className="text-muted-foreground hover:text-destructive">
-                          <Trash2 size={11} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
+            {cat && catItems.length > 0 && (
+              <ul className="mb-2 space-y-1.5">
+                {catItems.map(it => (
+                  <li key={it.id} className="group flex items-center gap-2 rounded-md border border-border bg-background p-2 text-xs">
+                    <MaterialPhoto
+                      itemId={it.id}
+                      photoUrl={it.photo_url || null}
+                      onUpdated={(url) => updateItemPhoto(it.id, url)}
+                      size="sm"
+                    />
+                    <span className="flex-1 font-medium">{it.name}</span>
+                    <button onClick={() => deleteItem(it.id)}
+                      className="text-muted-foreground hover:text-destructive">
+                      <Trash2 size={12} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
 
             <div className="flex gap-1">
