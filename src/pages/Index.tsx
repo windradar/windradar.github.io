@@ -7,6 +7,7 @@ import { WindCharts } from '@/components/WindCharts';
 import { WindCompareChart } from '@/components/WindCompareChart';
 import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import { UserMenu } from '@/components/UserMenu';
+import { LegalFooter } from '@/components/LegalFooter';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
@@ -373,6 +374,7 @@ export default function Index() {
           {apiUpdateTime && <span className="ml-2">· 🕐 {apiUpdateTime}</span>}
         </div>
       </main>
+      <LegalFooter />
     </div>
   );
 }
