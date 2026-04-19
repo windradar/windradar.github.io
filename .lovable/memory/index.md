@@ -18,5 +18,8 @@ Progressive heatmap (yellow-red) for wind intensity based on user threshold.
 - [Wind Intensity Heatmap](mem://features/wind-intensity-heatmap) — Progressive color coding (yellow to red) based on a configurable knot threshold
 - [Forecast Sharing Range](mem://features/sharing-range) — Share forecast summaries for specific time ranges
 - [Settings Panel](mem://features/settings-system) — Centralized settings for heatmap threshold, visible hours, and email reports
+- [Auth & Sessions](mem://features/auth-and-sessions) — Email/password auth, profile, training sessions CRUD with weather snapshot and edit support
+- [Materials Catalog](mem://features/materials-catalog) — 4-slot material catalog with custom names, items per category, optional photos
+- [Legal Compliance](mem://features/legal-compliance) — Cookie banner with granular consent (EU/UK/CA), legal pages, conditional AdSense loading
 - [Auth and Sessions](mem://features/auth-and-sessions) — Email/password auth, profiles, training_sessions with weather snapshot
 - [Materials Catalog](mem://features/materials-catalog) — Per-user customizable material categories and items used as dropdowns in sessions
