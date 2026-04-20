@@ -7,11 +7,11 @@ export default function Notice() {
 
       <h2>1. Datos del titular</h2>
       <ul>
-        <li><strong>Titular:</strong> [TU NOMBRE O RAZÓN SOCIAL]</li>
-        <li><strong>NIF / CIF:</strong> [TU NIF/CIF]</li>
-        <li><strong>Domicilio:</strong> [TU DIRECCIÓN POSTAL]</li>
-        <li><strong>País:</strong> [TU PAÍS]</li>
-        <li><strong>Email de contacto:</strong> [TU EMAIL]</li>
+        <li><strong>Titular:</strong> Juan M de Haroo</li>
+        <li><strong>NIF / CIF:</strong> 46674975V</li>
+        <li><strong>Domicilio:</strong> Sant Feliu de Llobregat</li>
+        <li><strong>País:</strong> España</li>
+        <li><strong>Email de contacto:</strong> juhabar@gmail.com</li>
         <li><strong>Sitio web:</strong> https://windradar.lovable.app</li>
       </ul>
 
