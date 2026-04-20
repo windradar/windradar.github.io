@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { WindRose } from '@/components/WindRose';
@@ -8,11 +8,14 @@ import { WindCompareChart } from '@/components/WindCompareChart';
 import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import { UserMenu } from '@/components/UserMenu';
 import { LegalFooter } from '@/components/LegalFooter';
+import { FavoritesButton } from '@/components/FavoritesButton';
+import { Star } from 'lucide-react';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
-  addToSearchHistory,
+  addToSearchHistory, getLastSearch, setLastSearch,
+  isFavorite, toggleFavorite,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
@@ -29,6 +32,8 @@ export default function Index() {
   const [error, setError] = useState('');
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
   const [apiUpdateTime, setApiUpdateTime] = useState<string | null>(null);
+  const [favKey, setFavKey] = useState(0);
+  const [isFav, setIsFav] = useState(false);
 
   const today = localDateStr(new Date());
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
@@ -75,12 +80,30 @@ export default function Index() {
       setLon(searchLon);
       setName(searchName);
       addToSearchHistory({ name: searchName, lat: searchLat, lon: searchLon });
+      setLastSearch({ name: searchName, lat: searchLat, lon: searchLon });
+      setIsFav(isFavorite(searchLat, searchLon));
       await fetchWeather(searchLat, searchLon, date);
     } catch (e: any) {
       setLoading(false);
       setError('Error: ' + e.message);
     }
   }, [fetchWeather, date]);
+
+  // Auto-load last search on mount
+  useEffect(() => {
+    const last = getLastSearch();
+    if (last) {
+      doSearch(last.name, last.lat, last.lon);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleToggleFav = useCallback(() => {
+    if (lat === null || lon === null) return;
+    const nowFav = toggleFavorite({ name, lat, lon });
+    setIsFav(nowFav);
+    setFavKey(k => k + 1);
+  }, [lat, lon, name]);
 
   // Reload data when date changes and we have coordinates
   const handleDateChange = useCallback(async (newDate: string) => {
@@ -170,23 +193,24 @@ export default function Index() {
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex-shrink-0 flex items-center gap-1.5">
               <img src={logoFlow} alt="WindFlowRadar" className="h-8 w-8 rounded-full sm:h-9 sm:w-9" />
-              <span className="font-display text-base font-extrabold tracking-tight sm:text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">WindFlowRadar</span>
+              <span className="hidden md:inline font-display text-base font-extrabold tracking-tight sm:text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">WindFlowRadar</span>
             </div>
             <div className="hidden min-w-0 flex-1 sm:block">
               <SearchWithSuggestions onSelect={doSearch} />
             </div>
+            <FavoritesButton onSelect={doSearch} refreshKey={favKey} />
             <input
               type="date"
               value={date}
               min={minDate}
               max={maxDate}
               onChange={e => handleDateChange(e.target.value)}
-              className="rounded-lg border border-border bg-secondary px-2 py-2 font-mono text-xs text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
+              className="min-w-0 max-w-[130px] flex-shrink rounded-lg border border-border bg-secondary px-1.5 py-2 font-mono text-[0.7rem] text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
             />
             <ThemeSelector />
             <UserMenu />
           </div>
-          <div className="mt-2 sm:hidden">
+          <div className="mt-2 flex items-center gap-2 sm:hidden">
             <SearchWithSuggestions onSelect={doSearch} />
           </div>
         </div>
@@ -197,6 +221,16 @@ export default function Index() {
         {/* Location bar */}
         <div className="mb-4 flex flex-wrap items-baseline gap-2 sm:gap-3">
           <h1 className="font-display text-xl font-extrabold tracking-tight sm:text-2xl md:text-3xl">{name}</h1>
+          {lat !== null && (
+            <button
+              onClick={handleToggleFav}
+              aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              className={`self-center rounded-full p-1.5 transition-colors ${isFav ? 'text-accent hover:bg-accent/10' : 'text-muted-foreground hover:bg-secondary hover:text-accent'}`}
+            >
+              <Star className="h-4 w-4" fill={isFav ? 'currentColor' : 'none'} />
+            </button>
+          )}
           {lat !== null && (
             <span className="text-[0.65rem] text-muted-foreground sm:text-[0.7rem]">
               {lat.toFixed(4)}°N {Math.abs(lon!).toFixed(4)}°{lon! < 0 ? 'O' : 'E'}
