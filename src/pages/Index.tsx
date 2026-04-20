@@ -10,6 +10,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { LegalFooter } from '@/components/LegalFooter';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
