@@ -7,9 +7,9 @@ export default function Privacy() {
 
       <h2>1. Responsable del tratamiento</h2>
       <ul>
-        <li><strong>Titular:</strong> [TU NOMBRE O RAZÓN SOCIAL]</li>
-        <li><strong>Email DPO/contacto:</strong> [TU EMAIL]</li>
-        <li><strong>Dirección:</strong> [TU DIRECCIÓN POSTAL]</li>
+        <li><strong>Titular:</strong> Juan M de Haro</li>
+        <li><strong>Email DPO/contacto:</strong> juhabar@gmail.com</li>
+        <li><strong>Dirección:</strong> Sant Feliu de Llobregat</li>
       </ul>
 
       <h2>2. Datos que tratamos</h2>
