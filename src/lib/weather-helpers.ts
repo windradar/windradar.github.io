@@ -153,21 +153,30 @@ export function isFavorite(lat: number, lon: number): boolean {
 }
 
 export function toggleFavorite(item: Omit<FavoriteSpot, 'addedAt'>): boolean {
-  const favs = getFavorites();
-  const exists = favs.findIndex(f => Math.abs(f.lat - item.lat) < 1e-4 && Math.abs(f.lon - item.lon) < 1e-4);
-  if (exists >= 0) {
-    favs.splice(exists, 1);
-    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+  try {
+    const favs = getFavorites();
+    const exists = favs.findIndex(f => Math.abs(f.lat - item.lat) < 1e-4 && Math.abs(f.lon - item.lon) < 1e-4);
+    if (exists >= 0) {
+      favs.splice(exists, 1);
+      localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+      return false;
+    }
+    favs.unshift({ ...item, addedAt: Date.now() });
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 30)));
+    return true;
+  } catch (e) {
+    console.error('[favorites] toggle failed', e);
     return false;
   }
-  favs.unshift({ ...item, addedAt: Date.now() });
-  localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 30)));
-  return true;
 }
 
 export function removeFavorite(lat: number, lon: number) {
-  const favs = getFavorites().filter(f => !(Math.abs(f.lat - lat) < 1e-4 && Math.abs(f.lon - lon) < 1e-4));
-  localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+  try {
+    const favs = getFavorites().filter(f => !(Math.abs(f.lat - lat) < 1e-4 && Math.abs(f.lon - lon) < 1e-4));
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+  } catch (e) {
+    console.error('[favorites] remove failed', e);
+  }
 }
 
 // ===== LAST SEARCH =====

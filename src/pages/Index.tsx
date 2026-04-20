@@ -10,6 +10,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { LegalFooter } from '@/components/LegalFooter';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
@@ -103,6 +104,7 @@ export default function Index() {
     const nowFav = toggleFavorite({ name, lat, lon });
     setIsFav(nowFav);
     setFavKey(k => k + 1);
+    toast(nowFav ? `⭐ "${name}" añadido a favoritos` : `Eliminado "${name}" de favoritos`);
   }, [lat, lon, name]);
 
   // Reload data when date changes and we have coordinates
@@ -226,9 +228,10 @@ export default function Index() {
               onClick={handleToggleFav}
               aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
               title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-              className={`self-center rounded-full p-1.5 transition-colors ${isFav ? 'text-accent hover:bg-accent/10' : 'text-muted-foreground hover:bg-secondary hover:text-accent'}`}
+              className={`self-center inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[0.7rem] font-medium transition-colors ${isFav ? 'border-accent/40 bg-accent/10 text-accent hover:bg-accent/20' : 'border-border bg-secondary text-muted-foreground hover:border-accent/40 hover:text-accent'}`}
             >
-              <Star className="h-4 w-4" fill={isFav ? 'currentColor' : 'none'} />
+              <Star className="h-3.5 w-3.5" fill={isFav ? 'currentColor' : 'none'} />
+              <span>{isFav ? 'Favorito' : 'Añadir'}</span>
             </button>
           )}
           {lat !== null && (
