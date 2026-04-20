@@ -104,6 +104,7 @@ export default function Index() {
     const nowFav = toggleFavorite({ name, lat, lon });
     setIsFav(nowFav);
     setFavKey(k => k + 1);
+    toast(nowFav ? `⭐ "${name}" añadido a favoritos` : `Eliminado "${name}" de favoritos`);
   }, [lat, lon, name]);
 
   // Reload data when date changes and we have coordinates
