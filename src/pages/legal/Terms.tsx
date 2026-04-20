@@ -10,7 +10,7 @@ export default function Terms() {
       <ul>
         <li>Debes ser mayor de 16 años (UE) o 13 años (resto) para registrarte.</li>
         <li>Eres responsable de la confidencialidad de tu contraseña.</li>
-        <li>Notifica cualquier acceso no autorizado a <strong>[TU EMAIL]</strong>.</li>
+        <li>Notifica cualquier acceso no autorizado a <strong>juhabar@gmail.com</strong>.</li>
       </ul>
 
       <h2>3. Uso aceptable</h2>
