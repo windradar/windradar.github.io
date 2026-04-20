@@ -222,6 +222,16 @@ export default function Index() {
         <div className="mb-4 flex flex-wrap items-baseline gap-2 sm:gap-3">
           <h1 className="font-display text-xl font-extrabold tracking-tight sm:text-2xl md:text-3xl">{name}</h1>
           {lat !== null && (
+            <button
+              onClick={handleToggleFav}
+              aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              className={`self-center rounded-full p-1.5 transition-colors ${isFav ? 'text-accent hover:bg-accent/10' : 'text-muted-foreground hover:bg-secondary hover:text-accent'}`}
+            >
+              <Star className="h-4 w-4" fill={isFav ? 'currentColor' : 'none'} />
+            </button>
+          )}
+          {lat !== null && (
             <span className="text-[0.65rem] text-muted-foreground sm:text-[0.7rem]">
               {lat.toFixed(4)}°N {Math.abs(lon!).toFixed(4)}°{lon! < 0 ? 'O' : 'E'}
             </span>
