@@ -80,12 +80,30 @@ export default function Index() {
       setLon(searchLon);
       setName(searchName);
       addToSearchHistory({ name: searchName, lat: searchLat, lon: searchLon });
+      setLastSearch({ name: searchName, lat: searchLat, lon: searchLon });
+      setIsFav(isFavorite(searchLat, searchLon));
       await fetchWeather(searchLat, searchLon, date);
     } catch (e: any) {
       setLoading(false);
       setError('Error: ' + e.message);
     }
   }, [fetchWeather, date]);
+
+  // Auto-load last search on mount
+  useEffect(() => {
+    const last = getLastSearch();
+    if (last) {
+      doSearch(last.name, last.lat, last.lon);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleToggleFav = useCallback(() => {
+    if (lat === null || lon === null) return;
+    const nowFav = toggleFavorite({ name, lat, lon });
+    setIsFav(nowFav);
+    setFavKey(k => k + 1);
+  }, [lat, lon, name]);
 
   // Reload data when date changes and we have coordinates
   const handleDateChange = useCallback(async (newDate: string) => {
