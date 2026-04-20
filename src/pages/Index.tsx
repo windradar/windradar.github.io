@@ -193,23 +193,24 @@ export default function Index() {
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex-shrink-0 flex items-center gap-1.5">
               <img src={logoFlow} alt="WindFlowRadar" className="h-8 w-8 rounded-full sm:h-9 sm:w-9" />
-              <span className="font-display text-base font-extrabold tracking-tight sm:text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">WindFlowRadar</span>
+              <span className="hidden md:inline font-display text-base font-extrabold tracking-tight sm:text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">WindFlowRadar</span>
             </div>
             <div className="hidden min-w-0 flex-1 sm:block">
               <SearchWithSuggestions onSelect={doSearch} />
             </div>
+            <FavoritesButton onSelect={doSearch} refreshKey={favKey} />
             <input
               type="date"
               value={date}
               min={minDate}
               max={maxDate}
               onChange={e => handleDateChange(e.target.value)}
-              className="rounded-lg border border-border bg-secondary px-2 py-2 font-mono text-xs text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
+              className="min-w-0 max-w-[130px] flex-shrink rounded-lg border border-border bg-secondary px-1.5 py-2 font-mono text-[0.7rem] text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
             />
             <ThemeSelector />
             <UserMenu />
           </div>
-          <div className="mt-2 sm:hidden">
+          <div className="mt-2 flex items-center gap-2 sm:hidden">
             <SearchWithSuggestions onSelect={doSearch} />
           </div>
         </div>
