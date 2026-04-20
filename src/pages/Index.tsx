@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { WindRose } from '@/components/WindRose';
@@ -8,11 +8,14 @@ import { WindCompareChart } from '@/components/WindCompareChart';
 import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import { UserMenu } from '@/components/UserMenu';
 import { LegalFooter } from '@/components/LegalFooter';
+import { FavoritesButton } from '@/components/FavoritesButton';
+import { Star } from 'lucide-react';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
-  addToSearchHistory,
+  addToSearchHistory, getLastSearch, setLastSearch,
+  isFavorite, toggleFavorite,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
