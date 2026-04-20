@@ -32,6 +32,8 @@ export default function Index() {
   const [error, setError] = useState('');
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
   const [apiUpdateTime, setApiUpdateTime] = useState<string | null>(null);
+  const [favKey, setFavKey] = useState(0);
+  const [isFav, setIsFav] = useState(false);
 
   const today = localDateStr(new Date());
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
