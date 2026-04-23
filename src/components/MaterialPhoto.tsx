@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface Props {
   itemId: string;
@@ -18,6 +19,7 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [enlarged, setEnlarged] = useState(false);
   const dim = size === 'sm' ? 'h-10 w-10' : 'h-16 w-16';
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +40,6 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
       const { data: pub } = supabase.storage.from('material-photos').getPublicUrl(path);
       const newUrl = pub.publicUrl;
 
-      // delete old photo if any
       if (photoUrl) {
         const oldPath = extractPath(photoUrl);
         if (oldPath) await supabase.storage.from('material-photos').remove([oldPath]);
@@ -68,42 +69,67 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
   };
 
   return (
-    <div className={`relative ${dim} shrink-0 overflow-hidden rounded-md border border-border bg-secondary/40`}>
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFile} className="hidden" />
-      {photoUrl ? (
-        <>
-          <img src={photoUrl} alt="material" className="h-full w-full object-cover" loading="lazy" />
+    <>
+      <div className={`relative ${dim} shrink-0 overflow-hidden rounded-md border border-border bg-secondary/40`}>
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFile} className="hidden" />
+        {photoUrl ? (
+          <>
+            {/* Click anywhere on the photo to enlarge */}
+            <button
+              type="button"
+              onClick={() => setEnlarged(true)}
+              className="h-full w-full cursor-zoom-in"
+              title="Ver foto"
+            >
+              <img src={photoUrl} alt="material" className="h-full w-full object-cover" loading="lazy" />
+            </button>
+            {/* Delete – top-right corner, visible on group hover */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); removePhoto(); }}
+              className="absolute right-0 top-0 rounded-bl bg-background/80 p-0.5 text-destructive opacity-0 transition group-hover:opacity-100"
+              title="Eliminar foto"
+            >
+              <X size={10} />
+            </button>
+            {/* Change – bottom-right corner, visible on group hover */}
+            {!uploading && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+                className="absolute bottom-0 right-0 rounded-tl bg-background/80 p-0.5 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-primary"
+                title="Cambiar foto"
+              >
+                <ImagePlus size={10} />
+              </button>
+            )}
+          </>
+        ) : (
           <button
             type="button"
-            onClick={removePhoto}
-            className="absolute right-0 top-0 rounded-bl bg-background/80 p-0.5 text-destructive opacity-0 transition group-hover:opacity-100"
-            title="Eliminar foto"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary"
+            title="Subir foto"
           >
-            <X size={10} />
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
           </button>
-        </>
-      ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary"
-          title="Subir foto"
-        >
-          {uploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
-        </button>
+        )}
+      </div>
+
+      {photoUrl && (
+        <Dialog open={enlarged} onOpenChange={setEnlarged}>
+          <DialogContent className="max-w-2xl border-border bg-card p-2">
+            <DialogTitle className="sr-only">Foto del material</DialogTitle>
+            <img
+              src={photoUrl}
+              alt="material"
+              className="max-h-[85vh] w-full rounded object-contain"
+            />
+          </DialogContent>
+        </Dialog>
       )}
-      {photoUrl && !uploading && (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition hover:opacity-100"
-          title="Cambiar foto"
-        >
-          <ImagePlus size={14} />
-        </button>
-      )}
-    </div>
+    </>
   );
 }
 

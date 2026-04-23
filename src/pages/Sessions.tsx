@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/weather-helpers';
 import MaterialSelect from '@/components/MaterialSelect';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface Snapshot {
   hour: string;
@@ -46,6 +47,8 @@ export default function Sessions() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null); // null = nueva, id = editando
+  const [materialPhotos, setMaterialPhotos] = useState<Record<string, string>>({});
+  const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null);
 
   // form state
   const [date, setDate] = useState(localDateStr(new Date()));
@@ -75,6 +78,17 @@ export default function Sessions() {
   }, [user]);
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('material_items').select('name, photo_url').not('photo_url', 'is', null)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        for (const it of data) { if (it.photo_url) map[it.name] = it.photo_url; }
+        setMaterialPhotos(map);
+      });
+  }, [user]);
 
   const fetchWeatherSnapshot = useCallback(async () => {
     if (locLat === null || locLon === null) {
@@ -386,10 +400,32 @@ export default function Sessions() {
                   )}
 
                   {(s.material_1 || s.material_2 || s.material_3 || s.material_4) && (
-                    <p className="mb-1 text-xs">
+                    <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                       <span className="text-muted-foreground">Material: </span>
-                      {[s.material_1, s.material_2, s.material_3, s.material_4].filter(Boolean).join(' · ')}
-                    </p>
+                      {[s.material_1, s.material_2, s.material_3, s.material_4]
+                        .filter(Boolean)
+                        .map((name, i, arr) => (
+                          <span key={i} className="flex items-center gap-1">
+                            {materialPhotos[name!] && (
+                              <button
+                                type="button"
+                                onClick={() => setEnlargedPhoto(materialPhotos[name!])}
+                                title="Ver foto"
+                                className="shrink-0"
+                              >
+                                <img
+                                  src={materialPhotos[name!]}
+                                  alt={name!}
+                                  className="h-5 w-5 cursor-zoom-in rounded border border-border object-cover transition-colors hover:border-primary"
+                                  loading="lazy"
+                                />
+                              </button>
+                            )}
+                            {name}
+                            {i < arr.length - 1 && <span className="text-muted-foreground/50">·</span>}
+                          </span>
+                        ))}
+                    </div>
                   )}
 
                   {s.tracking_url && (
@@ -406,6 +442,19 @@ export default function Sessions() {
           )}
         </section>
       </div>
+
+      <Dialog open={!!enlargedPhoto} onOpenChange={(open) => { if (!open) setEnlargedPhoto(null); }}>
+        <DialogContent className="max-w-2xl border-border bg-card p-2">
+          <DialogTitle className="sr-only">Foto del material</DialogTitle>
+          {enlargedPhoto && (
+            <img
+              src={enlargedPhoto}
+              alt="material"
+              className="max-h-[85vh] w-full rounded object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
