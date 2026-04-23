@@ -200,7 +200,15 @@ export default function Index() {
             <div className="hidden min-w-0 flex-1 sm:block">
               <SearchWithSuggestions onSelect={doSearch} />
             </div>
-            <FavoritesButton onSelect={doSearch} refreshKey={favKey} />
+            <FavoritesButton
+              onSelect={doSearch}
+              refreshKey={favKey}
+              currentSpot={lat !== null && lon !== null ? { name, lat, lon } : null}
+              onFavChanged={() => {
+                if (lat !== null && lon !== null) setIsFav(isFavorite(lat, lon));
+                setFavKey(k => k + 1);
+              }}
+            />
             <input
               type="date"
               value={date}

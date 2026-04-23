@@ -1,19 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MapPin, Trash2 } from 'lucide-react';
-import { getFavorites, removeFavorite, type FavoriteSpot } from '@/lib/weather-helpers';
+import { getFavorites, removeFavorite, toggleFavorite, isFavorite, type FavoriteSpot } from '@/lib/weather-helpers';
+import { toast } from 'sonner';
 
 interface Props {
   onSelect: (name: string, lat: number, lon: number) => void;
   refreshKey?: number;
+  currentSpot?: { name: string; lat: number; lon: number } | null;
+  onFavChanged?: () => void;
 }
 
-export function FavoritesButton({ onSelect, refreshKey }: Props) {
+export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChanged }: Props) {
   const [open, setOpen] = useState(false);
   const [favs, setFavs] = useState<FavoriteSpot[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setFavs(getFavorites()); }, [open, refreshKey]);
+  const reload = () => setFavs(getFavorites());
+
+  useEffect(() => { reload(); }, [open, refreshKey]);
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -22,6 +27,16 @@ export function FavoritesButton({ onSelect, refreshKey }: Props) {
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, []);
+
+  const currentIsFav = currentSpot ? isFavorite(currentSpot.lat, currentSpot.lon) : false;
+
+  const handleToggleCurrent = () => {
+    if (!currentSpot) return;
+    const nowFav = toggleFavorite(currentSpot);
+    reload();
+    onFavChanged?.();
+    toast(nowFav ? `⭐ "${currentSpot.name}" guardado` : `Eliminado de favoritos`);
+  };
 
   return (
     <div ref={ref} className="relative flex-shrink-0">
@@ -44,14 +59,37 @@ export function FavoritesButton({ onSelect, refreshKey }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full z-50 mt-1 w-[260px] max-h-[340px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl"
+            className="absolute right-0 top-full z-50 mt-1 w-[280px] max-h-[400px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl"
           >
             <div className="px-3 py-2 text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground border-b border-border">
               Spots favoritos
             </div>
+
+            {/* Add / remove current spot */}
+            {currentSpot && (
+              <div className="border-b border-border p-2">
+                <button
+                  onClick={handleToggleCurrent}
+                  className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs font-semibold transition-colors ${
+                    currentIsFav
+                      ? 'bg-accent/10 text-accent hover:bg-destructive/10 hover:text-destructive'
+                      : 'bg-primary/10 text-primary hover:bg-primary/20'
+                  }`}
+                >
+                  <Star className="h-3.5 w-3.5 shrink-0" fill={currentIsFav ? 'currentColor' : 'none'} />
+                  <span className="flex-1 truncate text-left">
+                    {currentIsFav ? 'Quitar de favoritos' : 'Guardar spot actual'}
+                  </span>
+                  <span className="max-w-[100px] shrink-0 truncate text-[0.65rem] opacity-70">{currentSpot.name}</span>
+                </button>
+              </div>
+            )}
+
             {favs.length === 0 ? (
               <div className="px-4 py-6 text-center text-xs text-muted-foreground">
-                Sin favoritos.<br />Marca con ⭐ tras buscar.
+                {currentSpot
+                  ? 'Pulsa "Guardar spot actual" para añadirlo.'
+                  : <>Sin favoritos.<br />Busca una ubicación para guardarla.</>}
               </div>
             ) : favs.map((f, i) => (
               <div
@@ -66,7 +104,7 @@ export function FavoritesButton({ onSelect, refreshKey }: Props) {
                   <span className="truncate text-foreground">{f.name}</span>
                 </button>
                 <button
-                  onClick={() => { removeFavorite(f.lat, f.lon); setFavs(getFavorites()); }}
+                  onClick={() => { removeFavorite(f.lat, f.lon); reload(); onFavChanged?.(); }}
                   className="rounded p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
                   aria-label="Eliminar"
                 >
