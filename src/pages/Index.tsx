@@ -11,6 +11,8 @@ import { LegalFooter } from '@/components/LegalFooter';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
@@ -22,6 +24,8 @@ import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
 
 export default function Index() {
+  const { user } = useAuth();
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
   const [name, setName] = useState('WindFlowRadar');
@@ -98,6 +102,13 @@ export default function Index() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load WhatsApp number from profile
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('whatsapp_number').eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.whatsapp_number) setWhatsappNumber(data.whatsapp_number); });
+  }, [user]);
 
   const handleToggleFav = useCallback(() => {
     if (lat === null || lon === null) return;
@@ -282,7 +293,7 @@ export default function Index() {
         {/* Actions row */}
         {wx && (
           <div className="mb-4 flex flex-wrap items-end gap-2">
-            <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={allDayIdxs} />
+            <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={allDayIdxs} whatsappNumber={whatsappNumber} />
             <SettingsPanel settings={settings} onChange={setSettings} />
           </div>
         )}
@@ -460,7 +471,7 @@ function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: s
   );
 }
 
-function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; mar: MarineData | null; name: string; date: string; dayIdxs: number[] }) {
+function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx: WeatherData; mar: MarineData | null; name: string; date: string; dayIdxs: number[]; whatsappNumber?: string }) {
   const h = wx.hourly;
   const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
   const [fromH, setFromH] = useState(hours[0] || '00:00');
@@ -484,7 +495,8 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs }: { wx: WeatherData; ma
       msg += `⏰ *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡ráf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '—'}\n`;
     }
     msg += `\n_WindFlowRadar · Open-Meteo_`;
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    const base = whatsappNumber ? `https://wa.me/${whatsappNumber}` : 'https://wa.me';
+    window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   return (

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
 
 const passwordSchema = z.string()
   .min(10, 'Mínimo 10 caracteres')
@@ -17,6 +17,7 @@ const passwordSchema = z.string()
 export default function Profile() {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
@@ -24,15 +25,24 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('display_name').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => { if (data) setDisplayName(data.display_name || ''); });
+    supabase.from('profiles').select('display_name, whatsapp_number').eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setDisplayName(data.display_name || '');
+          setWhatsappNumber(data.whatsapp_number || '');
+        }
+      });
   }, [user]);
 
   const saveProfile = async () => {
     if (!user) return;
     setSavingProfile(true);
+    const cleanWa = whatsappNumber.replace(/\D/g, '');
     const { error } = await supabase.from('profiles')
-      .update({ display_name: displayName.trim() || null })
+      .update({
+        display_name: displayName.trim() || null,
+        whatsapp_number: cleanWa || null,
+      })
       .eq('user_id', user.id);
     setSavingProfile(false);
     if (error) toast.error(error.message);
@@ -84,6 +94,30 @@ export default function Profile() {
             <button onClick={saveProfile} disabled={savingProfile}
               className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
               {savingProfile ? '...' : 'Guardar perfil'}
+            </button>
+          </div>
+        </section>
+
+        <section className="mb-6 rounded-xl border border-border bg-card p-5">
+          <h2 className="mb-1 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider">
+            <MessageCircle size={15} className="text-green-500" /> WhatsApp predeterminado
+          </h2>
+          <p className="mb-3 text-[0.68rem] text-muted-foreground">
+            Al pulsar "Compartir" en la previsión se abrirá directamente este contacto con el mensaje listo para enviar.
+            Número en formato internacional sin espacios ni <code>+</code> (ej: <code>34612345678</code>).
+          </p>
+          <div className="space-y-3">
+            <input
+              value={whatsappNumber}
+              onChange={e => setWhatsappNumber(e.target.value)}
+              placeholder="34612345678"
+              maxLength={20}
+              inputMode="tel"
+              className="w-full rounded-md border border-border bg-secondary px-3 py-2 font-mono text-sm outline-none focus:border-primary"
+            />
+            <button onClick={saveProfile} disabled={savingProfile}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
+              {savingProfile ? '...' : 'Guardar'}
             </button>
           </div>
         </section>
