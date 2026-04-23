@@ -26,6 +26,8 @@ export default function MaterialsManager() {
   const [loading, setLoading] = useState(true);
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemName, setEditItemName] = useState('');
   const [newItem, setNewItem] = useState<Record<number, string>>({});
 
   const load = useCallback(async () => {
@@ -106,6 +108,22 @@ export default function MaterialsManager() {
     setItems(is => is.filter(x => x.id !== id));
   };
 
+  const startEditItem = (it: MaterialItem) => {
+    setEditingItemId(it.id);
+    setEditItemName(it.name);
+  };
+
+  const saveItemName = async (id: string) => {
+    const trimmed = editItemName.trim();
+    if (!trimmed) { toast.error('El nombre no puede estar vacío'); return; }
+    const { error } = await supabase.from('material_items')
+      .update({ name: trimmed.slice(0, 80) }).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setItems(is => is.map(x => x.id === id ? { ...x, name: trimmed.slice(0, 80) } : x));
+    setEditingItemId(null);
+    toast.success('Nombre actualizado');
+  };
+
   const updateItemPhoto = (id: string, newUrl: string | null) => {
     setItems(is => is.map(x => x.id === id ? { ...x, photo_url: newUrl } : x));
   };
@@ -158,11 +176,39 @@ export default function MaterialsManager() {
                       onUpdated={(url) => updateItemPhoto(it.id, url)}
                       size="sm"
                     />
-                    <span className="flex-1 font-medium">{it.name}</span>
-                    <button onClick={() => deleteItem(it.id)}
-                      className="text-muted-foreground hover:text-destructive">
-                      <Trash2 size={12} />
-                    </button>
+                    {editingItemId === it.id ? (
+                      <div className="flex flex-1 items-center gap-1">
+                        <input
+                          autoFocus
+                          value={editItemName}
+                          onChange={e => setEditItemName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveItemName(it.id); }
+                            if (e.key === 'Escape') setEditingItemId(null);
+                          }}
+                          maxLength={80}
+                          className="flex-1 rounded border border-primary/40 bg-background px-2 py-0.5 text-xs outline-none"
+                        />
+                        <button onClick={() => saveItemName(it.id)} className="rounded bg-primary p-1 text-primary-foreground">
+                          <Check size={12} />
+                        </button>
+                        <button onClick={() => setEditingItemId(null)} className="rounded border border-border p-1 text-muted-foreground">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="flex-1 font-medium">{it.name}</span>
+                        <button onClick={() => startEditItem(it)}
+                          className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary">
+                          <Pencil size={12} />
+                        </button>
+                        <button onClick={() => deleteItem(it.id)}
+                          className="text-muted-foreground hover:text-destructive">
+                          <Trash2 size={12} />
+                        </button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
