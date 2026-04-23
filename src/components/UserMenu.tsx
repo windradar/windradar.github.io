@@ -4,7 +4,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, UserCircle, ListChecks, LogIn, Wrench } from 'lucide-react';
+import { LogOut, UserCircle, ListChecks, LogIn, Wrench, HelpCircle } from 'lucide-react';
 
 export function UserMenu() {
   const { user, signOut } = useAuth();
@@ -45,6 +45,9 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/materials')}>
           <Wrench className="mr-2 h-4 w-4" /> Materiales
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/help')}>
+          <HelpCircle className="mr-2 h-4 w-4" /> Ayuda
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={async () => { await signOut(); navigate('/'); }}>

@@ -18,6 +18,7 @@ import Notice from "./pages/legal/Notice.tsx";
 import Privacy from "./pages/legal/Privacy.tsx";
 import Cookies from "./pages/legal/Cookies.tsx";
 import Terms from "./pages/legal/Terms.tsx";
+import Help from "./pages/Help.tsx";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
               <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
+              <Route path="/help" element={<Help />} />
               <Route path="/legal/notice" element={<Notice />} />
               <Route path="/legal/privacy" element={<Privacy />} />
               <Route path="/legal/cookies" element={<Cookies />} />
