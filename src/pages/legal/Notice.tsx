@@ -2,12 +2,12 @@ import LegalLayout from './LegalLayout';
 
 export default function Notice() {
   return (
-    <LegalLayout title="Aviso legal" lastUpdated="2026-04-19">
+    <LegalLayout title="Aviso legal" lastUpdated="2026-04-23">
       <p>De conformidad con la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico (LSSI-CE) y normativa equivalente, se facilitan los siguientes datos del responsable del sitio web <strong>WindFlowRadar</strong>.</p>
 
       <h2>1. Datos del titular</h2>
       <ul>
-        <li><strong>Titular:</strong> Juan M de Haroo</li>
+        <li><strong>Titular:</strong> Juan M de Haro</li>
         <li><strong>NIF / CIF:</strong> 46674975V</li>
         <li><strong>Domicilio:</strong> Sant Feliu de Llobregat</li>
         <li><strong>País:</strong> España</li>
@@ -16,7 +16,7 @@ export default function Notice() {
       </ul>
 
       <h2>2. Objeto</h2>
-      <p>WindFlowRadar es una aplicación web que ofrece información meteorológica relativa al viento, ráfagas, oleaje y temperatura, así como herramientas para registrar sesiones deportivas (windsurf, kitesurf, vela y similares). El servicio se presta con carácter informativo.</p>
+      <p>WindFlowRadar es una aplicación web que ofrece información meteorológica relativa al viento, ráfagas, oleaje y temperatura, así como herramientas para registrar sesiones deportivas (windsurf, kitesurf, vela y similares) y gestionar el inventario de material deportivo personal. El servicio se presta con carácter informativo.</p>
 
       <h2>3. Condiciones de uso</h2>
       <p>El acceso a la web es libre y gratuito. Algunas funcionalidades (área personal, sesiones, materiales) requieren registro. El usuario se compromete a hacer un uso adecuado y lícito del sitio y a no utilizarlo para realizar actividades ilícitas o contrarias a la buena fe.</p>

@@ -2,7 +2,7 @@ import LegalLayout from './LegalLayout';
 
 export default function Privacy() {
   return (
-    <LegalLayout title="Política de privacidad" lastUpdated="2026-04-19">
+    <LegalLayout title="Política de privacidad" lastUpdated="2026-04-23">
       <p>Esta política explica cómo <strong>WindFlowRadar</strong> trata tus datos personales conforme al <strong>Reglamento (UE) 2016/679 (RGPD)</strong>, la <strong>LOPDGDD 3/2018</strong>, el <strong>UK GDPR / Data Protection Act 2018</strong> y, cuando proceda, la <strong>California Consumer Privacy Act (CCPA/CPRA)</strong>.</p>
 
       <h2>1. Responsable del tratamiento</h2>
@@ -16,7 +16,7 @@ export default function Privacy() {
       <ul>
         <li><strong>Cuenta:</strong> email y contraseña cifrada (hash). Opcionalmente, alias.</li>
         <li><strong>Sesiones de entrenamiento:</strong> fecha, horas, ubicación, snapshot meteo, material, URL de tracking, notas — siempre introducidos por ti.</li>
-        <li><strong>Materiales:</strong> nombres y, opcionalmente, fotos que subas.</li>
+        <li><strong>Materiales</strong> (sección <code>/materials</code>): nombres de tablas, velas y accesorios y, opcionalmente, fotos que subas. Las imágenes se almacenan en <strong>Supabase Storage</strong> y son de acceso privado; solo tú puedes verlas y eliminarlas.</li>
         <li><strong>Datos técnicos:</strong> dirección IP, tipo de navegador, idioma, zona horaria — necesarios por seguridad y diagnóstico.</li>
         <li><strong>Cookies y similares:</strong> ver <a href="/legal/cookies">Política de cookies</a>.</li>
       </ul>
@@ -48,7 +48,7 @@ export default function Privacy() {
         <li><strong>Retirar el consentimiento</strong> en cualquier momento.</li>
         <li><strong>Presentar una reclamación</strong> ante la <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">Agencia Española de Protección de Datos (AEPD)</a> u otra autoridad competente (ICO en UK, CPPA en California).</li>
       </ul>
-      <p>Para ejercerlos, escribe a <strong>[TU EMAIL]</strong> indicando el derecho que deseas ejercer y adjuntando copia de un documento identificativo.</p>
+      <p>Para ejercerlos, escribe a <strong>juhabar@gmail.com</strong> indicando el derecho que deseas ejercer y adjuntando copia de un documento identificativo.</p>
 
       <h2>7. Derechos específicos California (CCPA/CPRA)</h2>
       <p>Si resides en California tienes derecho a: (a) saber qué información recopilamos, (b) solicitar su eliminación, (c) corregir información inexacta, (d) optar por <em>no</em> a la "venta" o "compartición" de datos personales (no realizamos venta), (e) no ser discriminado por ejercer estos derechos.</p>
