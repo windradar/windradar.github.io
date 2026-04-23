@@ -10,7 +10,7 @@ interface Props {
   onChange: (slot: number, value: string) => void;
 }
 
-const DEFAULT_NAMES = ['Material 1', 'Material 2', 'Material 3', 'Material 4'];
+const DEFAULT_NAMES = ['Tabla', 'Vela', 'Aleta', 'Otro'];
 
 export default function MaterialSelect({ values, onChange }: Props) {
   const { user } = useAuth();
@@ -107,7 +107,7 @@ export default function MaterialSelect({ values, onChange }: Props) {
               </div>
               {!cat && (
                 <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                  Sin categoría. Configúrala en Perfil → Materiales.
+                  Sin categoría. Configúrala en Materiales.
                 </p>
               )}
             </div>

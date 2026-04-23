@@ -74,7 +74,7 @@ export default function Sessions() {
       .select('*').order('session_date', { ascending: false }).order('start_time', { ascending: false });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    setSessions((data as any) || []);
+    setSessions((data as Session[]) || []);
   }, [user]);
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
@@ -208,7 +208,7 @@ export default function Sessions() {
       location_name: locName,
       location_lat: locLat,
       location_lon: locLon,
-      weather_snapshot: snapshot as any,
+      weather_snapshot: snapshot as Snapshot[] | null,
       material_1: materials[1]?.trim() || null,
       material_2: materials[2]?.trim() || null,
       material_3: materials[3]?.trim() || null,
@@ -303,8 +303,8 @@ export default function Sessions() {
                 <div className="rounded-md border border-border bg-secondary/40 p-3">
                   <p className="mb-2 text-[0.65rem] uppercase tracking-widest text-muted-foreground">Snapshot ({snapshot.length} h)</p>
                   <div className="space-y-1 font-mono text-xs">
-                    {snapshot.map((s, i) => (
-                      <div key={i} className="flex justify-between">
+                    {snapshot.map((s) => (
+                      <div key={s.hour} className="flex justify-between">
                         <span className="text-muted-foreground">{s.hour}</span>
                         <span>💨 {s.wind_kn}kn ⚡{s.gust_kn}kn {dirArrow(s.dir_deg)} {s.dir_short} 🌊 {s.wave_m !== null ? s.wave_m.toFixed(1) + 'm' : '—'}</span>
                       </div>
@@ -387,10 +387,10 @@ export default function Sessions() {
 
                   {s.weather_snapshot && Array.isArray(s.weather_snapshot) && s.weather_snapshot.length > 0 && (
                     <details className="mb-2">
-                      <summary className="cursor-pointer text-xs text-primary">Datos meteo ({(s.weather_snapshot as any).length} h)</summary>
+                      <summary className="cursor-pointer text-xs text-primary">Datos meteo ({(s.weather_snapshot as Snapshot[]).length} h)</summary>
                       <div className="mt-2 space-y-0.5 font-mono text-[0.7rem]">
-                        {(s.weather_snapshot as any as Snapshot[]).map((w, i) => (
-                          <div key={i} className="flex justify-between text-muted-foreground">
+                        {(s.weather_snapshot as Snapshot[]).map((w) => (
+                          <div key={w.hour} className="flex justify-between text-muted-foreground">
                             <span>{w.hour}</span>
                             <span>💨{w.wind_kn} ⚡{w.gust_kn} {dirArrow(w.dir_deg)}{w.dir_short} 🌊{w.wave_m !== null ? w.wave_m.toFixed(1) + 'm' : '—'}</span>
                           </div>

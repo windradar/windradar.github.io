@@ -91,9 +91,9 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
                   ? 'Pulsa "Guardar spot actual" para añadirlo.'
                   : <>Sin favoritos.<br />Busca una ubicación para guardarla.</>}
               </div>
-            ) : favs.map((f, i) => (
+            ) : favs.map((f) => (
               <div
-                key={i}
+                key={`${f.lat},${f.lon}`}
                 className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-secondary"
               >
                 <button

@@ -165,9 +165,9 @@ export function SearchWithSuggestions({ onSelect }: Props) {
                 <div className="px-4 py-2 text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">
                   Búsquedas recientes
                 </div>
-                {history.slice(0, 6).map((h, i) => (
+                {history.slice(0, 6).map((h) => (
                   <button
-                    key={i}
+                    key={h.timestamp}
                     onClick={() => handleSelect(h.name, h.lat, h.lon)}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-secondary"
                   >
