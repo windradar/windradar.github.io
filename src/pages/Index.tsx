@@ -5,8 +5,9 @@ import { WindRose } from '@/components/WindRose';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
 import { WindCompareChart } from '@/components/WindCompareChart';
-import { SettingsPanel, loadSettings, type AppSettings } from '@/components/SettingsPanel';
+import { loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import { UserMenu } from '@/components/UserMenu';
+import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
@@ -229,7 +230,7 @@ export default function Index() {
               className="min-w-0 max-w-[130px] flex-shrink rounded-lg border border-border bg-secondary px-1.5 py-2 font-mono text-[0.7rem] text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
             />
             <ThemeSelector />
-            <UserMenu />
+            <UserMenu settings={settings} onSettingsChange={setSettings} />
           </div>
           <div className="mt-2 flex items-center gap-2 sm:hidden">
             <SearchWithSuggestions onSelect={doSearch} />
@@ -281,12 +282,14 @@ export default function Index() {
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
               <WindRose degrees={cardData.wd} speed={cardData.ws} gustSpeed={cardData.wg} />
             </div>
-            <NowCard label="⚡ Beaufort" value={`${cardData.b[0]}`} unit="BFT" sub={cardData.b[1]} color={cardData.bftColor} />
+            <NowCard label="☔ Precipitación" value={cardData.prec.toFixed(1)} unit="mm" sub="Última hora" />
             <NowCard label="🌊 Altura ola" value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
             <NowCard label="🌡️ Temp. aire" value={safeNum(cardData.temp, 1)} unit="°C" />
             <NowCard label="🌊 Temp. agua" value={safeNum(cardData.sst, 1)} unit="°C" sub="Superficie mar" color="#4dd9ff" />
             <NowCard label="☁️ Tiempo" value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
-            <NowCard label="☔ Precipitación" value={cardData.prec.toFixed(1)} unit="mm" sub="Última hora" />
+            <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+              <WeekForecastChart wx={wx} mar={mar} />
+            </div>
           </div>
         )}
 
@@ -294,7 +297,6 @@ export default function Index() {
         {wx && (
           <div className="mb-4 flex flex-wrap items-end gap-2">
             <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={allDayIdxs} whatsappNumber={whatsappNumber} />
-            <SettingsPanel settings={settings} onChange={setSettings} />
           </div>
         )}
 
