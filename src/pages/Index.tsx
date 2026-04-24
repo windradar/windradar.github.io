@@ -463,6 +463,14 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
   );
 }
 
+function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: string; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} className="rounded-lg border border-border bg-transparent px-3 py-2 font-display text-[0.72rem] font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary sm:px-4 sm:text-[0.78rem]">
+      {emoji} {children}
+    </button>
+  );
+}
+
 function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx: WeatherData; mar: MarineData | null; name: string; date: string; dayIdxs: number[]; whatsappNumber?: string }) {
   const h = wx.hourly;
   const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
