@@ -147,10 +147,10 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
                 <text
                   key={i}
                   x={i * SLOT_W + SLOT_W / 2}
-                  y={y < 7 ? 7 : y}
+                  y={y < 8 ? 8 : y}
                   textAnchor="middle"
                   fontSize={6}
-                  fill="rgba(255,255,255,0.75)"
+                  className="fill-foreground/70"
                 >
                   {s.windKn}
                 </text>
