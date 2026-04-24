@@ -79,30 +79,36 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          date_format: string
           display_name: string | null
           email: string | null
           id: string
           updated_at: string
           user_id: string
           whatsapp_number: string | null
+          wind_units: string
         }
         Insert: {
           created_at?: string
+          date_format?: string
           display_name?: string | null
           email?: string | null
           id?: string
           updated_at?: string
           user_id: string
           whatsapp_number?: string | null
+          wind_units?: string
         }
         Update: {
           created_at?: string
+          date_format?: string
           display_name?: string | null
           email?: string | null
           id?: string
           updated_at?: string
           user_id?: string
           whatsapp_number?: string | null
+          wind_units?: string
         }
         Relationships: []
       }
@@ -192,6 +198,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_own_account: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
