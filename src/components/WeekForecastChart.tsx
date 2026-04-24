@@ -139,6 +139,23 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
                 />
               );
             })}
+            {/* wind speed labels above bars */}
+            {slots.map((s, i) => {
+              const bh = Math.max(2, (s.windKn / maxVal) * BAR_H);
+              const y = BAR_H - bh - 2;
+              return (
+                <text
+                  key={i}
+                  x={i * SLOT_W + SLOT_W / 2}
+                  y={y < 7 ? 7 : y}
+                  textAnchor="middle"
+                  fontSize={6}
+                  fill="rgba(255,255,255,0.75)"
+                >
+                  {s.windKn}
+                </text>
+              );
+            })}
             {/* gust line */}
             <polyline
               points={gustPoints}
