@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ExternalLink, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink, Pencil, X, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/weather-helpers';
 import MaterialSelect from '@/components/MaterialSelect';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import SessionStoryShare from '@/components/SessionStoryShare';
 
 interface Snapshot {
   hour: string;
@@ -49,6 +50,7 @@ export default function Sessions() {
   const [editingId, setEditingId] = useState<string | null>(null); // null = nueva, id = editando
   const [materialPhotos, setMaterialPhotos] = useState<Record<string, string>>({});
   const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null);
+  const [storySession, setStorySession] = useState<Session | null>(null);
 
   // form state
   const [date, setDate] = useState(localDateStr(new Date()));
@@ -372,6 +374,12 @@ export default function Sessions() {
                       </p>
                     </div>
                     <div className="flex gap-1">
+                      <button
+                        onClick={() => setStorySession(s)}
+                        title="Compartir en Instagram"
+                        className="text-muted-foreground hover:text-pink-500">
+                        <Share2 size={15} />
+                      </button>
                       <button onClick={() => openEditForm(s)}
                         title="Editar"
                         className="text-muted-foreground hover:text-primary">
@@ -455,6 +463,12 @@ export default function Sessions() {
           )}
         </DialogContent>
       </Dialog>
+
+      <SessionStoryShare
+        session={storySession}
+        materialPhotos={materialPhotos}
+        onClose={() => setStorySession(null)}
+      />
     </div>
   );
 }
