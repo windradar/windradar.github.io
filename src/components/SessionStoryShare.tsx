@@ -122,6 +122,8 @@ function roundRect(
 function drawStory(canvas: HTMLCanvasElement, session: Session, bgImg: HTMLImageElement | null) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, CW, CH);
 
   // ── Background ──────────────────────────────────────────────
@@ -337,10 +339,10 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
     if (!canvas || !session) return;
     setSharing(true);
     try {
-      const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png'));
+      const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/jpeg', 0.95));
       if (!blob) { toast.error('Error generando la imagen'); return; }
-      const fileName = `sesion-windradar-${session.session_date}.png`;
-      const file = new File([blob], fileName, { type: 'image/png' });
+      const fileName = `sesion-windradar-${session.session_date}.jpg`;
+      const file = new File([blob], fileName, { type: 'image/jpeg' });
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: `Mi sesión – ${session.location_name ?? 'WindFlowRadar'}` });
@@ -404,7 +406,6 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
             />
