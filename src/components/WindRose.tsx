@@ -84,39 +84,30 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
             );
           })}
 
-          {/* Wind arrow */}
-          <motion.g
-            initial={{ rotate: 0 }}
-            animate={{ rotate: degrees }}
-            transition={{ type: 'spring', stiffness: 60, damping: 15 }}
-            style={{ transformOrigin: `${cx}px ${cy}px` }}
-          >
-            {/* Arrow shaft */}
-            <line
-              x1={cx}
-              y1={cy + innerR - 5}
-              x2={cx}
-              y2={cy - tickR + 12}
-              stroke={color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            {/* Arrow head */}
-            <polygon
-              points={`${cx},${cy - tickR + 5} ${cx - 7},${cy - tickR + 18} ${cx + 7},${cy - tickR + 18}`}
-              fill={color}
-            />
-            {/* Arrow tail */}
-            <line
-              x1={cx - 5}
-              y1={cy + innerR - 2}
-              x2={cx + 5}
-              y2={cy + innerR - 2}
-              stroke={color}
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </motion.g>
+          {/* Wind arrow — translated to center so rotation is always around (0,0) */}
+          <g transform={`translate(${cx}, ${cy})`}>
+            <motion.g
+              initial={{ rotate: 0 }}
+              animate={{ rotate: degrees }}
+              transition={{ type: 'spring', stiffness: 60, damping: 15 }}
+              style={{ transformOrigin: '0px 0px' }}
+            >
+              <line
+                x1={0} y1={innerR - 5}
+                x2={0} y2={-tickR + 12}
+                stroke={color} strokeWidth="2.5" strokeLinecap="round"
+              />
+              <polygon
+                points={`0,${-tickR + 5} -7,${-tickR + 18} 7,${-tickR + 18}`}
+                fill={color}
+              />
+              <line
+                x1={-5} y1={innerR - 2}
+                x2={5} y2={innerR - 2}
+                stroke={color} strokeWidth="2" strokeLinecap="round"
+              />
+            </motion.g>
+          </g>
 
           {/* Center circle */}
           <circle cx={cx} cy={cy} r={innerR - 4} className="fill-card" />
