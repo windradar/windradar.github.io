@@ -5,12 +5,26 @@ import { kmhToKnots, windColor, waveColor } from '@/lib/weather-helpers';
 const SLOT_W = 20;
 const BAR_H = 176;
 
+function wmoEmoji(code: number): string {
+  if (code === 0) return '☀️';
+  if (code <= 2) return '🌤️';
+  if (code === 3) return '☁️';
+  if (code <= 48) return '🌫️';
+  if (code <= 55) return '🌦️';
+  if (code <= 65) return '🌧️';
+  if (code <= 75) return '🌨️';
+  if (code <= 82) return '🌧️';
+  if (code <= 99) return '⛈️';
+  return '☁️';
+}
+
 interface Slot {
   time: string;
   windKn: number;
   gustKn: number;
   dir: number;
   wave: number | null;
+  wcode: number;
 }
 
 export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineData | null }) {
@@ -26,6 +40,7 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
         gustKn: Math.round(kmhToKnots(h.wind_gusts_10m[i] || 0)),
         dir: h.wind_direction_10m[i] || 0,
         wave: mar?.hourly?.wave_height?.[i] ?? null,
+        wcode: h.weathercode?.[i] ?? 0,
       });
     }
     return result;
@@ -89,6 +104,21 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* Weather icons (every 6h: 00, 06, 12, 18) */}
+          <div className="flex" style={{ height: 16 }}>
+            {slots.map((s, i) => {
+              const hr = s.time.slice(11, 13);
+              if (!['00', '06', '12', '18'].includes(hr)) {
+                return <div key={i} style={{ width: SLOT_W, flexShrink: 0 }} />;
+              }
+              return (
+                <div key={i} style={{ width: SLOT_W, flexShrink: 0 }} className="flex items-center justify-center">
+                  <span style={{ fontSize: '11px', lineHeight: 1 }}>{wmoEmoji(s.wcode)}</span>
+                </div>
+              );
+            })}
           </div>
 
           {/* Wind bars + gust line */}

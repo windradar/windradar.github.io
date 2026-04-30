@@ -486,15 +486,28 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx:
     });
     if (!idxs.length) return;
 
-    let msg = `🌬️ *WindFlowRadar – ${name}*\n📅 ${humanDate(date)} (${fromH}–${toH})\n\n`;
+    const wmoEmojiShare = (code: number) => {
+      if (code === 0) return '☀️';
+      if (code <= 2) return '🌤️';
+      if (code === 3) return '☁️';
+      if (code <= 48) return '🌫️';
+      if (code <= 55) return '🌦️';
+      if (code <= 65) return '🌧️';
+      if (code <= 75) return '🌨️';
+      if (code <= 82) return '🌧️';
+      if (code <= 99) return '⛈️';
+      return '☁️';
+    };
+    let msg = `💨 *WindFlowRadar – ${name}*\n📅 ${humanDate(date)} (${fromH}–${toH})\n\n`;
     for (const idx of idxs) {
       const ws = Math.round(h.wind_speed_10m[idx] || 0);
       const wg = Math.round(h.wind_gusts_10m[idx] || 0);
       const wd = h.wind_direction_10m[idx] || 0;
       const wi = windInfo(wd);
       const wh = mar?.hourly?.wave_height?.[idx] ?? null;
+      const wc = h.weathercode?.[idx] ?? 0;
       const hr = h.time[idx].slice(11, 16);
-      msg += `⏰ *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡ráf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '—'}\n`;
+      msg += `${wmoEmojiShare(wc)} *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡raf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
     }
     msg += `\n_WindFlowRadar · Open-Meteo_`;
     const base = whatsappNumber ? `https://wa.me/${whatsappNumber}` : 'https://wa.me';
