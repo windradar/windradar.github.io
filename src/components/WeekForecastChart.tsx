@@ -3,7 +3,7 @@ import type { WeatherData, MarineData } from '@/lib/weather-helpers';
 import { kmhToKnots, windColor, waveColor } from '@/lib/weather-helpers';
 
 const SLOT_W = 20;
-const BAR_H = 88;
+const BAR_H = 176;
 
 interface Slot {
   time: string;

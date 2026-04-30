@@ -516,7 +516,6 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx:
         </select>
       </div>
       <ActionBtn onClick={share} emoji="📲">Compartir</ActionBtn>
-      <ActionBtn onClick={() => window.print()} emoji="🖨️">Imprimir</ActionBtn>
     </>
   );
 }
