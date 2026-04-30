@@ -40,7 +40,9 @@ interface Session {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
-const urlSchema = z.string().trim().url('URL no válida').max(500).optional().or(z.literal(''));
+const urlSchema = z.string().trim().url('URL no válida').max(500)
+  .refine(u => /^https?:\/\//i.test(u), 'Solo se permiten URLs http/https')
+  .optional().or(z.literal(''));
 
 export default function Sessions() {
   const { user } = useAuth();
@@ -436,7 +438,7 @@ export default function Sessions() {
                     </div>
                   )}
 
-                  {s.tracking_url && (
+                  {s.tracking_url && /^https?:\/\//i.test(s.tracking_url) && (
                     <a href={s.tracking_url} target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                       <ExternalLink size={12} /> Tracking
