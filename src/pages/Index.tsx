@@ -510,8 +510,19 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx:
       msg += `${wmoEmojiShare(wc)} *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡raf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
     }
     msg += `\n_WindFlowRadar · Open-Meteo_`;
-    const base = whatsappNumber ? `https://wa.me/${whatsappNumber}` : 'https://wa.me';
-    window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    // Web Share API: funciona en móvil y Chrome/Edge desktop modernos
+    if (navigator.share) {
+      navigator.share({ text: msg }).catch(() => {});
+      return;
+    }
+    // Desktop: copiar al portapapeles + abrir WhatsApp Web
+    navigator.clipboard.writeText(msg).then(() => {
+      toast.success('Mensaje copiado. Pégalo en WhatsApp Web (Ctrl+V).');
+    }).catch(() => {
+      const base = whatsappNumber ? `https://wa.me/${whatsappNumber}` : 'https://wa.me';
+      window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
+    });
   };
 
   return (
