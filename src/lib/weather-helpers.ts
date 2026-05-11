@@ -81,9 +81,9 @@ export function localDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function humanDate(s: string): string {
+export function humanDate(s: string, locale = 'es-ES'): string {
   const d = new Date(s + 'T12:00:00');
-  return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 export interface WeatherData {

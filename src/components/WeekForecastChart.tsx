@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
 import { kmhToKnots, windColor, waveColor } from '@/lib/weather-helpers';
 
@@ -28,6 +29,7 @@ interface Slot {
 }
 
 export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineData | null }) {
+  const { t, i18n } = useTranslation();
   const h = wx.hourly;
 
   const slots: Slot[] = useMemo(() => {
@@ -68,23 +70,23 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
 
   const formatDay = (ds: string) => {
     const d = new Date(ds + 'T12:00:00');
-    return d.toLocaleDateString('es', { weekday: 'short', day: 'numeric' });
+    return d.toLocaleDateString(i18n.language, { weekday: 'short', day: 'numeric' });
   };
 
   return (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="mb-2 flex items-center gap-4">
         <span className="text-[0.62rem] uppercase tracking-widest text-muted-foreground">
-          🌬️ Previsión 7 días · cada 2h
+          {t('chart.forecast7days')}
         </span>
         <span className="flex items-center gap-2 text-[0.58rem] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="inline-block h-2.5 w-3.5 rounded-sm bg-[#44cc88] opacity-80" />
-            Viento (kn)
+            {t('chart.wind')}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="inline-block h-px w-4 bg-[#ff8c00]" style={{ borderTop: '2px solid #ff8c00' }} />
-            Ráfaga
+            {t('chart.gust')}
           </span>
         </span>
       </div>

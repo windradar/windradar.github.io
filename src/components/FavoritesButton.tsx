@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MapPin, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getFavorites, removeFavorite, toggleFavorite, isFavorite, type FavoriteSpot } from '@/lib/weather-helpers';
 import { toast } from 'sonner';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChanged }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [favs, setFavs] = useState<FavoriteSpot[]>([]);
   const ref = useRef<HTMLDivElement>(null);
@@ -35,15 +37,15 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
     const nowFav = toggleFavorite(currentSpot);
     reload();
     onFavChanged?.();
-    toast(nowFav ? `⭐ "${currentSpot.name}" guardado` : `Eliminado de favoritos`);
+    toast(nowFav ? t('favorites.saved', { name: currentSpot.name }) : t('favorites.removed'));
   };
 
   return (
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={() => setOpen(o => !o)}
-        aria-label="Favoritos"
-        title="Spots favoritos"
+        aria-label={t('favorites.title')}
+        title={t('favorites.title')}
         className="flex h-[42px] items-center gap-1 rounded-lg border border-border bg-secondary px-2.5 text-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <Star className="h-4 w-4" fill={favs.length > 0 ? 'currentColor' : 'none'} />
@@ -62,10 +64,9 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
             className="absolute right-0 top-full z-50 mt-1 w-[280px] max-h-[400px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl"
           >
             <div className="px-3 py-2 text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground border-b border-border">
-              Spots favoritos
+              {t('favorites.title')}
             </div>
 
-            {/* Add / remove current spot */}
             {currentSpot && (
               <div className="border-b border-border p-2">
                 <button
@@ -78,7 +79,7 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
                 >
                   <Star className="h-3.5 w-3.5 shrink-0" fill={currentIsFav ? 'currentColor' : 'none'} />
                   <span className="flex-1 truncate text-left">
-                    {currentIsFav ? 'Quitar de favoritos' : 'Guardar spot actual'}
+                    {currentIsFav ? t('favorites.remove') : t('favorites.save')}
                   </span>
                   <span className="max-w-[100px] shrink-0 truncate text-[0.65rem] opacity-70">{currentSpot.name}</span>
                 </button>
@@ -88,8 +89,8 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
             {favs.length === 0 ? (
               <div className="px-4 py-6 text-center text-xs text-muted-foreground">
                 {currentSpot
-                  ? 'Pulsa "Guardar spot actual" para añadirlo.'
-                  : <>Sin favoritos.<br />Busca una ubicación para guardarla.</>}
+                  ? t('favorites.addHint')
+                  : <>{t('favorites.empty')}<br />{t('favorites.emptySearch')}</>}
               </div>
             ) : favs.map((f) => (
               <div
@@ -106,7 +107,7 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
                 <button
                   onClick={() => { removeFavorite(f.lat, f.lon); reload(); onFavChanged?.(); }}
                   className="rounded p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
-                  aria-label="Eliminar"
+                  aria-label={t('common.close')}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

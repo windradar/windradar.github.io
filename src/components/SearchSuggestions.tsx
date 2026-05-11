@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Search, Loader2, Clock, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { type SearchHistoryItem, getSearchHistory } from '@/lib/weather-helpers';
 
 interface GeoResult {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function SearchWithSuggestions({ onSelect }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GeoResult[]>([]);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
@@ -25,7 +27,6 @@ export function SearchWithSuggestions({ onSelect }: Props) {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -78,7 +79,6 @@ export function SearchWithSuggestions({ onSelect }: Props) {
       const fullName = [r.name, r.admin1, r.country].filter(Boolean).join(', ');
       handleSelect(fullName, r.latitude, r.longitude);
     } else if (query.trim()) {
-      // Trigger a search to get results
       search(query.trim());
     }
   };
@@ -97,7 +97,7 @@ export function SearchWithSuggestions({ onSelect }: Props) {
           onFocus={handleFocus}
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
           className="w-full rounded-lg border border-border bg-secondary py-2.5 pl-9 pr-8 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-          placeholder="Buscar lugar..."
+          placeholder={t('search.placeholder')}
         />
         {query && (
           <button
@@ -112,7 +112,7 @@ export function SearchWithSuggestions({ onSelect }: Props) {
         onClick={handleSubmit}
         className="flex-shrink-0 whitespace-nowrap rounded-lg bg-primary px-4 py-2.5 font-display text-[0.78rem] font-bold tracking-wider text-primary-foreground transition-all hover:-translate-y-0.5 hover:brightness-110"
       >
-        <span className="hidden sm:inline">BUSCAR</span>
+        <span className="hidden sm:inline">{t('search.searchBtn')}</span>
         <Search className="h-4 w-4 sm:hidden" />
       </button>
 
@@ -127,7 +127,7 @@ export function SearchWithSuggestions({ onSelect }: Props) {
           >
             {loading && (
               <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Buscando...
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('search.searching')}
               </div>
             )}
 
@@ -156,14 +156,14 @@ export function SearchWithSuggestions({ onSelect }: Props) {
 
             {showNoResults && !loading && (
               <div className="px-4 py-4 text-center text-xs text-muted-foreground">
-                No se encontraron resultados para "{query}"
+                {t('search.noResults', { q: query })}
               </div>
             )}
 
             {showHistory && !loading && (
               <>
                 <div className="px-4 py-2 text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">
-                  Búsquedas recientes
+                  {t('search.recentSearches')}
                 </div>
                 {history.slice(0, 6).map((h) => (
                   <button

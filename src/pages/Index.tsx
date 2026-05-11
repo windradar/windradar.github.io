@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { WindRose } from '@/components/WindRose';
@@ -25,7 +26,13 @@ import {
 import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
 
+const LANG_LOCALE: Record<string, string> = {
+  es: 'es-ES', ca: 'ca-ES', en: 'en-GB', fr: 'fr-FR',
+};
+
 export default function Index() {
+  const { t, i18n } = useTranslation();
+  const langLocale = LANG_LOCALE[i18n.language] || 'es-ES';
   const { user } = useAuth();
   const [whatsappNumber, setWhatsappNumber] = useState<string>('');
   const [lat, setLat] = useState<number | null>(null);
@@ -47,7 +54,7 @@ export default function Index() {
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
 
   const fetchWeather = useCallback(async (latitude: number, longitude: number, selectedDate?: string) => {
-    setLoadingText('Descargando previsión meteorológica...');
+    setLoadingText(t('index.loadingText'));
     const targetDate = selectedDate || localDateStr(new Date());
     const isPast = targetDate < localDateStr(new Date());
 
@@ -71,13 +78,13 @@ export default function Index() {
 
     // Extract API generation time
     const genTime = wxRes.generationtime_ms;
-    const updateStr = genTime ? `Generado en ${genTime.toFixed(0)}ms` : null;
+    const updateStr = genTime ? t('index.generatedIn', { ms: genTime.toFixed(0) }) : null;
     setApiUpdateTime(updateStr);
 
     setWx(wxRes);
     setMar(marRes);
     setLoading(false);
-  }, []);
+  }, [t]);
 
   const doSearch = useCallback(async (searchName: string, searchLat: number, searchLon: number) => {
     setError('');
@@ -117,7 +124,7 @@ export default function Index() {
     const nowFav = toggleFavorite({ name, lat, lon });
     setIsFav(nowFav);
     setFavKey(k => k + 1);
-    toast(nowFav ? `⭐ "${name}" añadido a favoritos` : `Eliminado "${name}" de favoritos`);
+    toast(nowFav ? t('index.favAdded', { name }) : t('index.favRemoved', { name }));
   }, [lat, lon, name]);
 
   // Reload data when date changes and we have coordinates
@@ -253,7 +260,7 @@ export default function Index() {
               className={`self-center inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[0.7rem] font-medium transition-colors ${isFav ? 'border-accent/40 bg-accent/10 text-accent hover:bg-accent/20' : 'border-border bg-secondary text-muted-foreground hover:border-accent/40 hover:text-accent'}`}
             >
               <Star className="h-3.5 w-3.5" fill={isFav ? 'currentColor' : 'none'} />
-              <span>{isFav ? 'Favorito' : 'Añadir'}</span>
+              <span>{isFav ? t('index.favLabel') : t('index.favAdd')}</span>
             </button>
           )}
           {lat !== null && (
@@ -262,7 +269,7 @@ export default function Index() {
             </span>
           )}
           <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]">
-            {wx ? 'EN VIVO' : 'LISTO'}
+            {wx ? t('index.live') : t('index.ready')}
           </span>
         </div>
 
@@ -272,23 +279,23 @@ export default function Index() {
           </div>
         )}
 
-        <SectionTitle>Condiciones actuales</SectionTitle>
+        <SectionTitle>{t('index.conditionsTitle')}</SectionTitle>
 
         {!wx ? (
           <div className="mb-6 rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground sm:p-8">
-            Introduce una ubicación y pulsa <strong className="text-primary">BUSCAR</strong> para cargar la previsión
+            {t('index.searchPrompt')}
           </div>
         ) : cardData && (
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
-            <NowCard highlight label="💨 Viento" value={`${Math.round(kmhToKnots(cardData.ws))}`} unit="kn" sub={`Ráf: ${Math.round(kmhToKnots(cardData.wg))} kn · ${Math.round(cardData.ws)} km/h`} color={windColor(cardData.ws)} />
+            <NowCard highlight label={t('index.windCard')} value={`${Math.round(kmhToKnots(cardData.ws))}`} unit="kn" sub={t('index.windCardSub', { gust: Math.round(kmhToKnots(cardData.wg)), speed: Math.round(cardData.ws) })} color={windColor(cardData.ws)} />
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
               <WindRose degrees={cardData.wd} speed={cardData.ws} gustSpeed={cardData.wg} />
             </div>
-            <NowCard label="☔ Precipitación" value={cardData.prec.toFixed(1)} unit="mm" sub="Última hora" />
-            <NowCard label="🌊 Altura ola" value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
-            <NowCard label="🌡️ Temp. aire" value={safeNum(cardData.temp, 1)} unit="°C" />
-            <NowCard label="🌊 Temp. agua" value={safeNum(cardData.sst, 1)} unit="°C" sub="Superficie mar" color="#4dd9ff" />
-            <NowCard label="☁️ Tiempo" value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
+            <NowCard label={t('index.precipCard')} value={cardData.prec.toFixed(1)} unit="mm" sub={t('index.lastHour')} />
+            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
+            <NowCard label={t('index.airTempCard')} value={safeNum(cardData.temp, 1)} unit="°C" />
+            <NowCard label={t('index.waterTempCard')} value={safeNum(cardData.sst, 1)} unit="°C" sub={t('index.surfaceSea')} color="#4dd9ff" />
+            <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
               <WeekForecastChart wx={wx} mar={mar} />
             </div>
@@ -303,21 +310,21 @@ export default function Index() {
         )}
 
         {/* Table */}
-        <SectionTitle>Previsión horaria — {humanDate(date)}</SectionTitle>
+        <SectionTitle>{t('index.hourlyTitle')} — {humanDate(date, langLocale)}</SectionTitle>
 
         {/* Desktop table */}
         <div className="mb-6 hidden overflow-x-auto rounded-lg border border-border md:block">
           <table className="w-full min-w-[850px] border-collapse font-mono text-[0.88rem]">
             <thead>
               <tr className="bg-secondary">
-                {['HORA','🌡️ AIRE','💧 AGUA','💨 VIENTO (kn)','⚡ RÁFAGA (kn)','🧭 DIRECCIÓN','⛵ NOMBRE','🌊 OLA','🌊 DIR.','☁️ TIEMPO','☔ PRECIP.','BFT'].map(th => (
+                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind'),t('index.tableGust'),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
                   <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {!h || dayIdxs.length === 0 ? (
-                <tr><td colSpan={12} className="py-7 text-center text-sm text-muted-foreground">Sin datos — introduce una ubicación y pulsa Buscar</td></tr>
+                <tr><td colSpan={12} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
               ) : dayIdxs.map((idx, ri) => {
                 const ws = h.wind_speed_10m[idx] || 0;
                 const wd = h.wind_direction_10m[idx] || 0;
@@ -361,7 +368,7 @@ export default function Index() {
         {/* Mobile hourly cards */}
         <div className="mb-6 space-y-2 md:hidden">
           {!h || dayIdxs.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">Sin datos</div>
+            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">{t('index.noDataShort')}</div>
           ) : dayIdxs.map((idx, ri) => {
             const ws = h.wind_speed_10m[idx] || 0;
             const wd = h.wind_direction_10m[idx] || 0;
@@ -419,7 +426,7 @@ export default function Index() {
         {/* Charts */}
         {wx && (
           <>
-            <SectionTitle>Gráficos — próximas 48h</SectionTitle>
+            <SectionTitle>{t('index.chartsTitle')}</SectionTitle>
             <div className="mb-6 grid grid-cols-1 gap-3.5 md:grid-cols-2">
               <WindCharts wx={wx} mar={mar} />
               {lat !== null && lon !== null && (
@@ -430,7 +437,7 @@ export default function Index() {
         )}
 
         <div className="pb-4 text-center text-[0.6rem] tracking-wider text-muted-foreground sm:text-[0.65rem]">
-          Open-Meteo API · GFS + ECMWF · Copernicus Marine · Sin API key · Datos gratuitos
+          {t('index.dataSource')}
           {apiUpdateTime && <span className="ml-2">· 🕐 {apiUpdateTime}</span>}
         </div>
       </main>
@@ -476,6 +483,8 @@ function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: s
 }
 
 function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx: WeatherData; mar: MarineData | null; name: string; date: string; dayIdxs: number[]; whatsappNumber?: string }) {
+  const { t, i18n } = useTranslation();
+  const langLocale = LANG_LOCALE[i18n.language] || 'es-ES';
   const h = wx.hourly;
   const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
   const [fromH, setFromH] = useState(hours[0] || '00:00');
@@ -500,7 +509,7 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx:
       if (code <= 99) return '⛈️';
       return '☁️';
     };
-    let msg = `💨 *WindFlowRadar – ${name}*\n📅 ${humanDate(date)} (${fromH}–${toH})\n\n`;
+    let msg = `💨 *WindFlowRadar – ${name}*\n📅 ${humanDate(date, langLocale)} (${fromH}–${toH})\n\n`;
     for (const idx of idxs) {
       const ws = Math.round(h.wind_speed_10m[idx] || 0);
       const wg = Math.round(h.wind_gusts_10m[idx] || 0);
@@ -520,7 +529,7 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx:
     }
     // Desktop: copiar al portapapeles + abrir WhatsApp Web
     navigator.clipboard.writeText(msg).then(() => {
-      toast.success('Mensaje copiado. Pégalo en WhatsApp Web (Ctrl+V).');
+      toast.success(t('index.copiedMsg'));
     }).catch(() => {
       const base = whatsappNumber ? `https://wa.me/${whatsappNumber}` : 'https://wa.me';
       window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -530,18 +539,18 @@ function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx:
   return (
     <>
       <div className="flex flex-col gap-1">
-        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Desde</label>
+        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.shareFrom')}</label>
         <select value={fromH} onChange={e => setFromH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
           {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Hasta</label>
+        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.shareTo')}</label>
         <select value={toH} onChange={e => setToH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
           {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
         </select>
       </div>
-      <ActionBtn onClick={share} emoji="📲">Compartir</ActionBtn>
+      <ActionBtn onClick={share} emoji="📲">{t('index.shareBtn')}</ActionBtn>
     </>
   );
 }
