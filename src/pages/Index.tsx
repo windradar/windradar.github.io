@@ -12,6 +12,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
 import { FavoritesButton } from '@/components/FavoritesButton';
+import { GearRecommendation } from '@/components/GearRecommendation';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -300,6 +301,11 @@ export default function Index() {
               <WeekForecastChart wx={wx} mar={mar} />
             </div>
           </div>
+        )}
+
+        {/* Gear recommendation */}
+        {wx && cardData && (
+          <GearRecommendation windKn={Math.round(kmhToKnots(cardData.ws))} />
         )}
 
         {/* Actions row */}

@@ -93,7 +93,26 @@
   },
   "materials": {
     "title": "Materiales",
-    "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión."
+    "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión.",
+    "setRange": "Añadir rango de viento",
+    "clearRange": "Quitar rango",
+    "size": "Talla",
+    "rangeSaved": "Rango guardado"
+  },
+  "sports": {
+    "title": "Deportes",
+    "addCustom": "Añadir deporte personalizado",
+    "presets": "Añadir predefinido",
+    "windRange": "Rango de viento",
+    "namePlaceholder": "Nombre del deporte...",
+    "saved": "Deporte guardado",
+    "deleted": "Deporte eliminado",
+    "noSport": "Sin deporte"
+  },
+  "gear": {
+    "title": "Equipo recomendado",
+    "basedOn": "Basado en viento medio ·",
+    "manage": "Gestionar materiales"
   },
   "sessions": {
     "title": "Sesiones",

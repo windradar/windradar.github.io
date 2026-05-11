@@ -93,7 +93,26 @@
   },
   "materials": {
     "title": "Materials",
-    "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió."
+    "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió.",
+    "setRange": "Afegir rang de vent",
+    "clearRange": "Treure rang",
+    "size": "Talla",
+    "rangeSaved": "Rang desat"
+  },
+  "sports": {
+    "title": "Esports",
+    "addCustom": "Afegir esport personalitzat",
+    "presets": "Afegir predefinit",
+    "windRange": "Rang de vent",
+    "namePlaceholder": "Nom de l'esport...",
+    "saved": "Esport desat",
+    "deleted": "Esport eliminat",
+    "noSport": "Sense esport"
+  },
+  "gear": {
+    "title": "Equip recomanat",
+    "basedOn": "Basat en vent mitjà ·",
+    "manage": "Gestionar materials"
   },
   "sessions": {
     "title": "Sessions",
