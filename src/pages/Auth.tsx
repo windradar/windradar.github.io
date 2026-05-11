@@ -4,26 +4,27 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import logoFlow from '@/assets/logo-flow.png';
 
-// Strong password: 10+ chars, upper, lower, number, symbol
-const passwordSchema = z.string()
-  .min(10, 'Mínimo 10 caracteres')
-  .max(72, 'Máximo 72 caracteres')
-  .regex(/[a-z]/, 'Necesita una minúscula')
-  .regex(/[A-Z]/, 'Necesita una mayúscula')
-  .regex(/[0-9]/, 'Necesita un número')
-  .regex(/[^A-Za-z0-9]/, 'Necesita un símbolo');
-
-const emailSchema = z.string().trim().email('Email no válido').max(255);
-
 export default function Auth() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const passwordSchema = z.string()
+    .min(10, t('auth.passwordMin'))
+    .max(72, t('auth.passwordMax'))
+    .regex(/[a-z]/, t('auth.passwordLower'))
+    .regex(/[A-Z]/, t('auth.passwordUpper'))
+    .regex(/[0-9]/, t('auth.passwordNumber'))
+    .regex(/[^A-Za-z0-9]/, t('auth.passwordSymbol'));
+
+  const emailSchema = z.string().trim().email(t('auth.invalidEmail')).max(255);
 
   useEffect(() => {
     if (!authLoading && user) navigate('/', { replace: true });
@@ -44,7 +45,7 @@ export default function Auth() {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
-        toast.success('Si el email existe, recibirás instrucciones para restaurar tu contraseña.');
+        toast.success(t('auth.resetEmailSent'));
         setMode('signin');
         return;
       }
@@ -63,13 +64,13 @@ export default function Auth() {
         });
         if (error) {
           if (error.message.toLowerCase().includes('already')) {
-            toast.error('Ese email ya está registrado.');
+            toast.error(t('auth.emailAlreadyRegistered'));
           } else {
             toast.error(error.message);
           }
           return;
         }
-        toast.success('Cuenta creada. Revisa tu email para confirmar.');
+        toast.success(t('auth.accountCreated'));
         setMode('signin');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -77,13 +78,13 @@ export default function Auth() {
           password: passParsed.data,
         });
         if (error) {
-          toast.error(error.message.includes('Invalid') ? 'Credenciales no válidas' : error.message);
+          toast.error(error.message.includes('Invalid') ? t('auth.invalidCredentials') : error.message);
           return;
         }
         navigate('/', { replace: true });
       }
     } catch (err: any) {
-      toast.error(err.message || 'Error inesperado');
+      toast.error(err.message || t('common.error'));
     } finally {
       setSubmitting(false);
     }
@@ -100,19 +101,19 @@ export default function Auth() {
 
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg">
         <h1 className="mb-1 font-display text-xl font-bold">
-          {mode === 'signin' && 'Iniciar sesión'}
-          {mode === 'signup' && 'Crear cuenta'}
-          {mode === 'forgot' && 'Recuperar contraseña'}
+          {mode === 'signin' && t('auth.signIn')}
+          {mode === 'signup' && t('auth.signUp')}
+          {mode === 'forgot' && t('auth.forgotPassword')}
         </h1>
         <p className="mb-5 text-xs text-muted-foreground">
-          {mode === 'signup' && 'Solo necesitamos email y contraseña.'}
-          {mode === 'signin' && 'Accede a tu área personal.'}
-          {mode === 'forgot' && 'Te enviaremos un enlace por email.'}
+          {mode === 'signup' && t('auth.onlyEmailPassword')}
+          {mode === 'signin' && t('auth.accessArea')}
+          {mode === 'forgot' && t('auth.sendLinkDesc')}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Email</label>
+            <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('auth.emailLabel')}</label>
             <input
               type="email"
               autoComplete="email"
@@ -125,7 +126,7 @@ export default function Auth() {
 
           {mode !== 'forgot' && (
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Contraseña</label>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('auth.passwordLabel')}</label>
               <input
                 type="password"
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -136,9 +137,7 @@ export default function Auth() {
                 className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               {mode === 'signup' && (
-                <p className="mt-1 text-[0.65rem] text-muted-foreground">
-                  Mínimo 10 caracteres con mayúscula, minúscula, número y símbolo.
-                </p>
+                <p className="mt-1 text-[0.65rem] text-muted-foreground">{t('auth.passwordHint')}</p>
               )}
             </div>
           )}
@@ -148,22 +147,22 @@ export default function Auth() {
             disabled={submitting}
             className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50"
           >
-            {submitting ? '...' : mode === 'signup' ? 'Crear cuenta' : mode === 'forgot' ? 'Enviar enlace' : 'Entrar'}
+            {submitting ? '...' : mode === 'signup' ? t('auth.createAccountBtn') : mode === 'forgot' ? t('auth.sendLinkBtn') : t('auth.enterBtn')}
           </button>
         </form>
 
         <div className="mt-4 flex flex-col gap-1.5 text-xs">
           {mode === 'signin' && (
             <>
-              <button onClick={() => setMode('signup')} className="text-primary hover:underline text-left">¿No tienes cuenta? Regístrate</button>
-              <button onClick={() => setMode('forgot')} className="text-muted-foreground hover:underline text-left">¿Olvidaste tu contraseña?</button>
+              <button onClick={() => setMode('signup')} className="text-primary hover:underline text-left">{t('auth.noAccount')}</button>
+              <button onClick={() => setMode('forgot')} className="text-muted-foreground hover:underline text-left">{t('auth.forgotPasswordLink')}</button>
             </>
           )}
           {mode === 'signup' && (
-            <button onClick={() => setMode('signin')} className="text-primary hover:underline text-left">¿Ya tienes cuenta? Entra</button>
+            <button onClick={() => setMode('signin')} className="text-primary hover:underline text-left">{t('auth.alreadyAccount')}</button>
           )}
           {mode === 'forgot' && (
-            <button onClick={() => setMode('signin')} className="text-primary hover:underline text-left">Volver a iniciar sesión</button>
+            <button onClick={() => setMode('signin')} className="text-primary hover:underline text-left">{t('auth.backToSignIn')}</button>
           )}
         </div>
       </div>

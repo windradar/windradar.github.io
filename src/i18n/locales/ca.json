@@ -1,0 +1,239 @@
+{
+  "common": {
+    "back": "Tornar",
+    "save": "Desar",
+    "cancel": "Cancel·lar",
+    "loading": "Carregant...",
+    "saving": "Desant...",
+    "deleting": "Eliminant...",
+    "close": "Tancar",
+    "error": "Error inesperat"
+  },
+  "nav": {
+    "profile": "Perfil",
+    "sessions": "Sessions",
+    "materials": "Materials",
+    "settings": "Configuració",
+    "help": "Ajuda",
+    "signIn": "Entrar",
+    "signOut": "Tancar sessió"
+  },
+  "theme": {
+    "dark": "Fosc",
+    "light": "Clar",
+    "toDark": "Canviar a mode fosc",
+    "toLight": "Canviar a mode clar"
+  },
+  "auth": {
+    "signIn": "Iniciar sessió",
+    "signUp": "Crear compte",
+    "forgotPassword": "Recuperar contrasenya",
+    "emailLabel": "Correu electrònic",
+    "passwordLabel": "Contrasenya",
+    "accessArea": "Accedeix a la teva àrea personal.",
+    "onlyEmailPassword": "Només necessitem correu i contrasenya.",
+    "sendLinkDesc": "T'enviarem un enllaç per correu.",
+    "createAccountBtn": "Crear compte",
+    "sendLinkBtn": "Enviar enllaç",
+    "enterBtn": "Entrar",
+    "passwordHint": "Mínim 10 caràcters amb majúscula, minúscula, número i símbol.",
+    "noAccount": "No tens compte? Registra't",
+    "forgotPasswordLink": "Has oblidat la contrasenya?",
+    "alreadyAccount": "Ja tens compte? Entra",
+    "backToSignIn": "Tornar a iniciar sessió",
+    "emailAlreadyRegistered": "Aquest correu ja està registrat.",
+    "accountCreated": "Compte creat. Revisa el correu per confirmar.",
+    "invalidCredentials": "Credencials no vàlides",
+    "resetEmailSent": "Si el correu existeix, rebràs instruccions per restaurar la contrasenya.",
+    "invalidEmail": "Correu no vàlid",
+    "passwordMin": "Mínim 10 caràcters",
+    "passwordMax": "Màxim 72 caràcters",
+    "passwordLower": "Necessita una minúscula",
+    "passwordUpper": "Necessita una majúscula",
+    "passwordNumber": "Necessita un número",
+    "passwordSymbol": "Necessita un símbol"
+  },
+  "resetPassword": {
+    "title": "Nova contrasenya",
+    "validating": "Validant enllaç...",
+    "newPassword": "Nova contrasenya",
+    "confirmPassword": "Confirmar contrasenya",
+    "updateBtn": "Actualitzar contrasenya",
+    "passwordMismatch": "Les contrasenyes no coincideixen",
+    "success": "Contrasenya actualitzada. Inicia sessió."
+  },
+  "profile": {
+    "title": "Perfil",
+    "accountData": "Dades del compte",
+    "emailLabel": "Correu electrònic",
+    "nameLabel": "Nom / Àlies",
+    "namePlaceholder": "El teu nom o àlies",
+    "preferences": "Preferències",
+    "windUnits": "Unitats de vent",
+    "dateFormat": "Format de data",
+    "knots": "Nusos (kn)",
+    "saveChanges": "Desar canvis",
+    "whatsappTitle": "WhatsApp predeterminat",
+    "whatsappDesc": "En prémer «Compartir» a la previsió s'obrirà directament aquest contacte amb el missatge llest per enviar. Número en format internacional sense espais ni + (ex: 34612345678).",
+    "changePassword": "Canviar contrasenya",
+    "newPassword": "Nova contrasenya",
+    "confirmPassword": "Confirmar contrasenya",
+    "passwordHint": "Mínim 10 caràcters amb majúscula, minúscula, número i símbol.",
+    "changePasswordBtn": "Canviar contrasenya",
+    "sendResetEmail": "Enviar correu de restauració",
+    "deleteAccount": "Eliminar compte",
+    "deleteWarning": "Això esborrarà de forma permanent totes les teves dades: sessions, materials i imatges. L'eliminació completa pot trigar fins a 30 dies.",
+    "deleteWarningBold": "Aquesta acció no es pot desfer.",
+    "deleteCheckbox": "Entenc que aquesta acció és irreversible i perdré totes les meves dades.",
+    "deleteBtn": "Eliminar el meu compte",
+    "profileUpdated": "Perfil actualitzat",
+    "passwordUpdated": "Contrasenya actualitzada",
+    "resetEmailSent": "Correu de restauració enviat",
+    "passwordMismatch": "Les contrasenyes no coincideixen"
+  },
+  "materials": {
+    "title": "Materials",
+    "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió."
+  },
+  "sessions": {
+    "title": "Sessions",
+    "newSession": "Nova",
+    "editSession": "✏️ Editar sessió",
+    "registerSession": "Registrar sessió",
+    "history": "Historial",
+    "noSessions": "Encara no has registrat cap sessió.",
+    "locationLabel": "Ubicació",
+    "dateLabel": "Data",
+    "startLabel": "Inici",
+    "endLabel": "Fi",
+    "loadWeather": "🌬️ Carregar dades meteo del rang",
+    "reloadWeather": "🔄 Recarregar dades meteo",
+    "loadingWeather": "Carregant...",
+    "snapshotLabel": "Snapshot",
+    "materialLabel": "Material utilitzat",
+    "trackingLabel": "URL de seguiment (Strava, etc.)",
+    "notesLabel": "Notes",
+    "saveSession": "Desar sessió",
+    "saveChanges": "Desar canvis",
+    "noLocation": "Falta la ubicació",
+    "timeError": "L'hora final ha de ser posterior",
+    "invalidTrackingUrl": "URL de seguiment no vàlida",
+    "dataDiscarded": "Dades meteo descartades: prem «Carregar dades» per actualitzar.",
+    "hoursLoaded": "{{count}} h carregades",
+    "noDataForRange": "No hi ha dades per a aquest rang horari",
+    "selectLocationFirst": "Selecciona una ubicació primer",
+    "sessionSaved": "Sessió desada",
+    "sessionUpdated": "Sessió actualitzada",
+    "deleteConfirm": "Eliminar aquesta sessió?",
+    "deleted": "Eliminada",
+    "noLocationLabel": "Sense ubicació",
+    "material": "Material",
+    "meteoData": "Dades meteo ({{count}} h)",
+    "shareInstagram": "Compartir a Instagram",
+    "noDataForDate": "Sense dades meteo per a aquesta data"
+  },
+  "settings": {
+    "title": "⚙️ Configuració",
+    "windThreshold": "🌬️ Llindar de vent mínim",
+    "windThresholdDesc": "Les files amb vent ≥ aquest valor es marcaran amb colors progressius (groc → vermell).",
+    "hourRange": "⏰ Rang d'hores visible",
+    "hourRangeDesc": "Filtra les hores que es mostren a la taula de previsió.",
+    "from": "Des de",
+    "to": "Fins a",
+    "emailNotif": "📧 Enviament automàtic per correu",
+    "emailNotifDesc": "Configura fins a 2 hores d'enviament automàtic diari amb el rang que prefereixis.",
+    "emailLabel": "Correu electrònic",
+    "locationLabel": "Ubicació",
+    "sendTime1": "Hora enviament 1",
+    "sendTime2": "Hora enviament 2",
+    "optional": "(opcional)",
+    "rangeFrom": "Rang des de",
+    "rangeTo": "Rang fins a",
+    "disabled": "— Desactivat —",
+    "emailNote": "L'enviament automàtic requereix que l'app estigui oberta al navegador a l'hora configurada. S'obrirà el client de correu amb l'informe llest.",
+    "cancel": "Cancel·lar",
+    "save": "Desar"
+  },
+  "chart": {
+    "forecast7days": "🌬️ Previsió 7 dies · cada 2h",
+    "wind": "Vent (kn)",
+    "gust": "Ratxa",
+    "direction": "🧭 Direcció"
+  },
+  "cookies": {
+    "title": "Privacitat i cookies",
+    "necessary": "Necessàries",
+    "necessaryDesc": "sempre actives (autenticació, preferències).",
+    "analytics": "Analítica",
+    "analyticsDesc": "mètriques anònimes d'ús.",
+    "marketing": "Publicitat",
+    "marketingDesc": "Google AdSense personalitzat.",
+    "desc": "Usem cookies tècniques imprescindibles perquè funcioni l'app (sessió, preferències). Amb el teu permís, també les usem per a analítica (millorar el servei) i publicitat (Google AdSense).",
+    "moreInfo": "Més info a",
+    "cookiePolicy": "Política de cookies",
+    "privacy": "Privacitat",
+    "legalNotice": "Avís legal",
+    "configure": "Configurar",
+    "saveSelection": "Desar selecció",
+    "reject": "Rebutjar",
+    "acceptAll": "Acceptar tot"
+  },
+  "legal": {
+    "legalNotice": "Avís legal",
+    "privacy": "Privacitat",
+    "cookies": "Cookies",
+    "terms": "Termes",
+    "configureCookies": "Configurar cookies"
+  },
+  "help": {
+    "title": "Guia d'ús",
+    "subtitle": "Tot el que necessites saber per treure el màxim profit a WindFlowRadar.",
+    "contents": "Contingut",
+    "contact": "Tens alguna pregunta o suggeriment?",
+    "contactLink": "Escriu-nos",
+    "sections": {
+      "radar": {
+        "title": "Radar meteorològic",
+        "steps": [
+          { "heading": "Selecciona un punt al mapa", "body": "Prem a qualsevol lloc del mapa o utilitza el cercador de localització per centrar la vista. El panell lateral mostrarà les dades meteorològiques d'aquell punt." },
+          { "heading": "Interpreta el vent", "body": "La velocitat es mostra en nusos (kt) per defecte. L'indicador de direcció assenyala des d'on bufa el vent. El valor entre parèntesis és la ratxa màxima." },
+          { "heading": "Dades d'onatge", "body": "L'alçada d'ona (Hs) i el període (T) s'actualitzen cada hora amb el model d'Open-Meteo Marine. Són orientatius: comprova sempre les condicions reals in situ." },
+          { "heading": "Temperatura i altres capes", "body": "Utilitza el selector de capes per alternar entre temperatura de l'aire, temperatura de l'aigua i visibilitat. El gràfic de 7 dies mostra la tendència horària del paràmetre actiu." }
+        ]
+      },
+      "spots": {
+        "title": "Spots favorits",
+        "steps": [
+          { "heading": "Desar un spot", "body": "Amb qualsevol punt seleccionat al mapa, prem el botó d'estrella (☆) al panell lateral. Pots posar-li un nom personalitzat abans de desar." },
+          { "heading": "Accedir als teus spots", "body": "El desplegable de favorits (icona estrella a la barra superior) llista tots els teus spots desats. Prem-ne un per centrar-te i carregar la previsió a l'instant." },
+          { "heading": "Eliminar un spot", "body": "Obre el desplegable de favorits i prem la icona de paperera al costat del spot que vulguis eliminar. L'acció és immediata." }
+        ]
+      },
+      "sessions": {
+        "title": "Sessions",
+        "steps": [
+          { "heading": "Registrar una sessió", "body": "Ves a Sessions des del menú d'usuari. Prem \"+ Nova sessió\" i introdueix la data, hores a l'aigua, el spot, el material usat i les teves notes. Les dades meteorològiques del moment es capturen automàticament." },
+          { "heading": "Vincular amb Strava", "body": "Al formulari de sessió pots enganxar l'URL de la teva activitat a Strava. Apareixerà com a enllaç al detall de la sessió." },
+          { "heading": "Historial i estadístiques", "body": "La llista de sessions mostra un resum cronològic. Les targetes inclouen condicions meteo del moment, material emprat i temps a l'aigua acumulat." }
+        ]
+      },
+      "materials": {
+        "title": "Materials",
+        "steps": [
+          { "heading": "Afegir material", "body": "Ves a Materials des del menú d'usuari (/materials). Prem \"+ Afegir\" i escriu el nom de l'element (taula, vela, ala, trapezi…). Pots editar el nom directament des de la targeta." },
+          { "heading": "Pujar una foto", "body": "Cada targeta de material té una àrea d'imatge. Prem-hi o al botó de càmera per pujar una foto des del dispositiu. La imatge es desa de forma privada al núvol: només tu la pots veure." },
+          { "heading": "Usar material en una sessió", "body": "En registrar una sessió, el camp «Material» mostra la llista de materials desats. Selecciona el que has usat i quedarà vinculat a aquella sessió." },
+          { "heading": "Veure foto ampliada", "body": "Prem sobre la miniatura de qualsevol material per obrir la imatge en un visor emergent a pantalla completa." }
+        ]
+      },
+      "profile": {
+        "title": "Perfil i compte",
+        "steps": [
+          { "heading": "Àlies i preferències", "body": "Des del teu Perfil pots canviar l'àlies que apareix a l'app i configurar les unitats preferides (nusos, km/h, m/s) i el format de data." },
+          { "heading": "Seguretat", "body": "Per canviar la contrasenya utilitza l'enllaç «Canviar contrasenya» del perfil. S'enviarà un correu a la teva adreça registrada amb les instruccions." },
+          { "heading": "Eliminar compte", "body": "Als ajustos del compte trobaràs l'opció d'eliminar el teu compte. Això esborrarà de forma permanent totes les teves dades (sessions, materials i imatges) en un termini màxim de 30 dies." }
+        ]
+      }
+    }
+  }
+}

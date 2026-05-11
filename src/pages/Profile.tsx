@@ -5,18 +5,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ArrowLeft, MessageCircle, TriangleAlert } from 'lucide-react';
-
-const passwordSchema = z.string()
-  .min(10, 'Mínimo 10 caracteres')
-  .max(72)
-  .regex(/[a-z]/, 'Necesita una minúscula')
-  .regex(/[A-Z]/, 'Necesita una mayúscula')
-  .regex(/[0-9]/, 'Necesita un número')
-  .regex(/[^A-Za-z0-9]/, 'Necesita un símbolo');
+import { useTranslation } from 'react-i18next';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const passwordSchema = z.string()
+    .min(10, t('auth.passwordMin'))
+    .max(72)
+    .regex(/[a-z]/, t('auth.passwordLower'))
+    .regex(/[A-Z]/, t('auth.passwordUpper'))
+    .regex(/[0-9]/, t('auth.passwordNumber'))
+    .regex(/[^A-Za-z0-9]/, t('auth.passwordSymbol'));
 
   const [displayName, setDisplayName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
@@ -60,18 +62,18 @@ export default function Profile() {
     }).eq('user_id', user.id);
     setSavingProfile(false);
     if (error) toast.error(error.message);
-    else toast.success('Perfil actualizado');
+    else toast.success(t('profile.profileUpdated'));
   };
 
   const changePassword = async () => {
-    if (newPass !== confirmPass) { toast.error('Las contraseñas no coinciden'); return; }
+    if (newPass !== confirmPass) { toast.error(t('profile.passwordMismatch')); return; }
     const parsed = passwordSchema.safeParse(newPass);
     if (!parsed.success) { toast.error(parsed.error.errors[0].message); return; }
     setSavingPass(true);
     const { error } = await supabase.auth.updateUser({ password: parsed.data });
     setSavingPass(false);
     if (error) { toast.error(error.message); return; }
-    toast.success('Contraseña actualizada');
+    toast.success(t('profile.passwordUpdated'));
     setNewPass(''); setConfirmPass('');
   };
 
@@ -81,32 +83,26 @@ export default function Profile() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
-    else toast.success('Email de restauración enviado');
+    else toast.success(t('profile.resetEmailSent'));
   };
 
   const deleteAccount = async () => {
     if (!user) return;
     setDeleting(true);
     try {
-      // Delete material items and categories (no CASCADE from auth.users)
       await supabase.from('material_items').delete().eq('user_id', user.id);
       await supabase.from('material_categories').delete().eq('user_id', user.id);
-
-      // Delete storage files in material-photos/{user_id}/
       const { data: files } = await supabase.storage.from('material-photos').list(user.id);
       if (files && files.length > 0) {
         const paths = files.map(f => `${user.id}/${f.name}`);
         await supabase.storage.from('material-photos').remove(paths);
       }
-
-      // Delete auth user (cascades to profiles + training_sessions)
       const { error } = await supabase.rpc('delete_own_account');
       if (error) throw error;
-
       await signOut();
       navigate('/');
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Error al eliminar la cuenta';
+      const msg = e instanceof Error ? e.message : t('common.error');
       toast.error(msg);
       setDeleting(false);
     }
@@ -116,23 +112,23 @@ export default function Profile() {
     <div className="min-h-screen bg-background px-4 py-6">
       <div className="mx-auto max-w-2xl">
         <Link to="/" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
-          <ArrowLeft size={14} /> Volver
+          <ArrowLeft size={14} /> {t('common.back')}
         </Link>
 
-        <h1 className="mb-6 font-display text-2xl font-extrabold">👤 Perfil</h1>
+        <h1 className="mb-6 font-display text-2xl font-extrabold">👤 {t('profile.title')}</h1>
 
         {/* Datos de cuenta */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">Datos de cuenta</h2>
+          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">{t('profile.accountData')}</h2>
           <div className="space-y-3">
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Email</label>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.emailLabel')}</label>
               <input value={user?.email || ''} disabled className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm text-muted-foreground" />
             </div>
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Nombre / Alias</label>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.nameLabel')}</label>
               <input value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60}
-                placeholder="Tu nombre o alias"
+                placeholder={t('profile.namePlaceholder')}
                 className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
             </div>
           </div>
@@ -140,10 +136,10 @@ export default function Profile() {
 
         {/* Preferencias */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">Preferencias</h2>
+          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">{t('profile.preferences')}</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Unidades de viento</label>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.windUnits')}</label>
               <div className="flex gap-2">
                 {(['kn', 'kmh', 'ms'] as const).map(u => (
                   <button
@@ -155,14 +151,14 @@ export default function Profile() {
                         : 'border-border bg-secondary text-muted-foreground hover:border-primary hover:text-primary'
                     }`}
                   >
-                    {u === 'kn' ? 'Nudos (kn)' : u === 'kmh' ? 'km/h' : 'm/s'}
+                    {u === 'kn' ? t('profile.knots') : u === 'kmh' ? 'km/h' : 'm/s'}
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Formato de fecha</label>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.dateFormat')}</label>
               <div className="flex gap-2 flex-wrap">
                 {(['dmy', 'mdy', 'iso'] as const).map(f => (
                   <button
@@ -182,7 +178,7 @@ export default function Profile() {
 
             <button onClick={saveProfile} disabled={savingProfile}
               className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
-              {savingProfile ? '...' : 'Guardar cambios'}
+              {savingProfile ? t('common.saving') : t('profile.saveChanges')}
             </button>
           </div>
         </section>
@@ -190,12 +186,9 @@ export default function Profile() {
         {/* WhatsApp */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
           <h2 className="mb-1 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider">
-            <MessageCircle size={15} className="text-green-500" /> WhatsApp predeterminado
+            <MessageCircle size={15} className="text-green-500" /> {t('profile.whatsappTitle')}
           </h2>
-          <p className="mb-3 text-[0.68rem] text-muted-foreground">
-            Al pulsar "Compartir" en la previsión se abrirá directamente este contacto con el mensaje listo para enviar.
-            Número en formato internacional sin espacios ni <code>+</code> (ej: <code>34612345678</code>).
-          </p>
+          <p className="mb-3 text-[0.68rem] text-muted-foreground">{t('profile.whatsappDesc')}</p>
           <div className="space-y-3">
             <input
               value={whatsappNumber}
@@ -207,30 +200,28 @@ export default function Profile() {
             />
             <button onClick={saveProfile} disabled={savingProfile}
               className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
-              {savingProfile ? '...' : 'Guardar'}
+              {savingProfile ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </section>
 
         {/* Cambiar contraseña */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">Cambiar contraseña</h2>
+          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">{t('profile.changePassword')}</h2>
           <div className="space-y-3">
-            <input type="password" placeholder="Nueva contraseña" value={newPass} onChange={e => setNewPass(e.target.value)}
+            <input type="password" placeholder={t('profile.newPassword')} value={newPass} onChange={e => setNewPass(e.target.value)}
               className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-            <input type="password" placeholder="Confirmar contraseña" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
+            <input type="password" placeholder={t('profile.confirmPassword')} value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
               className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-            <p className="text-[0.65rem] text-muted-foreground">
-              Mínimo 10 caracteres con mayúscula, minúscula, número y símbolo.
-            </p>
+            <p className="text-[0.65rem] text-muted-foreground">{t('profile.passwordHint')}</p>
             <div className="flex flex-wrap gap-2">
               <button onClick={changePassword} disabled={savingPass || !newPass}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
-                {savingPass ? '...' : 'Cambiar contraseña'}
+                {savingPass ? t('common.saving') : t('profile.changePasswordBtn')}
               </button>
               <button onClick={sendReset}
                 className="rounded-md border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-secondary">
-                Enviar email de restauración
+                {t('profile.sendResetEmail')}
               </button>
             </div>
           </div>
@@ -239,11 +230,10 @@ export default function Profile() {
         {/* Eliminar cuenta */}
         <section className="mb-6 rounded-xl border border-destructive/40 bg-destructive/5 p-5">
           <h2 className="mb-1 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-destructive">
-            <TriangleAlert size={15} /> Eliminar cuenta
+            <TriangleAlert size={15} /> {t('profile.deleteAccount')}
           </h2>
           <p className="mb-4 text-[0.68rem] text-muted-foreground">
-            Esto borrará de forma permanente todos tus datos: sesiones, materiales e imágenes.
-            La eliminación completa puede tardar hasta 30 días. <strong>Esta acción no se puede deshacer.</strong>
+            {t('profile.deleteWarning')} <strong>{t('profile.deleteWarningBold')}</strong>
           </p>
           <label className="mb-4 flex items-start gap-2 cursor-pointer">
             <input
@@ -252,19 +242,16 @@ export default function Profile() {
               onChange={e => setDeleteConfirmed(e.target.checked)}
               className="mt-0.5 accent-destructive"
             />
-            <span className="text-xs text-muted-foreground">
-              Entiendo que esta acción es irreversible y perderé todos mis datos.
-            </span>
+            <span className="text-xs text-muted-foreground">{t('profile.deleteCheckbox')}</span>
           </label>
           <button
             onClick={deleteAccount}
             disabled={!deleteConfirmed || deleting}
             className="rounded-md bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {deleting ? 'Eliminando...' : 'Eliminar mi cuenta'}
+            {deleting ? t('common.deleting') : t('profile.deleteBtn')}
           </button>
         </section>
-
       </div>
     </div>
   );

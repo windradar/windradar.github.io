@@ -1,0 +1,239 @@
+{
+  "common": {
+    "back": "Volver",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "deleting": "Eliminando...",
+    "close": "Cerrar",
+    "error": "Error inesperado"
+  },
+  "nav": {
+    "profile": "Perfil",
+    "sessions": "Sesiones",
+    "materials": "Materiales",
+    "settings": "Configuración",
+    "help": "Ayuda",
+    "signIn": "Entrar",
+    "signOut": "Cerrar sesión"
+  },
+  "theme": {
+    "dark": "Oscuro",
+    "light": "Claro",
+    "toDark": "Cambiar a modo oscuro",
+    "toLight": "Cambiar a modo claro"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "forgotPassword": "Recuperar contraseña",
+    "emailLabel": "Email",
+    "passwordLabel": "Contraseña",
+    "accessArea": "Accede a tu área personal.",
+    "onlyEmailPassword": "Solo necesitamos email y contraseña.",
+    "sendLinkDesc": "Te enviaremos un enlace por email.",
+    "createAccountBtn": "Crear cuenta",
+    "sendLinkBtn": "Enviar enlace",
+    "enterBtn": "Entrar",
+    "passwordHint": "Mínimo 10 caracteres con mayúscula, minúscula, número y símbolo.",
+    "noAccount": "¿No tienes cuenta? Regístrate",
+    "forgotPasswordLink": "¿Olvidaste tu contraseña?",
+    "alreadyAccount": "¿Ya tienes cuenta? Entra",
+    "backToSignIn": "Volver a iniciar sesión",
+    "emailAlreadyRegistered": "Ese email ya está registrado.",
+    "accountCreated": "Cuenta creada. Revisa tu email para confirmar.",
+    "invalidCredentials": "Credenciales no válidas",
+    "resetEmailSent": "Si el email existe, recibirás instrucciones para restaurar tu contraseña.",
+    "invalidEmail": "Email no válido",
+    "passwordMin": "Mínimo 10 caracteres",
+    "passwordMax": "Máximo 72 caracteres",
+    "passwordLower": "Necesita una minúscula",
+    "passwordUpper": "Necesita una mayúscula",
+    "passwordNumber": "Necesita un número",
+    "passwordSymbol": "Necesita un símbolo"
+  },
+  "resetPassword": {
+    "title": "Nueva contraseña",
+    "validating": "Validando enlace...",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "updateBtn": "Actualizar contraseña",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "success": "Contraseña actualizada. Inicia sesión."
+  },
+  "profile": {
+    "title": "Perfil",
+    "accountData": "Datos de cuenta",
+    "emailLabel": "Email",
+    "nameLabel": "Nombre / Alias",
+    "namePlaceholder": "Tu nombre o alias",
+    "preferences": "Preferencias",
+    "windUnits": "Unidades de viento",
+    "dateFormat": "Formato de fecha",
+    "knots": "Nudos (kn)",
+    "saveChanges": "Guardar cambios",
+    "whatsappTitle": "WhatsApp predeterminado",
+    "whatsappDesc": "Al pulsar «Compartir» en la previsión se abrirá directamente este contacto con el mensaje listo para enviar. Número en formato internacional sin espacios ni + (ej: 34612345678).",
+    "changePassword": "Cambiar contraseña",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordHint": "Mínimo 10 caracteres con mayúscula, minúscula, número y símbolo.",
+    "changePasswordBtn": "Cambiar contraseña",
+    "sendResetEmail": "Enviar email de restauración",
+    "deleteAccount": "Eliminar cuenta",
+    "deleteWarning": "Esto borrará de forma permanente todos tus datos: sesiones, materiales e imágenes. La eliminación completa puede tardar hasta 30 días.",
+    "deleteWarningBold": "Esta acción no se puede deshacer.",
+    "deleteCheckbox": "Entiendo que esta acción es irreversible y perderé todos mis datos.",
+    "deleteBtn": "Eliminar mi cuenta",
+    "profileUpdated": "Perfil actualizado",
+    "passwordUpdated": "Contraseña actualizada",
+    "resetEmailSent": "Email de restauración enviado",
+    "passwordMismatch": "Las contraseñas no coinciden"
+  },
+  "materials": {
+    "title": "Materiales",
+    "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión."
+  },
+  "sessions": {
+    "title": "Sesiones",
+    "newSession": "Nueva",
+    "editSession": "✏️ Editar sesión",
+    "registerSession": "Registrar sesión",
+    "history": "Historial",
+    "noSessions": "Aún no has registrado ninguna sesión.",
+    "locationLabel": "Ubicación",
+    "dateLabel": "Fecha",
+    "startLabel": "Inicio",
+    "endLabel": "Fin",
+    "loadWeather": "🌬️ Cargar datos meteo del rango",
+    "reloadWeather": "🔄 Recargar datos meteo",
+    "loadingWeather": "Cargando...",
+    "snapshotLabel": "Snapshot",
+    "materialLabel": "Material utilizado",
+    "trackingLabel": "URL de tracking (Strava, etc.)",
+    "notesLabel": "Notas",
+    "saveSession": "Guardar sesión",
+    "saveChanges": "Guardar cambios",
+    "noLocation": "Falta la ubicación",
+    "timeError": "La hora final debe ser posterior",
+    "invalidTrackingUrl": "URL de tracking no válida",
+    "dataDiscarded": "Datos meteo descartados: pulsa «Cargar datos» para actualizar.",
+    "hoursLoaded": "{{count}} h cargadas",
+    "noDataForRange": "No hay datos para ese rango horario",
+    "selectLocationFirst": "Selecciona una ubicación primero",
+    "sessionSaved": "Sesión guardada",
+    "sessionUpdated": "Sesión actualizada",
+    "deleteConfirm": "¿Eliminar esta sesión?",
+    "deleted": "Eliminada",
+    "noLocationLabel": "Sin ubicación",
+    "material": "Material",
+    "meteoData": "Datos meteo ({{count}} h)",
+    "shareInstagram": "Compartir en Instagram",
+    "noDataForDate": "Sin datos meteo para esa fecha"
+  },
+  "settings": {
+    "title": "⚙️ Configuración",
+    "windThreshold": "🌬️ Umbral de viento mínimo",
+    "windThresholdDesc": "Las filas con viento ≥ este valor se marcarán con colores progresivos (amarillo → rojo).",
+    "hourRange": "⏰ Rango de horas visible",
+    "hourRangeDesc": "Filtra las horas que se muestran en la tabla de previsión.",
+    "from": "Desde",
+    "to": "Hasta",
+    "emailNotif": "📧 Envío automático por email",
+    "emailNotifDesc": "Configura hasta 2 horas de envío automático diario con el rango que prefieras.",
+    "emailLabel": "Email",
+    "locationLabel": "Ubicación",
+    "sendTime1": "Hora envío 1",
+    "sendTime2": "Hora envío 2",
+    "optional": "(opcional)",
+    "rangeFrom": "Rango desde",
+    "rangeTo": "Rango hasta",
+    "disabled": "— Desactivado —",
+    "emailNote": "El envío automático requiere que la app esté abierta en el navegador a la hora configurada. Se abrirá tu cliente de correo con el informe listo.",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "chart": {
+    "forecast7days": "🌬️ Previsión 7 días · cada 2h",
+    "wind": "Viento (kn)",
+    "gust": "Ráfaga",
+    "direction": "🧭 Dirección"
+  },
+  "cookies": {
+    "title": "Privacidad y cookies",
+    "necessary": "Necesarias",
+    "necessaryDesc": "siempre activas (autenticación, preferencias).",
+    "analytics": "Analítica",
+    "analyticsDesc": "métricas anónimas de uso.",
+    "marketing": "Publicidad",
+    "marketingDesc": "Google AdSense personalizado.",
+    "desc": "Usamos cookies técnicas imprescindibles para que funcione la app (sesión, preferencias). Con tu permiso, también las usamos para analítica (mejorar el servicio) y publicidad (Google AdSense).",
+    "moreInfo": "Más info en",
+    "cookiePolicy": "Política de cookies",
+    "privacy": "Privacidad",
+    "legalNotice": "Aviso legal",
+    "configure": "Configurar",
+    "saveSelection": "Guardar selección",
+    "reject": "Rechazar",
+    "acceptAll": "Aceptar todo"
+  },
+  "legal": {
+    "legalNotice": "Aviso legal",
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "terms": "Términos",
+    "configureCookies": "Configurar cookies"
+  },
+  "help": {
+    "title": "Guía de uso",
+    "subtitle": "Todo lo que necesitas saber para sacar el máximo partido a WindFlowRadar.",
+    "contents": "Contenido",
+    "contact": "¿Tienes alguna duda o sugerencia?",
+    "contactLink": "Escríbenos",
+    "sections": {
+      "radar": {
+        "title": "Radar meteorológico",
+        "steps": [
+          { "heading": "Selecciona un punto en el mapa", "body": "Pulsa en cualquier lugar del mapa o usa el buscador de localización para centrar la vista. El panel lateral mostrará los datos meteorológicos de ese punto." },
+          { "heading": "Interpreta el viento", "body": "La velocidad se muestra en nudos (kt) por defecto. El indicador de dirección señala desde dónde sopla el viento. El valor entre paréntesis es la ráfaga máxima." },
+          { "heading": "Datos de oleaje", "body": "La altura de ola (Hs) y el periodo (T) se actualizan cada hora con el modelo de Open-Meteo Marine. Son orientativos: comprueba siempre las condiciones reales in situ." },
+          { "heading": "Temperatura y otras capas", "body": "Usa el selector de capas para alternar entre temperatura del aire, temperatura del agua y visibilidad. El gráfico de 7 días muestra la tendencia horaria del parámetro activo." }
+        ]
+      },
+      "spots": {
+        "title": "Spots favoritos",
+        "steps": [
+          { "heading": "Guardar un spot", "body": "Con cualquier punto seleccionado en el mapa, pulsa el botón de estrella (☆) en el panel lateral. Puedes darle un nombre personalizado antes de guardar." },
+          { "heading": "Acceder a tus spots", "body": "El desplegable de favoritos (icono estrella en la barra superior) lista todos tus spots guardados. Pulsa uno para centrarte en él y cargar su previsión al instante." },
+          { "heading": "Eliminar un spot", "body": "Abre el desplegable de favoritos y pulsa el icono de papelera junto al spot que quieras eliminar. La acción es inmediata." }
+        ]
+      },
+      "sessions": {
+        "title": "Sesiones",
+        "steps": [
+          { "heading": "Registrar una sesión", "body": "Ve a Sesiones desde el menú de usuario. Pulsa \"+ Nueva sesión\" e introduce la fecha, horas en el agua, el spot, el material usado y tus notas. Los datos meteorológicos del momento se capturan automáticamente." },
+          { "heading": "Vincular con Strava", "body": "En el formulario de sesión puedes pegar la URL de tu actividad en Strava. Aparecerá como enlace en el detalle de la sesión." },
+          { "heading": "Historial y estadísticas", "body": "La lista de sesiones muestra un resumen cronológico. Las tarjetas incluyen condiciones meteo del momento, material empleado y tiempo en el agua acumulado." }
+        ]
+      },
+      "materials": {
+        "title": "Materiales",
+        "steps": [
+          { "heading": "Añadir material", "body": "Ve a Materiales desde el menú de usuario (/materials). Pulsa \"+ Añadir\" y escribe el nombre del elemento (tabla, vela, ala, trapecio…). Puedes editar el nombre directamente desde la tarjeta." },
+          { "heading": "Subir una foto", "body": "Cada tarjeta de material tiene un área de imagen. Pulsa sobre ella o en el botón de cámara para subir una foto desde tu dispositivo. La imagen se guarda de forma privada en la nube: solo tú puedes verla." },
+          { "heading": "Usar material en una sesión", "body": "Al registrar una sesión, el campo \"Material\" muestra tu lista de materiales guardados. Selecciona el que usaste y quedará vinculado a esa sesión." },
+          { "heading": "Ver foto ampliada", "body": "Pulsa sobre la miniatura de cualquier material para abrir la imagen en un visor emergente a pantalla completa." }
+        ]
+      },
+      "profile": {
+        "title": "Perfil y cuenta",
+        "steps": [
+          { "heading": "Alias y preferencias", "body": "Desde tu Perfil puedes cambiar el alias que aparece en la app y configurar las unidades preferidas (nudos, km/h, m/s) y el formato de fecha." },
+          { "heading": "Seguridad", "body": "Para cambiar la contraseña usa el enlace \"Cambiar contraseña\" del perfil. Se enviará un correo a tu dirección registrada con las instrucciones." },
+          { "heading": "Eliminar cuenta", "body": "En los ajustes de cuenta encontrarás la opción de eliminar tu cuenta. Esto borrará de forma permanente todos tus datos (sesiones, materiales e imágenes) en un plazo máximo de 30 días." }
+        ]
+      }
+    }
+  }
+}

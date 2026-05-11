@@ -1,0 +1,239 @@
+{
+  "common": {
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "saving": "Enregistrement...",
+    "deleting": "Suppression...",
+    "close": "Fermer",
+    "error": "Erreur inattendue"
+  },
+  "nav": {
+    "profile": "Profil",
+    "sessions": "Sessions",
+    "materials": "Matériel",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "signIn": "Connexion",
+    "signOut": "Déconnexion"
+  },
+  "theme": {
+    "dark": "Sombre",
+    "light": "Clair",
+    "toDark": "Passer en mode sombre",
+    "toLight": "Passer en mode clair"
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "signUp": "Créer un compte",
+    "forgotPassword": "Récupérer le mot de passe",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Mot de passe",
+    "accessArea": "Accédez à votre espace personnel.",
+    "onlyEmailPassword": "Nous n'avons besoin que de votre e-mail et mot de passe.",
+    "sendLinkDesc": "Nous vous enverrons un lien par e-mail.",
+    "createAccountBtn": "Créer un compte",
+    "sendLinkBtn": "Envoyer le lien",
+    "enterBtn": "Se connecter",
+    "passwordHint": "Au moins 10 caractères avec majuscule, minuscule, chiffre et symbole.",
+    "noAccount": "Pas de compte ? Inscrivez-vous",
+    "forgotPasswordLink": "Mot de passe oublié ?",
+    "alreadyAccount": "Déjà un compte ? Connectez-vous",
+    "backToSignIn": "Retour à la connexion",
+    "emailAlreadyRegistered": "Cet e-mail est déjà enregistré.",
+    "accountCreated": "Compte créé. Vérifiez votre e-mail pour confirmer.",
+    "invalidCredentials": "Identifiants invalides",
+    "resetEmailSent": "Si l'e-mail existe, vous recevrez des instructions pour réinitialiser votre mot de passe.",
+    "invalidEmail": "E-mail invalide",
+    "passwordMin": "Au moins 10 caractères",
+    "passwordMax": "Maximum 72 caractères",
+    "passwordLower": "Nécessite une minuscule",
+    "passwordUpper": "Nécessite une majuscule",
+    "passwordNumber": "Nécessite un chiffre",
+    "passwordSymbol": "Nécessite un symbole"
+  },
+  "resetPassword": {
+    "title": "Nouveau mot de passe",
+    "validating": "Validation du lien...",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "updateBtn": "Mettre à jour le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "success": "Mot de passe mis à jour. Connectez-vous."
+  },
+  "profile": {
+    "title": "Profil",
+    "accountData": "Informations du compte",
+    "emailLabel": "E-mail",
+    "nameLabel": "Nom / Alias",
+    "namePlaceholder": "Votre nom ou alias",
+    "preferences": "Préférences",
+    "windUnits": "Unités de vent",
+    "dateFormat": "Format de date",
+    "knots": "Nœuds (kn)",
+    "saveChanges": "Enregistrer les modifications",
+    "whatsappTitle": "WhatsApp par défaut",
+    "whatsappDesc": "En appuyant sur «Partager» dans les prévisions, ce contact s'ouvrira directement avec le message prêt à envoyer. Numéro au format international sans espaces ni + (ex : 34612345678).",
+    "changePassword": "Changer le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordHint": "Au moins 10 caractères avec majuscule, minuscule, chiffre et symbole.",
+    "changePasswordBtn": "Changer le mot de passe",
+    "sendResetEmail": "Envoyer un e-mail de réinitialisation",
+    "deleteAccount": "Supprimer le compte",
+    "deleteWarning": "Cela supprimera définitivement toutes vos données : sessions, matériel et images. La suppression complète peut prendre jusqu'à 30 jours.",
+    "deleteWarningBold": "Cette action est irréversible.",
+    "deleteCheckbox": "Je comprends que cette action est irréversible et que je perdrai toutes mes données.",
+    "deleteBtn": "Supprimer mon compte",
+    "profileUpdated": "Profil mis à jour",
+    "passwordUpdated": "Mot de passe mis à jour",
+    "resetEmailSent": "E-mail de réinitialisation envoyé",
+    "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "materials": {
+    "title": "Matériel",
+    "description": "Personnalisez le nom de chaque emplacement (Voiles, Planches...) et ajoutez votre matériel. Il apparaîtra en liste déroulante lors de l'enregistrement d'une session."
+  },
+  "sessions": {
+    "title": "Sessions",
+    "newSession": "Nouvelle",
+    "editSession": "✏️ Modifier la session",
+    "registerSession": "Enregistrer une session",
+    "history": "Historique",
+    "noSessions": "Vous n'avez pas encore enregistré de session.",
+    "locationLabel": "Lieu",
+    "dateLabel": "Date",
+    "startLabel": "Début",
+    "endLabel": "Fin",
+    "loadWeather": "🌬️ Charger les données météo du créneau",
+    "reloadWeather": "🔄 Recharger les données météo",
+    "loadingWeather": "Chargement...",
+    "snapshotLabel": "Snapshot",
+    "materialLabel": "Matériel utilisé",
+    "trackingLabel": "URL de suivi (Strava, etc.)",
+    "notesLabel": "Notes",
+    "saveSession": "Enregistrer la session",
+    "saveChanges": "Enregistrer les modifications",
+    "noLocation": "Le lieu est requis",
+    "timeError": "L'heure de fin doit être postérieure",
+    "invalidTrackingUrl": "URL de suivi invalide",
+    "dataDiscarded": "Données météo supprimées : appuyez sur «Charger» pour mettre à jour.",
+    "hoursLoaded": "{{count}} h chargées",
+    "noDataForRange": "Aucune donnée pour ce créneau horaire",
+    "selectLocationFirst": "Sélectionnez d'abord un lieu",
+    "sessionSaved": "Session enregistrée",
+    "sessionUpdated": "Session mise à jour",
+    "deleteConfirm": "Supprimer cette session ?",
+    "deleted": "Supprimée",
+    "noLocationLabel": "Sans lieu",
+    "material": "Matériel",
+    "meteoData": "Données météo ({{count}} h)",
+    "shareInstagram": "Partager sur Instagram",
+    "noDataForDate": "Aucune donnée météo pour cette date"
+  },
+  "settings": {
+    "title": "⚙️ Paramètres",
+    "windThreshold": "🌬️ Seuil de vent minimum",
+    "windThresholdDesc": "Les lignes avec vent ≥ cette valeur seront marquées avec des couleurs progressives (jaune → rouge).",
+    "hourRange": "⏰ Plage horaire visible",
+    "hourRangeDesc": "Filtre les heures affichées dans le tableau des prévisions.",
+    "from": "De",
+    "to": "À",
+    "emailNotif": "📧 Envoi automatique par e-mail",
+    "emailNotifDesc": "Configurez jusqu'à 2 heures d'envoi automatique quotidien avec la plage souhaitée.",
+    "emailLabel": "E-mail",
+    "locationLabel": "Lieu",
+    "sendTime1": "Heure d'envoi 1",
+    "sendTime2": "Heure d'envoi 2",
+    "optional": "(facultatif)",
+    "rangeFrom": "Plage de",
+    "rangeTo": "Plage à",
+    "disabled": "— Désactivé —",
+    "emailNote": "L'envoi automatique nécessite que l'app soit ouverte dans le navigateur à l'heure configurée. Votre client de messagerie s'ouvrira avec le rapport prêt.",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "chart": {
+    "forecast7days": "🌬️ Prévisions 7 jours · toutes les 2h",
+    "wind": "Vent (kn)",
+    "gust": "Rafale",
+    "direction": "🧭 Direction"
+  },
+  "cookies": {
+    "title": "Confidentialité et cookies",
+    "necessary": "Nécessaires",
+    "necessaryDesc": "toujours actifs (authentification, préférences).",
+    "analytics": "Analytique",
+    "analyticsDesc": "métriques d'utilisation anonymes.",
+    "marketing": "Publicité",
+    "marketingDesc": "Google AdSense personnalisé.",
+    "desc": "Nous utilisons des cookies techniques essentiels au fonctionnement de l'app (session, préférences). Avec votre permission, nous les utilisons aussi pour l'analytique (amélioration du service) et la publicité (Google AdSense).",
+    "moreInfo": "Plus d'infos sur",
+    "cookiePolicy": "Politique de cookies",
+    "privacy": "Confidentialité",
+    "legalNotice": "Mentions légales",
+    "configure": "Configurer",
+    "saveSelection": "Enregistrer la sélection",
+    "reject": "Refuser",
+    "acceptAll": "Tout accepter"
+  },
+  "legal": {
+    "legalNotice": "Mentions légales",
+    "privacy": "Confidentialité",
+    "cookies": "Cookies",
+    "terms": "Conditions",
+    "configureCookies": "Paramètres des cookies"
+  },
+  "help": {
+    "title": "Guide d'utilisation",
+    "subtitle": "Tout ce que vous devez savoir pour tirer le meilleur parti de WindFlowRadar.",
+    "contents": "Sommaire",
+    "contact": "Une question ou une suggestion ?",
+    "contactLink": "Écrivez-nous",
+    "sections": {
+      "radar": {
+        "title": "Radar météorologique",
+        "steps": [
+          { "heading": "Sélectionnez un point sur la carte", "body": "Appuyez n'importe où sur la carte ou utilisez le moteur de recherche de localisation pour centrer la vue. Le panneau latéral affichera les données météo de ce point." },
+          { "heading": "Interpréter le vent", "body": "La vitesse est affichée en nœuds (kt) par défaut. L'indicateur de direction montre d'où vient le vent. La valeur entre parenthèses est la rafale maximale." },
+          { "heading": "Données de houle", "body": "La hauteur des vagues (Hs) et la période (T) sont mises à jour toutes les heures avec le modèle Open-Meteo Marine. Elles sont indicatives : vérifiez toujours les conditions réelles sur place." },
+          { "heading": "Température et autres couches", "body": "Utilisez le sélecteur de couches pour alterner entre température de l'air, température de l'eau et visibilité. Le graphique de 7 jours montre la tendance horaire du paramètre actif." }
+        ]
+      },
+      "spots": {
+        "title": "Spots favoris",
+        "steps": [
+          { "heading": "Enregistrer un spot", "body": "Avec un point sélectionné sur la carte, appuyez sur le bouton étoile (☆) dans le panneau latéral. Vous pouvez lui donner un nom personnalisé avant de sauvegarder." },
+          { "heading": "Accéder à vos spots", "body": "La liste déroulante des favoris (icône étoile dans la barre supérieure) liste tous vos spots enregistrés. Appuyez sur l'un d'eux pour y centrer et charger sa prévision instantanément." },
+          { "heading": "Supprimer un spot", "body": "Ouvrez la liste des favoris et appuyez sur l'icône de corbeille à côté du spot à supprimer. L'action est immédiate." }
+        ]
+      },
+      "sessions": {
+        "title": "Sessions",
+        "steps": [
+          { "heading": "Enregistrer une session", "body": "Allez dans Sessions depuis le menu utilisateur. Appuyez sur \"+ Nouvelle session\" et entrez la date, les heures sur l'eau, le spot, le matériel utilisé et vos notes. Les données météo du moment sont capturées automatiquement." },
+          { "heading": "Lier avec Strava", "body": "Dans le formulaire de session, vous pouvez coller l'URL de votre activité Strava. Elle apparaîtra comme lien dans le détail de la session." },
+          { "heading": "Historique et statistiques", "body": "La liste des sessions affiche un résumé chronologique. Les cartes incluent les conditions météo du moment, le matériel utilisé et le temps total sur l'eau." }
+        ]
+      },
+      "materials": {
+        "title": "Matériel",
+        "steps": [
+          { "heading": "Ajouter du matériel", "body": "Allez dans Matériel depuis le menu utilisateur (/materials). Appuyez sur \"+ Ajouter\" et saisissez le nom de l'élément (planche, voile, aile, harnais…). Vous pouvez modifier le nom directement depuis la carte." },
+          { "heading": "Uploader une photo", "body": "Chaque carte de matériel a une zone d'image. Appuyez dessus ou sur le bouton appareil photo pour uploader une photo depuis votre appareil. L'image est stockée de manière privée dans le cloud : seul vous pouvez la voir." },
+          { "heading": "Utiliser le matériel dans une session", "body": "Lors de l'enregistrement d'une session, le champ «Matériel» affiche votre liste enregistrée. Sélectionnez ce que vous avez utilisé et il sera lié à cette session." },
+          { "heading": "Voir la photo agrandie", "body": "Appuyez sur la miniature d'un matériel pour ouvrir l'image dans un visualiseur plein écran." }
+        ]
+      },
+      "profile": {
+        "title": "Profil et compte",
+        "steps": [
+          { "heading": "Alias et préférences", "body": "Depuis votre Profil, vous pouvez modifier l'alias affiché dans l'app et configurer les unités préférées (nœuds, km/h, m/s) et le format de date." },
+          { "heading": "Sécurité", "body": "Pour changer votre mot de passe, utilisez le lien «Changer le mot de passe» du profil. Des instructions seront envoyées à votre adresse e-mail enregistrée." },
+          { "heading": "Supprimer le compte", "body": "Dans les paramètres du compte, vous trouverez l'option de supprimer votre compte. Cela effacera définitivement toutes vos données (sessions, matériel et images) dans un délai maximum de 30 jours." }
+        ]
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeSelector } from '@/components/ThemeSelector';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { WindRose } from '@/components/WindRose';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
@@ -230,6 +231,7 @@ export default function Index() {
               className="min-w-0 max-w-[130px] flex-shrink rounded-lg border border-border bg-secondary px-1.5 py-2 font-mono text-[0.7rem] text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
             />
             <ThemeSelector />
+            <LanguageSelector />
             <UserMenu settings={settings} onSettingsChange={setSettings} />
           </div>
           <div className="mt-2 flex items-center gap-2 sm:hidden">

@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/weather-helpers';
 import MaterialSelect from '@/components/MaterialSelect';
@@ -40,12 +41,13 @@ interface Session {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
-const urlSchema = z.string().trim().url('URL no válida').max(500)
-  .refine(u => /^https?:\/\//i.test(u), 'Solo se permiten URLs http/https')
-  .optional().or(z.literal(''));
-
 export default function Sessions() {
+  const { t } = useTranslation();
   const { user } = useAuth();
+
+  const urlSchema = z.string().trim().url(t('sessions.invalidTrackingUrl')).max(500)
+    .refine(u => /^https?:\/\//i.test(u), t('sessions.invalidTrackingUrl'))
+    .optional().or(z.literal(''));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -96,10 +98,10 @@ export default function Sessions() {
 
   const fetchWeatherSnapshot = useCallback(async () => {
     if (locLat === null || locLon === null) {
-      toast.error('Selecciona una ubicación primero');
+      toast.error(t('sessions.selectLocationFirst'));
       return;
     }
-    if (startH >= endH) { toast.error('La hora final debe ser posterior'); return; }
+    if (startH >= endH) { toast.error(t('sessions.timeError')); return; }
 
     setLoadingSnap(true);
     try {
@@ -137,11 +139,10 @@ export default function Sessions() {
           temp: wxRes.hourly.temperature_2m[i] ?? null,
         });
       }
-      if (!snap.length) throw new Error('No hay datos para ese rango horario');
+      if (!snap.length) throw new Error(t('sessions.noDataForRange'));
       setSnapshot(snap);
-      // actualizar origKey al refrescar manualmente
       setOrigKey(`${date}|${startH}|${endH}|${locLat}|${locLon}`);
-      toast.success(`${snap.length} h cargadas`);
+      toast.success(t('sessions.hoursLoaded', { count: snap.length }));
     } catch (e: any) {
       toast.error(e.message || 'Error cargando datos');
       setSnapshot(null);
@@ -156,7 +157,7 @@ export default function Sessions() {
     const currentKey = `${date}|${startH}|${endH}|${locLat}|${locLon}`;
     if (currentKey !== origKey && snapshot) {
       setSnapshot(null);
-      toast.info('Datos meteo descartados: pulsa "Cargar datos" para actualizar.');
+      toast.info(t('sessions.dataDiscarded'));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, startH, endH, locLat, locLon]);
@@ -197,8 +198,8 @@ export default function Sessions() {
 
   const saveSession = async () => {
     if (!user) return;
-    if (!locName) { toast.error('Falta la ubicación'); return; }
-    if (startH >= endH) { toast.error('Hora fin > hora inicio'); return; }
+    if (!locName) { toast.error(t('sessions.noLocation')); return; }
+    if (startH >= endH) { toast.error(t('sessions.timeError')); return; }
 
     if (trackingUrl) {
       const u = urlSchema.safeParse(trackingUrl);
@@ -231,17 +232,17 @@ export default function Sessions() {
     setSaving(false);
 
     if (error) { toast.error(error.message); return; }
-    toast.success(editingId ? 'Sesión actualizada' : 'Sesión guardada');
+    toast.success(editingId ? t('sessions.sessionUpdated') : t('sessions.sessionSaved'));
     resetForm();
     setShowForm(false);
     loadSessions();
   };
 
   const deleteSession = async (id: string) => {
-    if (!confirm('¿Eliminar esta sesión?')) return;
+    if (!confirm(t('sessions.deleteConfirm'))) return;
     const { error } = await supabase.from('training_sessions').delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
-    toast.success('Eliminada');
+    toast.success(t('sessions.deleted'));
     setSessions(s => s.filter(x => x.id !== id));
   };
 
@@ -249,48 +250,46 @@ export default function Sessions() {
     <div className="min-h-screen bg-background px-4 py-6">
       <div className="mx-auto max-w-4xl">
         <Link to="/" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
-          <ArrowLeft size={14} /> Volver
+          <ArrowLeft size={14} /> {t('common.back')}
         </Link>
 
         <div className="mb-6 flex items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-extrabold">⛵ Sesiones</h1>
+          <h1 className="font-display text-2xl font-extrabold">⛵ {t('sessions.title')}</h1>
           <button
             onClick={() => showForm ? (resetForm(), setShowForm(false)) : openNewForm()}
             className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110">
-            {showForm ? <><X size={16} /> Cerrar</> : <><Plus size={16} /> Nueva</>}
+            {showForm ? <><X size={16} /> {t('common.close')}</> : <><Plus size={16} /> {t('sessions.newSession')}</>}
           </button>
         </div>
 
         {showForm && (
           <section className="mb-6 rounded-xl border border-primary/30 bg-card p-5">
             <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-wider">
-              {editingId ? '✏️ Editar sesión' : 'Registrar sesión'}
+              {editingId ? t('sessions.editSession') : t('sessions.registerSession')}
             </h2>
 
             <div className="space-y-4">
-              {/* Location search */}
               <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Ubicación</label>
+                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.locationLabel')}</label>
                 <SearchWithSuggestions onSelect={(name, lat, lon) => { setLocName(name); setLocLat(lat); setLocLon(lon); }} />
                 {locName && <p className="mt-1 text-xs text-primary">📍 {locName}</p>}
               </div>
 
-              {/* Date + hours */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Fecha</label>
+                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.dateLabel')}</label>
                   <input type="date" value={date} onChange={e => setDate(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary" />
                 </div>
                 <div>
-                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Inicio</label>
+                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.startLabel')}</label>
                   <select value={startH} onChange={e => setStartH(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary">
                     {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Fin</label>
+                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.endLabel')}</label>
                   <select value={endH} onChange={e => setEndH(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary">
                     {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
@@ -300,12 +299,12 @@ export default function Sessions() {
 
               <button onClick={fetchWeatherSnapshot} disabled={loadingSnap || !locLat}
                 className="w-full rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20 disabled:opacity-50">
-                {loadingSnap ? 'Cargando...' : snapshot ? '🔄 Recargar datos meteo' : '🌬️ Cargar datos meteo del rango'}
+                {loadingSnap ? t('sessions.loadingWeather') : snapshot ? t('sessions.reloadWeather') : t('sessions.loadWeather')}
               </button>
 
               {snapshot && (
                 <div className="rounded-md border border-border bg-secondary/40 p-3">
-                  <p className="mb-2 text-[0.65rem] uppercase tracking-widest text-muted-foreground">Snapshot ({snapshot.length} h)</p>
+                  <p className="mb-2 text-[0.65rem] uppercase tracking-widest text-muted-foreground">{t('sessions.snapshotLabel')} ({snapshot.length} h)</p>
                   <div className="space-y-1 font-mono text-xs">
                     {snapshot.map((s) => (
                       <div key={s.hour} className="flex justify-between">
@@ -317,9 +316,8 @@ export default function Sessions() {
                 </div>
               )}
 
-              {/* Material */}
               <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-2">Material utilizado</label>
+                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-2">{t('sessions.materialLabel')}</label>
                 <MaterialSelect
                   values={materials}
                   onChange={(slot, value) => setMaterials(m => ({ ...m, [slot]: value }))}
@@ -327,13 +325,13 @@ export default function Sessions() {
               </div>
 
               <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">URL de tracking (Strava, etc.)</label>
+                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.trackingLabel')}</label>
                 <input type="url" value={trackingUrl} onChange={e => setTrackingUrl(e.target.value)} placeholder="https://strava.com/activities/..."
                   className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono outline-none focus:border-primary" />
               </div>
 
               <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">Notas</label>
+                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.notesLabel')}</label>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000} rows={2}
                   className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
               </div>
