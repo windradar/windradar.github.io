@@ -1,13 +1,14 @@
 import { useTranslation } from 'react-i18next';
 
 const LANGUAGES = [
-  { code: 'es', label: 'Castellano', flag: '🇪🇸', enabled: true },
-  { code: 'ca', label: 'Català',     flag: '🏴',  enabled: true },
-  { code: 'en', label: 'English',    flag: '🇬🇧', enabled: false },
-  { code: 'fr', label: 'Français',   flag: '🇫🇷', enabled: false },
+  { code: 'es', label: 'Castellano', fi: 'es',    enabled: true,  visible: true  },
+  { code: 'ca', label: 'Català',     fi: 'es-ct', enabled: true,  visible: true  },
+  { code: 'en', label: 'English',    fi: 'gb',    enabled: false, visible: false },
+  { code: 'fr', label: 'Français',   fi: 'fr',    enabled: false, visible: false },
 ];
 
-const ENABLED = LANGUAGES.filter(l => l.enabled);
+const ENABLED  = LANGUAGES.filter(l => l.enabled);
+const VISIBLE  = LANGUAGES.filter(l => l.visible);
 
 export function LanguageSelector() {
   const { i18n } = useTranslation();
@@ -26,31 +27,21 @@ export function LanguageSelector() {
         className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary"
         title={current.label}
       >
-        <span>{current.flag}</span>
+        <span className={`fi fi-${current.fi} rounded-sm`} style={{ width: 18, height: 13, display: 'inline-block' }} />
         <span className="hidden sm:inline font-mono">{current.code.toUpperCase()}</span>
       </button>
 
       <div className="absolute right-0 top-full z-50 mt-1 hidden min-w-[150px] rounded-lg border border-border bg-card shadow-lg group-hover:block">
-        {LANGUAGES.map(lang => (
+        {VISIBLE.map(lang => (
           <button
             key={lang.code}
-            onClick={() => lang.enabled && i18n.changeLanguage(lang.code)}
-            disabled={!lang.enabled}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-xs transition-colors ${
-              lang.enabled
-                ? lang.code === i18n.language
-                  ? 'font-bold text-primary hover:bg-secondary'
-                  : 'text-foreground hover:bg-secondary'
-                : 'cursor-not-allowed text-muted-foreground/40'
+            onClick={() => i18n.changeLanguage(lang.code)}
+            className={`flex w-full items-center gap-2.5 px-3 py-2 text-xs transition-colors hover:bg-secondary ${
+              lang.code === i18n.language ? 'font-bold text-primary' : 'text-foreground'
             }`}
           >
-            <span>{lang.flag}</span>
+            <span className={`fi fi-${lang.fi} rounded-sm flex-shrink-0`} style={{ width: 18, height: 13, display: 'inline-block' }} />
             <span className="flex-1 text-left">{lang.label}</span>
-            {!lang.enabled && (
-              <span className="text-[0.55rem] uppercase tracking-wider text-muted-foreground/50">
-                Pròx.
-              </span>
-            )}
           </button>
         ))}
       </div>
