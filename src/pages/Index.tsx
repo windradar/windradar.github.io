@@ -11,6 +11,7 @@ import { loadSettings, type AppSettings } from '@/components/SettingsPanel';
 import { UserMenu } from '@/components/UserMenu';
 import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
+import { AdUnit, AD_SLOTS } from '@/components/AdUnit';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
@@ -308,6 +309,8 @@ export default function Index() {
             <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={allDayIdxs} whatsappNumber={whatsappNumber} />
           </div>
         )}
+
+        <AdUnit slot={AD_SLOTS.mainPage} format="horizontal" className="my-4" />
 
         {/* Table */}
         <SectionTitle>{t('index.hourlyTitle')} — {humanDate(date, langLocale)}</SectionTitle>
