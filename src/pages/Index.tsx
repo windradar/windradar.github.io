@@ -323,12 +323,6 @@ export default function Index() {
         )}
 
         {/* Actions row */}
-        {wx && (
-          <div className="mb-4 flex flex-wrap items-end gap-2">
-            <ShareRangePanel wx={wx} mar={mar} name={name} date={date} dayIdxs={allDayIdxs} whatsappNumber={whatsappNumber} />
-          </div>
-        )}
-
         {wx && <AdUnit slot={AD_SLOTS.mainPage} format="horizontal" className="my-4" />}
 
         {/* Table */}
@@ -509,83 +503,3 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
   );
 }
 
-function ActionBtn({ onClick, emoji, children }: { onClick: () => void; emoji: string; children: React.ReactNode }) {
-  return (
-    <button onClick={onClick} className="rounded-lg border border-border bg-transparent px-3 py-2 font-display text-[0.72rem] font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary sm:px-4 sm:text-[0.78rem]">
-      {emoji} {children}
-    </button>
-  );
-}
-
-function ShareRangePanel({ wx, mar, name, date, dayIdxs, whatsappNumber }: { wx: WeatherData; mar: MarineData | null; name: string; date: string; dayIdxs: number[]; whatsappNumber?: string }) {
-  const { t, i18n } = useTranslation();
-  const langLocale = LANG_LOCALE[i18n.language] || 'es-ES';
-  const h = wx.hourly;
-  const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
-  const [fromH, setFromH] = useState(hours[0] || '00:00');
-  const [toH, setToH] = useState(hours[hours.length - 1] || '23:00');
-
-  const share = () => {
-    const idxs = dayIdxs.filter(i => {
-      const hr = h.time[i].slice(11, 16);
-      return hr >= fromH && hr <= toH;
-    });
-    if (!idxs.length) return;
-
-    const wmoEmojiShare = (code: number) => {
-      if (code === 0) return '☀️';
-      if (code <= 2) return '🌤️';
-      if (code === 3) return '☁️';
-      if (code <= 48) return '🌫️';
-      if (code <= 55) return '🌦️';
-      if (code <= 65) return '🌧️';
-      if (code <= 75) return '🌨️';
-      if (code <= 82) return '🌧️';
-      if (code <= 99) return '⛈️';
-      return '☁️';
-    };
-    let msg = `💨 *WindFlowRadar – ${name}*\n📅 ${humanDate(date, langLocale)} (${fromH}–${toH})\n\n`;
-    for (const idx of idxs) {
-      const ws = Math.round(h.wind_speed_10m[idx] || 0);
-      const wg = Math.round(h.wind_gusts_10m[idx] || 0);
-      const wd = h.wind_direction_10m[idx] || 0;
-      const wi = windInfo(wd);
-      const wh = mar?.hourly?.wave_height?.[idx] ?? null;
-      const wc = h.weathercode?.[idx] ?? 0;
-      const hr = h.time[idx].slice(11, 16);
-      msg += `${wmoEmojiShare(wc)} *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡raf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
-    }
-    msg += `\n_WindFlowRadar · Open-Meteo_`;
-
-    // Web Share API: funciona en móvil y Chrome/Edge desktop modernos
-    if (navigator.share) {
-      navigator.share({ text: msg }).catch(() => {});
-      return;
-    }
-    // Desktop: copiar al portapapeles + abrir WhatsApp Web
-    navigator.clipboard.writeText(msg).then(() => {
-      toast.success(t('index.copiedMsg'));
-    }).catch(() => {
-      const base = whatsappNumber ? `https://wa.me/${whatsappNumber}` : 'https://wa.me';
-      window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
-    });
-  };
-
-  return (
-    <>
-      <div className="flex flex-col gap-1">
-        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.shareFrom')}</label>
-        <select value={fromH} onChange={e => setFromH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-          {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.shareTo')}</label>
-        <select value={toH} onChange={e => setToH(e.target.value)} className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-          {hours.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-        </select>
-      </div>
-      <ActionBtn onClick={share} emoji="📲">{t('index.shareBtn')}</ActionBtn>
-    </>
-  );
-}
