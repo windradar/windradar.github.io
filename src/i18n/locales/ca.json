@@ -16,7 +16,8 @@
     "settings": "Configuració",
     "help": "Ajuda",
     "signIn": "Entrar",
-    "signOut": "Tancar sessió"
+    "signOut": "Tancar sessió",
+    "shareWhatsapp": "Compartir previsió"
   },
   "theme": {
     "dark": "Fosc",
@@ -189,6 +190,11 @@
     "loadingText": "Descarregant previsió meteorològica...",
     "conditionsTitle": "Condicions actuals",
     "searchPrompt": "Introdueix una ubicació i prem CERCAR per carregar la previsió",
+    "appDesc": "Previsió meteorològica en temps real per a windsurf, kitesurf, wing foil i SUP. Consulta vent, onades i temperatura en qualsevol punt del món.",
+    "featureWind": "Vent i ràfegues en temps real",
+    "featureForecast": "Previsió 7 dies hora a hora",
+    "featureWave": "Onatge i temperatura del mar",
+    "featureShare": "Comparteix la previsió per WhatsApp",
     "windCard": "💨 Vent",
     "precipCard": "☔ Precipitació",
     "waveCard": "🌊 Alçada d'ona",

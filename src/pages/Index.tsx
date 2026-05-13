@@ -12,6 +12,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
 import { AdUnit, AD_SLOTS } from '@/components/AdUnit';
+import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
@@ -49,6 +50,7 @@ export default function Index() {
   const [apiUpdateTime, setApiUpdateTime] = useState<string | null>(null);
   const [favKey, setFavKey] = useState(0);
   const [isFav, setIsFav] = useState(false);
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
 
   const today = localDateStr(new Date());
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
@@ -240,7 +242,11 @@ export default function Index() {
             />
             <ThemeSelector />
             <LanguageSelector />
-            <UserMenu settings={settings} onSettingsChange={setSettings} />
+            <UserMenu
+              settings={settings}
+              onSettingsChange={setSettings}
+              onShareWhatsapp={wx ? () => setWhatsappModalOpen(true) : undefined}
+            />
           </div>
           <div className="mt-2 flex items-center gap-2 sm:hidden">
             <SearchWithSuggestions onSelect={doSearch} />
@@ -283,8 +289,21 @@ export default function Index() {
         <SectionTitle>{t('index.conditionsTitle')}</SectionTitle>
 
         {!wx ? (
-          <div className="mb-6 rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground sm:p-8">
-            {t('index.searchPrompt')}
+          <div className="mb-6 space-y-3">
+            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground sm:p-8">
+              {t('index.searchPrompt')}
+            </div>
+            <div className="rounded-lg border border-border/40 bg-card/40 px-4 py-3">
+              <p className="mb-2.5 text-xs leading-relaxed text-muted-foreground">{t('index.appDesc')}</p>
+              <ul className="grid grid-cols-2 gap-1.5 text-[0.68rem] text-muted-foreground/70 sm:grid-cols-4">
+                {[t('index.featureWind'), t('index.featureForecast'), t('index.featureWave'), t('index.featureShare')].map(f => (
+                  <li key={f} className="flex items-center gap-1.5">
+                    <span className="h-1 w-1 shrink-0 rounded-full bg-primary/50" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         ) : cardData && (
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
@@ -310,7 +329,7 @@ export default function Index() {
           </div>
         )}
 
-        <AdUnit slot={AD_SLOTS.mainPage} format="horizontal" className="my-4" />
+        {wx && <AdUnit slot={AD_SLOTS.mainPage} format="horizontal" className="my-4" />}
 
         {/* Table */}
         <SectionTitle>{t('index.hourlyTitle')} — {humanDate(date, langLocale)}</SectionTitle>
@@ -445,6 +464,19 @@ export default function Index() {
         </div>
       </main>
       <LegalFooter />
+
+      {wx && (
+        <WhatsAppShareModal
+          open={whatsappModalOpen}
+          onOpenChange={setWhatsappModalOpen}
+          wx={wx}
+          mar={mar}
+          name={name}
+          date={date}
+          dayIdxs={allDayIdxs}
+          whatsappNumber={whatsappNumber}
+        />
+      )}
     </div>
   );
 }

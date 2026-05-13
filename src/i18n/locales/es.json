@@ -16,7 +16,8 @@
     "settings": "Configuración",
     "help": "Ayuda",
     "signIn": "Entrar",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "shareWhatsapp": "Compartir previsión"
   },
   "theme": {
     "dark": "Oscuro",
@@ -189,6 +190,11 @@
     "loadingText": "Descargando previsión meteorológica...",
     "conditionsTitle": "Condiciones actuales",
     "searchPrompt": "Introduce una ubicación y pulsa BUSCAR para cargar la previsión",
+    "appDesc": "Previsión meteorológica en tiempo real para windsurf, kitesurf, wing foil y SUP. Consulta viento, olas y temperatura en cualquier punto del mundo.",
+    "featureWind": "Viento y ráfagas en tiempo real",
+    "featureForecast": "Previsión 7 días hora a hora",
+    "featureWave": "Oleaje y temperatura del mar",
+    "featureShare": "Comparte la previsión por WhatsApp",
     "windCard": "💨 Viento",
     "precipCard": "☔ Precipitación",
     "waveCard": "🌊 Altura ola",
