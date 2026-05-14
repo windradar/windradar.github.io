@@ -66,7 +66,7 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
       const hr = h.time[idx].slice(11, 16);
       msg += `${wmoEmoji(wc)} *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡raf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
     }
-    msg += `\n_WindFlowRadar · Open-Meteo_`;
+    msg += `\n_WindFlowRadar · Open-Meteo_\n\nMás información en https://windradar.github.io/`;
 
     if (navigator.share) {
       navigator.share({ text: msg }).catch(() => {});
