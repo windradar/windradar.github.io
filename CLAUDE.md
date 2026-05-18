@@ -132,6 +132,12 @@ Guardadas en `profiles`: `wind_units` (kn/kmh/ms) y `date_format` (dmy/mdy/iso).
 
 ---
 
+## Flujo de trabajo con GitHub
+
+Después de completar cualquier desarrollo o cambio en el código, **preguntar siempre al usuario si quiere subir los cambios a GitHub** antes de hacer el commit y push. No subir automáticamente sin confirmación explícita.
+
+---
+
 ## Lo que NO hacer
 
 - No desactivar RLS en ninguna tabla

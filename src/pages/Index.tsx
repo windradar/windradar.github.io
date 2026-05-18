@@ -23,14 +23,10 @@ import {
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
   addToSearchHistory, getLastSearch, setLastSearch,
-  isFavorite, toggleFavorite,
+  isFavorite, toggleFavorite, LANG_LOCALE,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
-
-const LANG_LOCALE: Record<string, string> = {
-  es: 'es-ES', ca: 'ca-ES', en: 'en-GB', fr: 'fr-FR',
-};
 
 export default function Index() {
   const { t, i18n } = useTranslation();

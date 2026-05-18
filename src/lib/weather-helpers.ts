@@ -1,3 +1,7 @@
+export const LANG_LOCALE: Record<string, string> = {
+  es: 'es-ES', ca: 'ca-ES', en: 'en-GB', fr: 'fr-FR',
+};
+
 export const WIND_NAMES = [
   'Tramontana', 'Gregal NNE', 'Gregal', 'Gregal ENE',
   'Llevant', 'Xaloc ESE', 'Xaloc', 'Xaloc SSE',
