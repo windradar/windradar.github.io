@@ -82,6 +82,16 @@ export type Database = {
           date_format: string
           display_name: string | null
           email: string | null
+          email_notif_address: string | null
+          email_notif_enabled: boolean
+          email_notif_lat: number | null
+          email_notif_location: string | null
+          email_notif_lon: number | null
+          email_notif_min_wind: number
+          email_notif_range_from: string
+          email_notif_range_to: string
+          email_notif_time1: string
+          email_notif_time2: string | null
           id: string
           updated_at: string
           user_id: string
@@ -93,6 +103,16 @@ export type Database = {
           date_format?: string
           display_name?: string | null
           email?: string | null
+          email_notif_address?: string | null
+          email_notif_enabled?: boolean
+          email_notif_lat?: number | null
+          email_notif_location?: string | null
+          email_notif_lon?: number | null
+          email_notif_min_wind?: number
+          email_notif_range_from?: string
+          email_notif_range_to?: string
+          email_notif_time1?: string
+          email_notif_time2?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -104,6 +124,16 @@ export type Database = {
           date_format?: string
           display_name?: string | null
           email?: string | null
+          email_notif_address?: string | null
+          email_notif_enabled?: boolean
+          email_notif_lat?: number | null
+          email_notif_location?: string | null
+          email_notif_lon?: number | null
+          email_notif_min_wind?: number
+          email_notif_range_from?: string
+          email_notif_range_to?: string
+          email_notif_time1?: string
+          email_notif_time2?: string | null
           id?: string
           updated_at?: string
           user_id?: string

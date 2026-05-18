@@ -151,9 +151,14 @@
     "rangeFrom": "Rang des de",
     "rangeTo": "Rang fins a",
     "disabled": "— Desactivat —",
-    "emailNote": "L'enviament automàtic requereix que l'app estigui oberta al navegador a l'hora configurada. S'obrirà el client de correu amb l'informe llest.",
+    "emailNote": "Els correus s'envien automàticament des del servidor. No cal tenir l'app oberta. Els horaris són en hora de Madrid (CET/CEST). El llindar de vent configurat a dalt s'aplica també al correu.",
     "cancel": "Cancel·lar",
-    "save": "Desar"
+    "save": "Desar",
+    "saving": "Desant...",
+    "emailSaved": "Configuració de correu desada",
+    "geoError": "No s'ha trobat la ubicació. Prova amb un altre nom (ex: Gavà, Espanya).",
+    "saveError": "Error en desar la configuració.",
+    "loginRequired": "Has d'iniciar sessió per activar les notificacions per correu."
   },
   "chart": {
     "forecast7days": "🌬️ Previsió 7 dies · cada 2h",

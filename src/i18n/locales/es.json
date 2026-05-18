@@ -151,9 +151,14 @@
     "rangeFrom": "Rango desde",
     "rangeTo": "Rango hasta",
     "disabled": "— Desactivado —",
-    "emailNote": "El envío automático requiere que la app esté abierta en el navegador a la hora configurada. Se abrirá tu cliente de correo con el informe listo.",
+    "emailNote": "Los emails se envían automáticamente desde el servidor. No es necesario tener la app abierta. Los horarios son en hora de Madrid (CET/CEST). El umbral de viento configurado arriba se aplica también al email.",
     "cancel": "Cancelar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "emailSaved": "Configuración de email guardada",
+    "geoError": "No se encontró la ubicación. Prueba con otro nombre (ej: Gavà, España).",
+    "saveError": "Error al guardar la configuración.",
+    "loginRequired": "Debes iniciar sesión para activar las notificaciones por email."
   },
   "chart": {
     "forecast7days": "🌬️ Previsión 7 días · cada 2h",

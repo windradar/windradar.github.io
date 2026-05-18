@@ -3,6 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AppSettings {
   minWindKn: number;
@@ -40,11 +43,28 @@ export function loadSettings(): AppSettings {
   return { ...defaultSettings };
 }
 
-function saveSettings(s: AppSettings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+function saveDisplaySettings(s: AppSettings) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    minWindKn: s.minWindKn,
+    gridFromHour: s.gridFromHour,
+    gridToHour: s.gridToHour,
+  }));
 }
 
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+
+async function geocode(location: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const res = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=es&format=json`
+    );
+    const data = await res.json();
+    if (data.results?.length) {
+      return { lat: data.results[0].latitude, lon: data.results[0].longitude };
+    }
+  } catch {}
+  return null;
+}
 
 export function SettingsPanel({
   settings,
@@ -58,8 +78,10 @@ export function SettingsPanel({
   onOpenChange?: (v: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [local, setLocal] = useState<AppSettings>(settings);
   const [internalOpen, setInternalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = (v: boolean) => {
@@ -67,16 +89,92 @@ export function SettingsPanel({
     controlledOnOpenChange?.(v);
   };
 
-  useEffect(() => { setLocal(settings); }, [settings]);
+  useEffect(() => {
+    setLocal(prev => ({ ...prev, minWindKn: settings.minWindKn, gridFromHour: settings.gridFromHour, gridToHour: settings.gridToHour }));
+  }, [settings]);
 
-  const update = (patch: Partial<AppSettings>) => {
-    const next = { ...local, ...patch };
-    setLocal(next);
-  };
+  // Load email settings from Supabase when dialog opens
+  useEffect(() => {
+    if (!open || !user) return;
+    supabase
+      .from('profiles')
+      .select('email_notif_enabled, email_notif_address, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setLocal(prev => ({
+            ...prev,
+            emailEnabled:   data.email_notif_enabled ?? false,
+            emailAddress:   data.email_notif_address ?? '',
+            emailLocation:  data.email_notif_location ?? '',
+            emailTime1:     data.email_notif_time1 ?? '07:00',
+            emailTime2:     data.email_notif_time2 ?? '',
+            emailRangeFrom: data.email_notif_range_from ?? '06:00',
+            emailRangeTo:   data.email_notif_range_to ?? '20:00',
+          }));
+        }
+      });
+  }, [open, user]);
 
-  const handleSave = () => {
-    saveSettings(local);
+  const update = (patch: Partial<AppSettings>) => setLocal(prev => ({ ...prev, ...patch }));
+
+  const handleSave = async () => {
+    setSaving(true);
+
+    // Always save display settings to localStorage
+    saveDisplaySettings(local);
     onChange(local);
+
+    // Email settings require login
+    if (local.emailEnabled && !user) {
+      toast.error(t('settings.loginRequired'));
+      setSaving(false);
+      setOpen(false);
+      return;
+    }
+
+    if (user) {
+      let lat: number | null = null;
+      let lon: number | null = null;
+
+      if (local.emailEnabled && local.emailLocation.trim()) {
+        const geo = await geocode(local.emailLocation.trim());
+        if (!geo) {
+          toast.error(t('settings.geoError'));
+          setSaving(false);
+          return;
+        }
+        lat = geo.lat;
+        lon = geo.lon;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email_notif_enabled:    local.emailEnabled,
+          email_notif_address:    local.emailAddress.trim() || null,
+          email_notif_location:   local.emailLocation.trim() || null,
+          email_notif_lat:        lat,
+          email_notif_lon:        lon,
+          email_notif_time1:      local.emailTime1,
+          email_notif_time2:      local.emailTime2 || null,
+          email_notif_range_from: local.emailRangeFrom,
+          email_notif_range_to:   local.emailRangeTo,
+          email_notif_min_wind:   local.minWindKn,
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast.error(t('settings.saveError'));
+        setSaving(false);
+        return;
+      }
+
+      if (local.emailEnabled) toast.success(t('settings.emailSaved'));
+    }
+
+    setSaving(false);
     setOpen(false);
   };
 
@@ -102,9 +200,7 @@ export function SettingsPanel({
               <Slider
                 value={[local.minWindKn]}
                 onValueChange={([v]) => update({ minWindKn: v })}
-                min={5}
-                max={30}
-                step={1}
+                min={5} max={30} step={1}
                 className="flex-1"
               />
               <span className="w-14 rounded-md border border-border bg-secondary px-2 py-1 text-center font-mono text-sm font-bold text-foreground">
@@ -140,6 +236,12 @@ export function SettingsPanel({
               <Switch checked={local.emailEnabled} onCheckedChange={v => update({ emailEnabled: v })} />
             </div>
             <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.emailNotifDesc')}</p>
+
+            {!user && local.emailEnabled && (
+              <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
+                {t('settings.loginRequired')}
+              </p>
+            )}
 
             <div className={`space-y-3 transition-opacity ${local.emailEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
               <div className="flex flex-col gap-1">
@@ -205,9 +307,9 @@ export function SettingsPanel({
             className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary">
             {t('settings.cancel')}
           </button>
-          <button onClick={handleSave}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-all hover:brightness-110">
-            {t('settings.save')}
+          <button onClick={handleSave} disabled={saving}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-all hover:brightness-110 disabled:opacity-60">
+            {saving ? t('settings.saving') : t('settings.save')}
           </button>
         </div>
       </DialogContent>
