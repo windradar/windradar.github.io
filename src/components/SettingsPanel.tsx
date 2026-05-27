@@ -82,6 +82,7 @@ export function SettingsPanel({
   const [local, setLocal] = useState<AppSettings>(settings);
   const [internalOpen, setInternalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = (v: boolean) => {
@@ -96,12 +97,14 @@ export function SettingsPanel({
   // Load email settings from Supabase when dialog opens
   useEffect(() => {
     if (!open || !user) return;
-    supabase
-      .from('profiles')
-      .select('email_notif_enabled, email_notif_address, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
+    setEmailLoading(true);
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('email_notif_enabled, email_notif_address, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to')
+          .eq('user_id', user.id)
+          .single();
         if (data) {
           setLocal(prev => ({
             ...prev,
@@ -114,7 +117,10 @@ export function SettingsPanel({
             emailRangeTo:   data.email_notif_range_to ?? '20:00',
           }));
         }
-      });
+      } finally {
+        setEmailLoading(false);
+      }
+    })();
   }, [open, user]);
 
   const update = (patch: Partial<AppSettings>) => setLocal(prev => ({ ...prev, ...patch }));
@@ -233,7 +239,7 @@ export function SettingsPanel({
           <section>
             <div className="mb-2 flex items-center justify-between">
               <h4 className="text-sm font-bold text-foreground">{t('settings.emailNotif')}</h4>
-              <Switch checked={local.emailEnabled} onCheckedChange={v => update({ emailEnabled: v })} />
+              <Switch checked={local.emailEnabled} onCheckedChange={v => update({ emailEnabled: v })} disabled={emailLoading} />
             </div>
             <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.emailNotifDesc')}</p>
 

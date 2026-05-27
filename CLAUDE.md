@@ -7,7 +7,7 @@ Este archivo define el contexto, convenciones y decisiones del proyecto para que
 ## Proyecto
 
 **WindFlowRadar** — app meteorológica para deportes de viento.
-- Autor: Juan Mª de Haro (jdeharo@sylo.es)
+- Autor: Juan Mª de Haro (juhabar@gmail.com)
 - Producción: https://windradar.github.io
 - Repo: https://github.com/windradar/windradar.github.io
 - Supabase project ID: `nextrkzcyddprywyvhsa`
