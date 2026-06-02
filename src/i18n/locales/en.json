@@ -89,7 +89,10 @@
     "profileUpdated": "Profile updated",
     "passwordUpdated": "Password updated",
     "resetEmailSent": "Reset email sent",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "whatsappNumber": "Number (no + or spaces)",
+    "callmebotApiKey": "CallMeBot API Key",
+    "callmebotHint": "Send «I allow callmebot to send me messages» to +34 644 66 39 34 on WhatsApp to get your API Key."
   },
   "materials": {
     "title": "Materials",
@@ -152,7 +155,13 @@
     "disabled": "— Disabled —",
     "emailNote": "Automatic sending requires the app to be open in the browser at the configured time. Your email client will open with the report ready.",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "whatsappAlert": "📲 Automatic WhatsApp notification",
+    "whatsappAlertDesc": "Get a wind forecast on WhatsApp when it exceeds the configured threshold. Requires CallMeBot activation (free).",
+    "callmebotActivation": "Activation (once): send «I allow callmebot to send me messages» to +34 644 66 39 34 on WhatsApp and you will receive your API Key.",
+    "callmebotApiKey": "CallMeBot API Key",
+    "whatsappAlertNote": "Your phone number is set in your profile. Wind threshold is shared with the email alert.",
+    "whatsappAlertSaved": "WhatsApp alerts saved"
   },
   "chart": {
     "forecast7days": "🌬️ 7-day forecast · every 2h",
@@ -195,43 +204,94 @@
       "radar": {
         "title": "Weather radar",
         "steps": [
-          { "heading": "Select a point on the map", "body": "Tap anywhere on the map or use the location search to centre the view. The side panel will show the weather data for that point." },
-          { "heading": "Read the wind", "body": "Speed is shown in knots (kt) by default. The direction indicator shows where the wind is blowing from. The value in brackets is the maximum gust." },
-          { "heading": "Wave data", "body": "Wave height (Hs) and period (T) are updated hourly using the Open-Meteo Marine model. They are indicative: always check real conditions on site." },
-          { "heading": "Temperature and other layers", "body": "Use the layer selector to switch between air temperature, water temperature and visibility. The 7-day chart shows the hourly trend for the active parameter." }
+          {
+            "heading": "Select a point on the map",
+            "body": "Tap anywhere on the map or use the location search to centre the view. The side panel will show the weather data for that point."
+          },
+          {
+            "heading": "Read the wind",
+            "body": "Speed is shown in knots (kt) by default. The direction indicator shows where the wind is blowing from. The value in brackets is the maximum gust."
+          },
+          {
+            "heading": "Wave data",
+            "body": "Wave height (Hs) and period (T) are updated hourly using the Open-Meteo Marine model. They are indicative: always check real conditions on site."
+          },
+          {
+            "heading": "Temperature and other layers",
+            "body": "Use the layer selector to switch between air temperature, water temperature and visibility. The 7-day chart shows the hourly trend for the active parameter."
+          }
         ]
       },
       "spots": {
         "title": "Favourite spots",
         "steps": [
-          { "heading": "Save a spot", "body": "With any point selected on the map, press the star button (☆) in the side panel. You can give it a custom name before saving." },
-          { "heading": "Access your spots", "body": "The favourites dropdown (star icon in the top bar) lists all your saved spots. Press one to centre on it and load its forecast instantly." },
-          { "heading": "Delete a spot", "body": "Open the favourites dropdown and press the bin icon next to the spot you want to remove. The action is immediate." }
+          {
+            "heading": "Save a spot",
+            "body": "With any point selected on the map, press the star button (☆) in the side panel. You can give it a custom name before saving."
+          },
+          {
+            "heading": "Access your spots",
+            "body": "The favourites dropdown (star icon in the top bar) lists all your saved spots. Press one to centre on it and load its forecast instantly."
+          },
+          {
+            "heading": "Delete a spot",
+            "body": "Open the favourites dropdown and press the bin icon next to the spot you want to remove. The action is immediate."
+          }
         ]
       },
       "sessions": {
         "title": "Sessions",
         "steps": [
-          { "heading": "Log a session", "body": "Go to Sessions from the user menu. Press \"+ New session\" and enter the date, time on the water, the spot, equipment used and your notes. Weather data at that moment is captured automatically." },
-          { "heading": "Link with Strava", "body": "In the session form you can paste the URL of your Strava activity. It will appear as a link in the session detail." },
-          { "heading": "History and stats", "body": "The session list shows a chronological summary. Cards include weather conditions at the time, equipment used and total time on the water." }
+          {
+            "heading": "Log a session",
+            "body": "Go to Sessions from the user menu. Press \"+ New session\" and enter the date, time on the water, the spot, equipment used and your notes. Weather data at that moment is captured automatically."
+          },
+          {
+            "heading": "Link with Strava",
+            "body": "In the session form you can paste the URL of your Strava activity. It will appear as a link in the session detail."
+          },
+          {
+            "heading": "History and stats",
+            "body": "The session list shows a chronological summary. Cards include weather conditions at the time, equipment used and total time on the water."
+          }
         ]
       },
       "materials": {
         "title": "Materials",
         "steps": [
-          { "heading": "Add equipment", "body": "Go to Materials from the user menu (/materials). Press \"+ Add\" and type the item name (board, sail, wing, harness…). You can edit the name directly from the card." },
-          { "heading": "Upload a photo", "body": "Each equipment card has an image area. Press it or the camera button to upload a photo from your device. The image is stored privately in the cloud: only you can see it." },
-          { "heading": "Use equipment in a session", "body": "When logging a session, the \"Equipment\" field shows your saved list. Select what you used and it will be linked to that session." },
-          { "heading": "View enlarged photo", "body": "Press on any equipment thumbnail to open the image in a full-screen pop-up viewer." }
+          {
+            "heading": "Add equipment",
+            "body": "Go to Materials from the user menu (/materials). Press \"+ Add\" and type the item name (board, sail, wing, harness…). You can edit the name directly from the card."
+          },
+          {
+            "heading": "Upload a photo",
+            "body": "Each equipment card has an image area. Press it or the camera button to upload a photo from your device. The image is stored privately in the cloud: only you can see it."
+          },
+          {
+            "heading": "Use equipment in a session",
+            "body": "When logging a session, the \"Equipment\" field shows your saved list. Select what you used and it will be linked to that session."
+          },
+          {
+            "heading": "View enlarged photo",
+            "body": "Press on any equipment thumbnail to open the image in a full-screen pop-up viewer."
+          }
         ]
       },
       "profile": {
         "title": "Profile & account",
         "steps": [
-          { "heading": "Alias and preferences", "body": "From your Profile you can change the alias shown in the app and configure preferred units (knots, km/h, m/s) and date format." },
-          { "heading": "Security", "body": "To change your password use the \"Change password\" link in the profile. Instructions will be sent to your registered email address." },
-          { "heading": "Delete account", "body": "In account settings you will find the option to delete your account. This will permanently erase all your data (sessions, materials and images) within a maximum of 30 days." }
+          {
+            "heading": "Alias and preferences",
+            "body": "From your Profile you can change the alias shown in the app and configure preferred units (knots, km/h, m/s) and date format."
+          },
+          {
+            "heading": "Security",
+            "body": "To change your password use the \"Change password\" link in the profile. Instructions will be sent to your registered email address."
+          },
+          {
+            "heading": "Delete account",
+            "body": "In account settings you will find the option to delete your account. This will permanently erase all your data (sessions, materials and images) within a maximum of 30 days."
+          }
         ]
       }
     }

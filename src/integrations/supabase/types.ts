@@ -78,6 +78,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          callmebot_apikey: string | null
           created_at: string
           date_format: string
           display_name: string | null
@@ -95,10 +96,19 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
+          whatsapp_alert_enabled: boolean
+          whatsapp_alert_lat: number | null
+          whatsapp_alert_location: string | null
+          whatsapp_alert_lon: number | null
+          whatsapp_alert_range_from: string | null
+          whatsapp_alert_range_to: string | null
+          whatsapp_alert_time1: string | null
+          whatsapp_alert_time2: string | null
           whatsapp_number: string | null
           wind_units: string
         }
         Insert: {
+          callmebot_apikey?: string | null
           created_at?: string
           date_format?: string
           display_name?: string | null
@@ -116,10 +126,19 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
+          whatsapp_alert_enabled?: boolean
+          whatsapp_alert_lat?: number | null
+          whatsapp_alert_location?: string | null
+          whatsapp_alert_lon?: number | null
+          whatsapp_alert_range_from?: string | null
+          whatsapp_alert_range_to?: string | null
+          whatsapp_alert_time1?: string | null
+          whatsapp_alert_time2?: string | null
           whatsapp_number?: string | null
           wind_units?: string
         }
         Update: {
+          callmebot_apikey?: string | null
           created_at?: string
           date_format?: string
           display_name?: string | null
@@ -137,6 +156,14 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+          whatsapp_alert_enabled?: boolean
+          whatsapp_alert_lat?: number | null
+          whatsapp_alert_location?: string | null
+          whatsapp_alert_lon?: number | null
+          whatsapp_alert_range_from?: string | null
+          whatsapp_alert_range_to?: string | null
+          whatsapp_alert_time1?: string | null
+          whatsapp_alert_time2?: string | null
           whatsapp_number?: string | null
           wind_units?: string
         }

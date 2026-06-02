@@ -22,6 +22,7 @@ export default function Profile() {
 
   const [displayName, setDisplayName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [callmebotApiKey, setCallmebotApiKey] = useState('');
   const [windUnits, setWindUnits] = useState<'kn' | 'kmh' | 'ms'>('kn');
   const [dateFormat, setDateFormat] = useState<'dmy' | 'mdy' | 'iso'>('dmy');
   const [savingProfile, setSavingProfile] = useState(false);
@@ -37,13 +38,14 @@ export default function Profile() {
     if (!user) return;
     supabase
       .from('profiles')
-      .select('display_name, whatsapp_number, wind_units, date_format')
+      .select('display_name, whatsapp_number, callmebot_apikey, wind_units, date_format')
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setDisplayName(data.display_name || '');
           setWhatsappNumber(data.whatsapp_number || '');
+          setCallmebotApiKey(data.callmebot_apikey || '');
           setWindUnits((data.wind_units as 'kn' | 'kmh' | 'ms') || 'kn');
           setDateFormat((data.date_format as 'dmy' | 'mdy' | 'iso') || 'dmy');
         }
@@ -57,6 +59,7 @@ export default function Profile() {
     const { error } = await supabase.from('profiles').update({
       display_name: displayName.trim() || null,
       whatsapp_number: cleanWa || null,
+      callmebot_apikey: callmebotApiKey.trim() || null,
       wind_units: windUnits,
       date_format: dateFormat,
     }).eq('user_id', user.id);
@@ -190,14 +193,28 @@ export default function Profile() {
           </h2>
           <p className="mb-3 text-[0.68rem] text-muted-foreground">{t('profile.whatsappDesc')}</p>
           <div className="space-y-3">
-            <input
-              value={whatsappNumber}
-              onChange={e => setWhatsappNumber(e.target.value)}
-              placeholder="34612345678"
-              maxLength={20}
-              inputMode="tel"
-              className="w-full rounded-md border border-border bg-secondary px-3 py-2 font-mono text-sm outline-none focus:border-primary"
-            />
+            <div>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.whatsappNumber')}</label>
+              <input
+                value={whatsappNumber}
+                onChange={e => setWhatsappNumber(e.target.value)}
+                placeholder="34612345678"
+                maxLength={20}
+                inputMode="tel"
+                className="w-full rounded-md border border-border bg-secondary px-3 py-2 font-mono text-sm outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.callmebotApiKey')}</label>
+              <input
+                value={callmebotApiKey}
+                onChange={e => setCallmebotApiKey(e.target.value)}
+                placeholder="1234567"
+                maxLength={20}
+                className="w-full rounded-md border border-border bg-secondary px-3 py-2 font-mono text-sm outline-none focus:border-primary"
+              />
+              <p className="mt-1 text-[0.62rem] text-muted-foreground">{t('profile.callmebotHint')}</p>
+            </div>
             <button onClick={saveProfile} disabled={savingProfile}
               className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
               {savingProfile ? t('common.saving') : t('common.save')}

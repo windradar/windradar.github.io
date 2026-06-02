@@ -18,6 +18,13 @@ export interface AppSettings {
   emailTime2: string;
   emailRangeFrom: string;
   emailRangeTo: string;
+  whatsappAlertEnabled: boolean;
+  callmebotApiKey: string;
+  whatsappAlertLocation: string;
+  whatsappAlertTime1: string;
+  whatsappAlertTime2: string;
+  whatsappAlertRangeFrom: string;
+  whatsappAlertRangeTo: string;
 }
 
 const STORAGE_KEY = 'windradar-settings';
@@ -33,6 +40,13 @@ const defaultSettings: AppSettings = {
   emailTime2: '',
   emailRangeFrom: '06:00',
   emailRangeTo: '20:00',
+  whatsappAlertEnabled: false,
+  callmebotApiKey: '',
+  whatsappAlertLocation: '',
+  whatsappAlertTime1: '07:00',
+  whatsappAlertTime2: '',
+  whatsappAlertRangeFrom: '06:00',
+  whatsappAlertRangeTo: '20:00',
 };
 
 export function loadSettings(): AppSettings {
@@ -102,19 +116,26 @@ export function SettingsPanel({
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('email_notif_enabled, email_notif_address, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to')
+          .select('email_notif_enabled, email_notif_address, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, whatsapp_alert_enabled, callmebot_apikey, whatsapp_alert_location, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to')
           .eq('user_id', user.id)
           .single();
         if (data) {
           setLocal(prev => ({
             ...prev,
-            emailEnabled:   data.email_notif_enabled ?? false,
-            emailAddress:   data.email_notif_address ?? '',
-            emailLocation:  data.email_notif_location ?? '',
-            emailTime1:     data.email_notif_time1 ?? '07:00',
-            emailTime2:     data.email_notif_time2 ?? '',
-            emailRangeFrom: data.email_notif_range_from ?? '06:00',
-            emailRangeTo:   data.email_notif_range_to ?? '20:00',
+            emailEnabled:          data.email_notif_enabled ?? false,
+            emailAddress:          data.email_notif_address ?? '',
+            emailLocation:         data.email_notif_location ?? '',
+            emailTime1:            data.email_notif_time1 ?? '07:00',
+            emailTime2:            data.email_notif_time2 ?? '',
+            emailRangeFrom:        data.email_notif_range_from ?? '06:00',
+            emailRangeTo:          data.email_notif_range_to ?? '20:00',
+            whatsappAlertEnabled:  data.whatsapp_alert_enabled ?? false,
+            callmebotApiKey:       data.callmebot_apikey ?? '',
+            whatsappAlertLocation: data.whatsapp_alert_location ?? '',
+            whatsappAlertTime1:    data.whatsapp_alert_time1 ?? '07:00',
+            whatsappAlertTime2:    data.whatsapp_alert_time2 ?? '',
+            whatsappAlertRangeFrom: data.whatsapp_alert_range_from ?? '06:00',
+            whatsappAlertRangeTo:   data.whatsapp_alert_range_to ?? '20:00',
           }));
         }
       } finally {
@@ -155,19 +176,41 @@ export function SettingsPanel({
         lon = geo.lon;
       }
 
+      let waLat: number | null = null;
+      let waLon: number | null = null;
+      if (local.whatsappAlertEnabled && local.whatsappAlertLocation.trim()) {
+        const geo = await geocode(local.whatsappAlertLocation.trim());
+        if (!geo) {
+          toast.error(t('settings.geoError'));
+          setSaving(false);
+          return;
+        }
+        waLat = geo.lat;
+        waLon = geo.lon;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
-          email_notif_enabled:    local.emailEnabled,
-          email_notif_address:    local.emailAddress.trim() || null,
-          email_notif_location:   local.emailLocation.trim() || null,
-          email_notif_lat:        lat,
-          email_notif_lon:        lon,
-          email_notif_time1:      local.emailTime1,
-          email_notif_time2:      local.emailTime2 || null,
-          email_notif_range_from: local.emailRangeFrom,
-          email_notif_range_to:   local.emailRangeTo,
-          email_notif_min_wind:   local.minWindKn,
+          email_notif_enabled:       local.emailEnabled,
+          email_notif_address:       local.emailAddress.trim() || null,
+          email_notif_location:      local.emailLocation.trim() || null,
+          email_notif_lat:           lat,
+          email_notif_lon:           lon,
+          email_notif_time1:         local.emailTime1,
+          email_notif_time2:         local.emailTime2 || null,
+          email_notif_range_from:    local.emailRangeFrom,
+          email_notif_range_to:      local.emailRangeTo,
+          email_notif_min_wind:      local.minWindKn,
+          whatsapp_alert_enabled:    local.whatsappAlertEnabled,
+          callmebot_apikey:          local.callmebotApiKey.trim() || null,
+          whatsapp_alert_location:   local.whatsappAlertLocation.trim() || null,
+          whatsapp_alert_lat:        waLat,
+          whatsapp_alert_lon:        waLon,
+          whatsapp_alert_time1:      local.whatsappAlertTime1,
+          whatsapp_alert_time2:      local.whatsappAlertTime2 || null,
+          whatsapp_alert_range_from: local.whatsappAlertRangeFrom,
+          whatsapp_alert_range_to:   local.whatsappAlertRangeTo,
         })
         .eq('user_id', user.id);
 
@@ -178,6 +221,7 @@ export function SettingsPanel({
       }
 
       if (local.emailEnabled) toast.success(t('settings.emailSaved'));
+      if (local.whatsappAlertEnabled) toast.success(t('settings.whatsappAlertSaved'));
     }
 
     setSaving(false);
@@ -303,6 +347,88 @@ export function SettingsPanel({
 
               <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
                 <strong className="text-primary">ℹ️</strong> {t('settings.emailNote')}
+              </div>
+            </div>
+          </section>
+
+          {/* WhatsApp automatic alert */}
+          <section>
+            <div className="mb-2 flex items-center justify-between">
+              <h4 className="text-sm font-bold text-foreground">{t('settings.whatsappAlert')}</h4>
+              <Switch checked={local.whatsappAlertEnabled} onCheckedChange={v => update({ whatsappAlertEnabled: v })} disabled={emailLoading} />
+            </div>
+            <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.whatsappAlertDesc')}</p>
+
+            {!user && local.whatsappAlertEnabled && (
+              <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
+                {t('settings.loginRequired')}
+              </p>
+            )}
+
+            <div className={`space-y-3 transition-opacity ${local.whatsappAlertEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
+              <div className="rounded-md border border-green-500/20 bg-green-500/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                <strong className="text-green-600">📱</strong> {t('settings.callmebotActivation')}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.callmebotApiKey')}</label>
+                <input
+                  value={local.callmebotApiKey}
+                  onChange={e => update({ callmebotApiKey: e.target.value })}
+                  placeholder="1234567"
+                  className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.locationLabel')}</label>
+                <input
+                  value={local.whatsappAlertLocation}
+                  onChange={e => update({ whatsappAlertLocation: e.target.value })}
+                  placeholder="Ej: Gavà, España"
+                  className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.sendTime1')}</label>
+                  <select value={local.whatsappAlertTime1} onChange={e => update({ whatsappAlertTime1: e.target.value })}
+                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
+                    {t('settings.sendTime2')} <span className="normal-case text-muted-foreground">{t('settings.optional')}</span>
+                  </label>
+                  <select value={local.whatsappAlertTime2} onChange={e => update({ whatsappAlertTime2: e.target.value })}
+                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                    <option value="">{t('settings.disabled')}</option>
+                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeFrom')}</label>
+                  <select value={local.whatsappAlertRangeFrom} onChange={e => update({ whatsappAlertRangeFrom: e.target.value })}
+                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeTo')}</label>
+                  <select value={local.whatsappAlertRangeTo} onChange={e => update({ whatsappAlertRangeTo: e.target.value })}
+                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                <strong className="text-primary">ℹ️</strong> {t('settings.whatsappAlertNote')}
               </div>
             </div>
           </section>

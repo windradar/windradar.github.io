@@ -90,7 +90,10 @@
     "profileUpdated": "Perfil actualizado",
     "passwordUpdated": "Contraseña actualizada",
     "resetEmailSent": "Email de restauración enviado",
-    "passwordMismatch": "Las contraseñas no coinciden"
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "whatsappNumber": "Número (sin + ni espacios)",
+    "callmebotApiKey": "API Key CallMeBot",
+    "callmebotHint": "Envía «I allow callmebot to send me messages» al +34 644 66 39 34 por WhatsApp para obtener tu API Key."
   },
   "materials": {
     "title": "Materiales",
@@ -158,7 +161,13 @@
     "emailSaved": "Configuración de email guardada",
     "geoError": "No se encontró la ubicación. Prueba con otro nombre (ej: Gavà, España).",
     "saveError": "Error al guardar la configuración.",
-    "loginRequired": "Debes iniciar sesión para activar las notificaciones por email."
+    "loginRequired": "Debes iniciar sesión para activar las notificaciones por email.",
+    "whatsappAlert": "📲 Envío automático por WhatsApp",
+    "whatsappAlertDesc": "Recibe el parte de viento en WhatsApp cuando supera el umbral configurado. Requiere activar CallMeBot (gratis).",
+    "callmebotActivation": "Activación (una sola vez): envía «I allow callmebot to send me messages» al +34 644 66 39 34 por WhatsApp y recibirás tu API Key.",
+    "callmebotApiKey": "API Key CallMeBot",
+    "whatsappAlertNote": "El número de teléfono se configura en tu perfil. El umbral de viento se comparte con la alerta de email.",
+    "whatsappAlertSaved": "Alertas WhatsApp guardadas"
   },
   "chart": {
     "forecast7days": "🌬️ Previsión 7 días · cada 2h",
@@ -265,43 +274,94 @@
       "radar": {
         "title": "Radar meteorológico",
         "steps": [
-          { "heading": "Selecciona un punto en el mapa", "body": "Pulsa en cualquier lugar del mapa o usa el buscador de localización para centrar la vista. El panel lateral mostrará los datos meteorológicos de ese punto." },
-          { "heading": "Interpreta el viento", "body": "La velocidad se muestra en nudos (kt) por defecto. El indicador de dirección señala desde dónde sopla el viento. El valor entre paréntesis es la ráfaga máxima." },
-          { "heading": "Datos de oleaje", "body": "La altura de ola (Hs) y el periodo (T) se actualizan cada hora con el modelo de Open-Meteo Marine. Son orientativos: comprueba siempre las condiciones reales in situ." },
-          { "heading": "Temperatura y otras capas", "body": "Usa el selector de capas para alternar entre temperatura del aire, temperatura del agua y visibilidad. El gráfico de 7 días muestra la tendencia horaria del parámetro activo." }
+          {
+            "heading": "Selecciona un punto en el mapa",
+            "body": "Pulsa en cualquier lugar del mapa o usa el buscador de localización para centrar la vista. El panel lateral mostrará los datos meteorológicos de ese punto."
+          },
+          {
+            "heading": "Interpreta el viento",
+            "body": "La velocidad se muestra en nudos (kt) por defecto. El indicador de dirección señala desde dónde sopla el viento. El valor entre paréntesis es la ráfaga máxima."
+          },
+          {
+            "heading": "Datos de oleaje",
+            "body": "La altura de ola (Hs) y el periodo (T) se actualizan cada hora con el modelo de Open-Meteo Marine. Son orientativos: comprueba siempre las condiciones reales in situ."
+          },
+          {
+            "heading": "Temperatura y otras capas",
+            "body": "Usa el selector de capas para alternar entre temperatura del aire, temperatura del agua y visibilidad. El gráfico de 7 días muestra la tendencia horaria del parámetro activo."
+          }
         ]
       },
       "spots": {
         "title": "Spots favoritos",
         "steps": [
-          { "heading": "Guardar un spot", "body": "Con cualquier punto seleccionado en el mapa, pulsa el botón de estrella (☆) en el panel lateral. Puedes darle un nombre personalizado antes de guardar." },
-          { "heading": "Acceder a tus spots", "body": "El desplegable de favoritos (icono estrella en la barra superior) lista todos tus spots guardados. Pulsa uno para centrarte en él y cargar su previsión al instante." },
-          { "heading": "Eliminar un spot", "body": "Abre el desplegable de favoritos y pulsa el icono de papelera junto al spot que quieras eliminar. La acción es inmediata." }
+          {
+            "heading": "Guardar un spot",
+            "body": "Con cualquier punto seleccionado en el mapa, pulsa el botón de estrella (☆) en el panel lateral. Puedes darle un nombre personalizado antes de guardar."
+          },
+          {
+            "heading": "Acceder a tus spots",
+            "body": "El desplegable de favoritos (icono estrella en la barra superior) lista todos tus spots guardados. Pulsa uno para centrarte en él y cargar su previsión al instante."
+          },
+          {
+            "heading": "Eliminar un spot",
+            "body": "Abre el desplegable de favoritos y pulsa el icono de papelera junto al spot que quieras eliminar. La acción es inmediata."
+          }
         ]
       },
       "sessions": {
         "title": "Sesiones",
         "steps": [
-          { "heading": "Registrar una sesión", "body": "Ve a Sesiones desde el menú de usuario. Pulsa \"+ Nueva sesión\" e introduce la fecha, horas en el agua, el spot, el material usado y tus notas. Los datos meteorológicos del momento se capturan automáticamente." },
-          { "heading": "Vincular con Strava", "body": "En el formulario de sesión puedes pegar la URL de tu actividad en Strava. Aparecerá como enlace en el detalle de la sesión." },
-          { "heading": "Historial y estadísticas", "body": "La lista de sesiones muestra un resumen cronológico. Las tarjetas incluyen condiciones meteo del momento, material empleado y tiempo en el agua acumulado." }
+          {
+            "heading": "Registrar una sesión",
+            "body": "Ve a Sesiones desde el menú de usuario. Pulsa \"+ Nueva sesión\" e introduce la fecha, horas en el agua, el spot, el material usado y tus notas. Los datos meteorológicos del momento se capturan automáticamente."
+          },
+          {
+            "heading": "Vincular con Strava",
+            "body": "En el formulario de sesión puedes pegar la URL de tu actividad en Strava. Aparecerá como enlace en el detalle de la sesión."
+          },
+          {
+            "heading": "Historial y estadísticas",
+            "body": "La lista de sesiones muestra un resumen cronológico. Las tarjetas incluyen condiciones meteo del momento, material empleado y tiempo en el agua acumulado."
+          }
         ]
       },
       "materials": {
         "title": "Materiales",
         "steps": [
-          { "heading": "Añadir material", "body": "Ve a Materiales desde el menú de usuario (/materials). Pulsa \"+ Añadir\" y escribe el nombre del elemento (tabla, vela, ala, trapecio…). Puedes editar el nombre directamente desde la tarjeta." },
-          { "heading": "Subir una foto", "body": "Cada tarjeta de material tiene un área de imagen. Pulsa sobre ella o en el botón de cámara para subir una foto desde tu dispositivo. La imagen se guarda de forma privada en la nube: solo tú puedes verla." },
-          { "heading": "Usar material en una sesión", "body": "Al registrar una sesión, el campo \"Material\" muestra tu lista de materiales guardados. Selecciona el que usaste y quedará vinculado a esa sesión." },
-          { "heading": "Ver foto ampliada", "body": "Pulsa sobre la miniatura de cualquier material para abrir la imagen en un visor emergente a pantalla completa." }
+          {
+            "heading": "Añadir material",
+            "body": "Ve a Materiales desde el menú de usuario (/materials). Pulsa \"+ Añadir\" y escribe el nombre del elemento (tabla, vela, ala, trapecio…). Puedes editar el nombre directamente desde la tarjeta."
+          },
+          {
+            "heading": "Subir una foto",
+            "body": "Cada tarjeta de material tiene un área de imagen. Pulsa sobre ella o en el botón de cámara para subir una foto desde tu dispositivo. La imagen se guarda de forma privada en la nube: solo tú puedes verla."
+          },
+          {
+            "heading": "Usar material en una sesión",
+            "body": "Al registrar una sesión, el campo \"Material\" muestra tu lista de materiales guardados. Selecciona el que usaste y quedará vinculado a esa sesión."
+          },
+          {
+            "heading": "Ver foto ampliada",
+            "body": "Pulsa sobre la miniatura de cualquier material para abrir la imagen en un visor emergente a pantalla completa."
+          }
         ]
       },
       "profile": {
         "title": "Perfil y cuenta",
         "steps": [
-          { "heading": "Alias y preferencias", "body": "Desde tu Perfil puedes cambiar el alias que aparece en la app y configurar las unidades preferidas (nudos, km/h, m/s) y el formato de fecha." },
-          { "heading": "Seguridad", "body": "Para cambiar la contraseña usa el enlace \"Cambiar contraseña\" del perfil. Se enviará un correo a tu dirección registrada con las instrucciones." },
-          { "heading": "Eliminar cuenta", "body": "En los ajustes de cuenta encontrarás la opción de eliminar tu cuenta. Esto borrará de forma permanente todos tus datos (sesiones, materiales e imágenes) en un plazo máximo de 30 días." }
+          {
+            "heading": "Alias y preferencias",
+            "body": "Desde tu Perfil puedes cambiar el alias que aparece en la app y configurar las unidades preferidas (nudos, km/h, m/s) y el formato de fecha."
+          },
+          {
+            "heading": "Seguridad",
+            "body": "Para cambiar la contraseña usa el enlace \"Cambiar contraseña\" del perfil. Se enviará un correo a tu dirección registrada con las instrucciones."
+          },
+          {
+            "heading": "Eliminar cuenta",
+            "body": "En los ajustes de cuenta encontrarás la opción de eliminar tu cuenta. Esto borrará de forma permanente todos tus datos (sesiones, materiales e imágenes) en un plazo máximo de 30 días."
+          }
         ]
       }
     }

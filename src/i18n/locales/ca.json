@@ -90,7 +90,10 @@
     "profileUpdated": "Perfil actualitzat",
     "passwordUpdated": "Contrasenya actualitzada",
     "resetEmailSent": "Correu de restauració enviat",
-    "passwordMismatch": "Les contrasenyes no coincideixen"
+    "passwordMismatch": "Les contrasenyes no coincideixen",
+    "whatsappNumber": "Número (sense + ni espais)",
+    "callmebotApiKey": "API Key CallMeBot",
+    "callmebotHint": "Envia «I allow callmebot to send me messages» al +34 644 66 39 34 per WhatsApp per obtenir la teva API Key."
   },
   "materials": {
     "title": "Materials",
@@ -158,7 +161,13 @@
     "emailSaved": "Configuració de correu desada",
     "geoError": "No s'ha trobat la ubicació. Prova amb un altre nom (ex: Gavà, Espanya).",
     "saveError": "Error en desar la configuració.",
-    "loginRequired": "Has d'iniciar sessió per activar les notificacions per correu."
+    "loginRequired": "Has d'iniciar sessió per activar les notificacions per correu.",
+    "whatsappAlert": "📲 Enviament automàtic per WhatsApp",
+    "whatsappAlertDesc": "Rep el pronòstic de vent a WhatsApp quan supera el llindar configurat. Requereix activar CallMeBot (gratuït).",
+    "callmebotActivation": "Activació (una sola vegada): envia «I allow callmebot to send me messages» al +34 644 66 39 34 per WhatsApp i rebràs la teva API Key.",
+    "callmebotApiKey": "API Key CallMeBot",
+    "whatsappAlertNote": "El número de telèfon es configura al teu perfil. El llindar de vent es comparteix amb l'alerta d'email.",
+    "whatsappAlertSaved": "Alertes WhatsApp desades"
   },
   "chart": {
     "forecast7days": "🌬️ Previsió 7 dies · cada 2h",
@@ -265,43 +274,94 @@
       "radar": {
         "title": "Radar meteorològic",
         "steps": [
-          { "heading": "Selecciona un punt al mapa", "body": "Prem a qualsevol lloc del mapa o utilitza el cercador de localització per centrar la vista. El panell lateral mostrarà les dades meteorològiques d'aquell punt." },
-          { "heading": "Interpreta el vent", "body": "La velocitat es mostra en nusos (kt) per defecte. L'indicador de direcció assenyala des d'on bufa el vent. El valor entre parèntesis és la ratxa màxima." },
-          { "heading": "Dades d'onatge", "body": "L'alçada d'ona (Hs) i el període (T) s'actualitzen cada hora amb el model d'Open-Meteo Marine. Són orientatius: comprova sempre les condicions reals in situ." },
-          { "heading": "Temperatura i altres capes", "body": "Utilitza el selector de capes per alternar entre temperatura de l'aire, temperatura de l'aigua i visibilitat. El gràfic de 7 dies mostra la tendència horària del paràmetre actiu." }
+          {
+            "heading": "Selecciona un punt al mapa",
+            "body": "Prem a qualsevol lloc del mapa o utilitza el cercador de localització per centrar la vista. El panell lateral mostrarà les dades meteorològiques d'aquell punt."
+          },
+          {
+            "heading": "Interpreta el vent",
+            "body": "La velocitat es mostra en nusos (kt) per defecte. L'indicador de direcció assenyala des d'on bufa el vent. El valor entre parèntesis és la ratxa màxima."
+          },
+          {
+            "heading": "Dades d'onatge",
+            "body": "L'alçada d'ona (Hs) i el període (T) s'actualitzen cada hora amb el model d'Open-Meteo Marine. Són orientatius: comprova sempre les condicions reals in situ."
+          },
+          {
+            "heading": "Temperatura i altres capes",
+            "body": "Utilitza el selector de capes per alternar entre temperatura de l'aire, temperatura de l'aigua i visibilitat. El gràfic de 7 dies mostra la tendència horària del paràmetre actiu."
+          }
         ]
       },
       "spots": {
         "title": "Spots favorits",
         "steps": [
-          { "heading": "Desar un spot", "body": "Amb qualsevol punt seleccionat al mapa, prem el botó d'estrella (☆) al panell lateral. Pots posar-li un nom personalitzat abans de desar." },
-          { "heading": "Accedir als teus spots", "body": "El desplegable de favorits (icona estrella a la barra superior) llista tots els teus spots desats. Prem-ne un per centrar-te i carregar la previsió a l'instant." },
-          { "heading": "Eliminar un spot", "body": "Obre el desplegable de favorits i prem la icona de paperera al costat del spot que vulguis eliminar. L'acció és immediata." }
+          {
+            "heading": "Desar un spot",
+            "body": "Amb qualsevol punt seleccionat al mapa, prem el botó d'estrella (☆) al panell lateral. Pots posar-li un nom personalitzat abans de desar."
+          },
+          {
+            "heading": "Accedir als teus spots",
+            "body": "El desplegable de favorits (icona estrella a la barra superior) llista tots els teus spots desats. Prem-ne un per centrar-te i carregar la previsió a l'instant."
+          },
+          {
+            "heading": "Eliminar un spot",
+            "body": "Obre el desplegable de favorits i prem la icona de paperera al costat del spot que vulguis eliminar. L'acció és immediata."
+          }
         ]
       },
       "sessions": {
         "title": "Sessions",
         "steps": [
-          { "heading": "Registrar una sessió", "body": "Ves a Sessions des del menú d'usuari. Prem \"+ Nova sessió\" i introdueix la data, hores a l'aigua, el spot, el material usat i les teves notes. Les dades meteorològiques del moment es capturen automàticament." },
-          { "heading": "Vincular amb Strava", "body": "Al formulari de sessió pots enganxar l'URL de la teva activitat a Strava. Apareixerà com a enllaç al detall de la sessió." },
-          { "heading": "Historial i estadístiques", "body": "La llista de sessions mostra un resum cronològic. Les targetes inclouen condicions meteo del moment, material emprat i temps a l'aigua acumulat." }
+          {
+            "heading": "Registrar una sessió",
+            "body": "Ves a Sessions des del menú d'usuari. Prem \"+ Nova sessió\" i introdueix la data, hores a l'aigua, el spot, el material usat i les teves notes. Les dades meteorològiques del moment es capturen automàticament."
+          },
+          {
+            "heading": "Vincular amb Strava",
+            "body": "Al formulari de sessió pots enganxar l'URL de la teva activitat a Strava. Apareixerà com a enllaç al detall de la sessió."
+          },
+          {
+            "heading": "Historial i estadístiques",
+            "body": "La llista de sessions mostra un resum cronològic. Les targetes inclouen condicions meteo del moment, material emprat i temps a l'aigua acumulat."
+          }
         ]
       },
       "materials": {
         "title": "Materials",
         "steps": [
-          { "heading": "Afegir material", "body": "Ves a Materials des del menú d'usuari (/materials). Prem \"+ Afegir\" i escriu el nom de l'element (taula, vela, ala, trapezi…). Pots editar el nom directament des de la targeta." },
-          { "heading": "Pujar una foto", "body": "Cada targeta de material té una àrea d'imatge. Prem-hi o al botó de càmera per pujar una foto des del dispositiu. La imatge es desa de forma privada al núvol: només tu la pots veure." },
-          { "heading": "Usar material en una sessió", "body": "En registrar una sessió, el camp «Material» mostra la llista de materials desats. Selecciona el que has usat i quedarà vinculat a aquella sessió." },
-          { "heading": "Veure foto ampliada", "body": "Prem sobre la miniatura de qualsevol material per obrir la imatge en un visor emergent a pantalla completa." }
+          {
+            "heading": "Afegir material",
+            "body": "Ves a Materials des del menú d'usuari (/materials). Prem \"+ Afegir\" i escriu el nom de l'element (taula, vela, ala, trapezi…). Pots editar el nom directament des de la targeta."
+          },
+          {
+            "heading": "Pujar una foto",
+            "body": "Cada targeta de material té una àrea d'imatge. Prem-hi o al botó de càmera per pujar una foto des del dispositiu. La imatge es desa de forma privada al núvol: només tu la pots veure."
+          },
+          {
+            "heading": "Usar material en una sessió",
+            "body": "En registrar una sessió, el camp «Material» mostra la llista de materials desats. Selecciona el que has usat i quedarà vinculat a aquella sessió."
+          },
+          {
+            "heading": "Veure foto ampliada",
+            "body": "Prem sobre la miniatura de qualsevol material per obrir la imatge en un visor emergent a pantalla completa."
+          }
         ]
       },
       "profile": {
         "title": "Perfil i compte",
         "steps": [
-          { "heading": "Àlies i preferències", "body": "Des del teu Perfil pots canviar l'àlies que apareix a l'app i configurar les unitats preferides (nusos, km/h, m/s) i el format de data." },
-          { "heading": "Seguretat", "body": "Per canviar la contrasenya utilitza l'enllaç «Canviar contrasenya» del perfil. S'enviarà un correu a la teva adreça registrada amb les instruccions." },
-          { "heading": "Eliminar compte", "body": "Als ajustos del compte trobaràs l'opció d'eliminar el teu compte. Això esborrarà de forma permanent totes les teves dades (sessions, materials i imatges) en un termini màxim de 30 dies." }
+          {
+            "heading": "Àlies i preferències",
+            "body": "Des del teu Perfil pots canviar l'àlies que apareix a l'app i configurar les unitats preferides (nusos, km/h, m/s) i el format de data."
+          },
+          {
+            "heading": "Seguretat",
+            "body": "Per canviar la contrasenya utilitza l'enllaç «Canviar contrasenya» del perfil. S'enviarà un correu a la teva adreça registrada amb les instruccions."
+          },
+          {
+            "heading": "Eliminar compte",
+            "body": "Als ajustos del compte trobaràs l'opció d'eliminar el teu compte. Això esborrarà de forma permanent totes les teves dades (sessions, materials i imatges) en un termini màxim de 30 dies."
+          }
         ]
       }
     }
