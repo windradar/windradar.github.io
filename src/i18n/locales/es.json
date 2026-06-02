@@ -93,7 +93,7 @@
     "passwordMismatch": "Las contraseñas no coinciden",
     "whatsappNumber": "Número (sin + ni espacios)",
     "callmebotApiKey": "API Key CallMeBot",
-    "callmebotHint": "Envía «I allow callmebot to send me messages» al +34 644 66 39 34 por WhatsApp para obtener tu API Key."
+    "callmebotHint": "Envía «I allow callmebot to send me messages» al +34 644 91 96 80 por WhatsApp para obtener tu API Key."
   },
   "materials": {
     "title": "Materiales",
@@ -164,7 +164,7 @@
     "loginRequired": "Debes iniciar sesión para activar las notificaciones por email.",
     "whatsappAlert": "📲 Envío automático por WhatsApp",
     "whatsappAlertDesc": "Recibe el parte de viento en WhatsApp cuando supera el umbral configurado. Requiere activar CallMeBot (gratis).",
-    "callmebotActivation": "Activación (una sola vez): envía «I allow callmebot to send me messages» al +34 644 66 39 34 por WhatsApp y recibirás tu API Key.",
+    "callmebotActivation": "Activación (una sola vez): envía «I allow callmebot to send me messages» al +34 644 91 96 80 por WhatsApp y recibirás tu API Key.",
     "callmebotApiKey": "API Key CallMeBot",
     "whatsappAlertNote": "El número de teléfono se configura en tu perfil. El umbral de viento se comparte con la alerta de email.",
     "whatsappAlertSaved": "Alertas WhatsApp guardadas"

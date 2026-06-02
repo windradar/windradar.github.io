@@ -92,7 +92,7 @@
     "passwordMismatch": "Passwords do not match",
     "whatsappNumber": "Number (no + or spaces)",
     "callmebotApiKey": "CallMeBot API Key",
-    "callmebotHint": "Send «I allow callmebot to send me messages» to +34 644 66 39 34 on WhatsApp to get your API Key."
+    "callmebotHint": "Send «I allow callmebot to send me messages» to +34 644 91 96 80 on WhatsApp to get your API Key."
   },
   "materials": {
     "title": "Materials",
@@ -158,7 +158,7 @@
     "save": "Save",
     "whatsappAlert": "📲 Automatic WhatsApp notification",
     "whatsappAlertDesc": "Get a wind forecast on WhatsApp when it exceeds the configured threshold. Requires CallMeBot activation (free).",
-    "callmebotActivation": "Activation (once): send «I allow callmebot to send me messages» to +34 644 66 39 34 on WhatsApp and you will receive your API Key.",
+    "callmebotActivation": "Activation (once): send «I allow callmebot to send me messages» to +34 644 91 96 80 on WhatsApp and you will receive your API Key.",
     "callmebotApiKey": "CallMeBot API Key",
     "whatsappAlertNote": "Your phone number is set in your profile. Wind threshold is shared with the email alert.",
     "whatsappAlertSaved": "WhatsApp alerts saved"

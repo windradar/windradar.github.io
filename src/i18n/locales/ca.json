@@ -93,7 +93,7 @@
     "passwordMismatch": "Les contrasenyes no coincideixen",
     "whatsappNumber": "Número (sense + ni espais)",
     "callmebotApiKey": "API Key CallMeBot",
-    "callmebotHint": "Envia «I allow callmebot to send me messages» al +34 644 66 39 34 per WhatsApp per obtenir la teva API Key."
+    "callmebotHint": "Envia «I allow callmebot to send me messages» al +34 644 91 96 80 per WhatsApp per obtenir la teva API Key."
   },
   "materials": {
     "title": "Materials",
@@ -164,7 +164,7 @@
     "loginRequired": "Has d'iniciar sessió per activar les notificacions per correu.",
     "whatsappAlert": "📲 Enviament automàtic per WhatsApp",
     "whatsappAlertDesc": "Rep el pronòstic de vent a WhatsApp quan supera el llindar configurat. Requereix activar CallMeBot (gratuït).",
-    "callmebotActivation": "Activació (una sola vegada): envia «I allow callmebot to send me messages» al +34 644 66 39 34 per WhatsApp i rebràs la teva API Key.",
+    "callmebotActivation": "Activació (una sola vegada): envia «I allow callmebot to send me messages» al +34 644 91 96 80 per WhatsApp i rebràs la teva API Key.",
     "callmebotApiKey": "API Key CallMeBot",
     "whatsappAlertNote": "El número de telèfon es configura al teu perfil. El llindar de vent es comparteix amb l'alerta d'email.",
     "whatsappAlertSaved": "Alertes WhatsApp desades"

@@ -92,7 +92,7 @@
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "whatsappNumber": "Numéro (sans + ni espaces)",
     "callmebotApiKey": "Clé API CallMeBot",
-    "callmebotHint": "Envoyez «I allow callmebot to send me messages» au +34 644 66 39 34 sur WhatsApp pour obtenir votre clé API."
+    "callmebotHint": "Envoyez «I allow callmebot to send me messages» au +34 644 91 96 80 sur WhatsApp pour obtenir votre clé API."
   },
   "materials": {
     "title": "Matériel",
@@ -158,7 +158,7 @@
     "save": "Enregistrer",
     "whatsappAlert": "📲 Envoi automatique par WhatsApp",
     "whatsappAlertDesc": "Recevez les prévisions de vent sur WhatsApp quand elles dépassent le seuil configuré. Nécessite l'activation de CallMeBot (gratuit).",
-    "callmebotActivation": "Activation (une seule fois) : envoyez «I allow callmebot to send me messages» au +34 644 66 39 34 sur WhatsApp et vous recevrez votre clé API.",
+    "callmebotActivation": "Activation (une seule fois) : envoyez «I allow callmebot to send me messages» au +34 644 91 96 80 sur WhatsApp et vous recevrez votre clé API.",
     "callmebotApiKey": "Clé API CallMeBot",
     "whatsappAlertNote": "Le numéro de téléphone est configuré dans votre profil. Le seuil de vent est partagé avec l'alerte email.",
     "whatsappAlertSaved": "Alertes WhatsApp sauvegardées"
