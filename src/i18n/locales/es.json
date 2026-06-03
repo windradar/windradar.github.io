@@ -173,7 +173,11 @@
     "testWhatsappSent": "Mensaje de prueba enviado",
     "testWhatsappError": "Error al enviar la prueba. Revisa la configuración.",
     "testWhatsappNoConfig": "Configura número y API Key en tu perfil antes de probar.",
-    "callmebotApiKeyRequired": "Introduce tu API Key de CallMeBot antes de probar."
+    "callmebotApiKeyRequired": "Introduce tu API Key de CallMeBot antes de probar.",
+    "testEmail": "Probar email ahora",
+    "testEmailSending": "Enviando...",
+    "testEmailError": "Error al enviar el email de prueba. Revisa la configuración.",
+    "testEmailNoConfig": "Configura el email y la ubicación antes de probar."
   },
   "chart": {
     "forecast7days": "🌬️ Previsión 7 días · cada 2h",

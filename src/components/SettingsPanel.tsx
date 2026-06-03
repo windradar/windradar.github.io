@@ -99,6 +99,7 @@ export function SettingsPanel({
   const [saving, setSaving] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [testingWa, setTestingWa] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = (v: boolean) => {
@@ -147,6 +148,40 @@ export function SettingsPanel({
   }, [open, user]);
 
   const update = (patch: Partial<AppSettings>) => setLocal(prev => ({ ...prev, ...patch }));
+
+  const handleTestEmail = async () => {
+    if (!user) { toast.error(t('settings.loginRequired')); return; }
+    setTestingEmail(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-forecast-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+        }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      console.log('[Email test] response:', JSON.stringify(data));
+      const results: string[] = data?.results ?? [];
+      if (results.length === 0) {
+        toast.error(t('settings.testEmailNoConfig'));
+      } else {
+        toast.success(results[0]);
+      }
+    } catch (err) {
+      console.error('[Email test]', err);
+      toast.error(t('settings.testEmailError'));
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   const handleTestWhatsapp = async () => {
     if (!user) { toast.error(t('settings.loginRequired')); return; }
@@ -385,6 +420,15 @@ export function SettingsPanel({
               <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
                 <strong className="text-primary">ℹ️</strong> {t('settings.emailNote')}
               </div>
+
+              <button
+                onClick={handleTestEmail}
+                disabled={testingEmail || !user}
+                className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[0.75rem] font-semibold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {testingEmail ? t('settings.testEmailSending') : t('settings.testEmail')}
+              </button>
             </div>
           </section>
 

@@ -1,7 +1,10 @@
 // Supabase Edge Function — send-forecast-email
 // Schedule: every hour at :00 (Europe/Madrid timezone aware)
-// Requires env vars: RESEND_API_KEY, RESEND_FROM_EMAIL
-// Auto-injected by Supabase: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Requires env vars: RESEND_API_KEY, RESEND_FROM_EMAIL, CRON_SECRET
+// Auto-injected by Supabase: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
+//
+// TEST MODE: call via fetch with user JWT Authorization header —
+// sends immediately to that user only, ignoring time schedule.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -9,6 +12,12 @@ const RESEND_API_KEY        = Deno.env.get('RESEND_API_KEY')!;
 const RESEND_FROM_EMAIL     = Deno.env.get('RESEND_FROM_EMAIL') ?? 'WindFlowRadar <noreply@windflowradar.com>';
 const SUPABASE_URL          = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': 'https://windradar.github.io',
+  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -146,37 +155,72 @@ function buildHtml(profile: ProfileRow, hourly: WxHourly, dateLabel: string): st
 
 // ─── main handler ────────────────────────────────────────────────────────────
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const auth = req.headers.get('Authorization') ?? '';
+
+  // Determine call mode: cron (all users + time check) or test (single user, immediate)
+  let testUserId: string | null = null;
+
+  if (cronSecret && auth === `Bearer ${cronSecret}`) {
+    // Authorized cron call — process all users
+  } else {
+    const anonClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!);
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    const { data: { user } } = await anonClient.auth.getUser(token);
+    if (!user) return new Response('Unauthorized', { status: 401, headers: CORS_HEADERS });
+    testUserId = user.id;
+  }
+
   const now         = new Date();
   const currentHour = madridHour(now);
   const dateLabel   = madridDateLabel(now);
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  const { data: profiles, error } = await supabase
+  let query = supabase
     .from('profiles')
-    .select('email_notif_address, email_notif_location, email_notif_lat, email_notif_lon, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, email_notif_min_wind')
+    .select('user_id, email_notif_address, email_notif_location, email_notif_lat, email_notif_lon, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, email_notif_min_wind')
     .eq('email_notif_enabled', true)
     .not('email_notif_address', 'is', null)
     .not('email_notif_lat', 'is', null);
 
-  if (error) {
-    console.error('DB error:', error.message);
-    return new Response('DB error', { status: 500 });
+  if (testUserId) {
+    query = query.eq('user_id', testUserId);
   }
 
-  const toSend = (profiles ?? []).filter((p: any) =>
-    p.email_notif_time1 === currentHour ||
-    (p.email_notif_time2 && p.email_notif_time2 === currentHour)
-  );
+  const { data: profiles, error } = await query;
 
-  let sent = 0;
+  if (error) {
+    console.error('DB error:', error.message);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } });
+  }
+
+  // Time check skipped in test mode
+  const toSend = testUserId
+    ? (profiles ?? [])
+    : (profiles ?? []).filter((p: any) =>
+        p.email_notif_time1 === currentHour ||
+        (p.email_notif_time2 && p.email_notif_time2 === currentHour)
+      );
+
+  if (!toSend.length) {
+    return new Response(JSON.stringify({ sent: 0, total: 0, hour: currentHour, testMode: !!testUserId }), {
+      status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+    });
+  }
+
+  const results: string[] = [];
   for (const p of toSend as any[]) {
     try {
       const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.email_notif_lat}&longitude=${p.email_notif_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,weathercode&wind_speed_unit=kmh&timezone=Europe%2FMadrid&forecast_days=1`;
-      const wx       = await (await fetch(wxUrl)).json();
-      const html     = buildHtml(p as ProfileRow, wx.hourly as WxHourly, dateLabel);
-      const subject  = `💨 Previsión ${p.email_notif_location} · ${currentHour}`;
+      const wx   = await (await fetch(wxUrl)).json();
+      const html = buildHtml(p as ProfileRow, wx.hourly as WxHourly, dateLabel);
+      const subject = `💨 Previsión ${p.email_notif_location} · ${currentHour}`;
 
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -184,16 +228,19 @@ Deno.serve(async () => {
         body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: [p.email_notif_address], subject, html }),
       });
 
+      const body = await res.text();
       if (!res.ok) {
-        const body = await res.text();
         console.error(`Resend error for ${p.email_notif_address}:`, body);
+        results.push(`❌ ${p.email_notif_address}: ${body.slice(0, 120)}`);
       } else {
-        sent++;
+        results.push(`✅ ${p.email_notif_address}`);
       }
     } catch (e) {
-      console.error(`Error sending to ${p.email_notif_address}:`, e);
+      results.push(`❌ ${p.email_notif_address}: ${(e as Error).message}`);
     }
   }
 
-  return new Response(`Sent ${sent}/${toSend.length} emails at ${currentHour}`, { status: 200 });
+  return new Response(JSON.stringify({ sent: results.filter(r => r.startsWith('✅')).length, total: toSend.length, results, testMode: !!testUserId }), {
+    status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  });
 });
