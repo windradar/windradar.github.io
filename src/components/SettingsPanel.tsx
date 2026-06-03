@@ -154,6 +154,7 @@ export function SettingsPanel({
     setTestingWa(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-whatsapp-alerts');
+      console.log('[WA test] data:', data, 'error:', error);
       if (error) throw error;
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
@@ -161,7 +162,8 @@ export function SettingsPanel({
       } else {
         toast.success(t('settings.testWhatsappSent'));
       }
-    } catch {
+    } catch (err) {
+      console.error('[WA test]', err);
       toast.error(t('settings.testWhatsappError'));
     } finally {
       setTestingWa(false);
