@@ -164,10 +164,11 @@ Deno.serve(async (req) => {
       }
 
       const phone = (u.whatsapp_number as string).replace(/\D/g, '')
+      console.log(`[WA] sending to phone=${phone} apikey=${u.callmebot_apikey}`)
       const callUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}&apikey=${u.callmebot_apikey}`
       const callRes = await fetch(callUrl)
       const callBody = await callRes.text()
-      results.push(`${u.whatsapp_alert_location}: HTTP ${callRes.status} — ${callBody.slice(0, 120)}`)
+      results.push(`📱${phone} — HTTP ${callRes.status}: ${callBody.slice(0, 100)}`)
 
     } catch (e: unknown) {
       results.push(`Error: ${(e as Error).message}`)

@@ -168,11 +168,12 @@ export function SettingsPanel({
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      console.log('[WA test] response:', JSON.stringify(data));
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
         toast.error(t('settings.testWhatsappNoConfig'));
       } else {
-        toast.success(t('settings.testWhatsappSent'));
+        toast.success(results[0]);
       }
     } catch (err) {
       console.error('[WA test]', err);
