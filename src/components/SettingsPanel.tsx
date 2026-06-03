@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Send } from 'lucide-react';
 
 export interface AppSettings {
   minWindKn: number;
@@ -97,6 +98,7 @@ export function SettingsPanel({
   const [internalOpen, setInternalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [testingWa, setTestingWa] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = (v: boolean) => {
@@ -145,6 +147,26 @@ export function SettingsPanel({
   }, [open, user]);
 
   const update = (patch: Partial<AppSettings>) => setLocal(prev => ({ ...prev, ...patch }));
+
+  const handleTestWhatsapp = async () => {
+    if (!user) { toast.error(t('settings.loginRequired')); return; }
+    if (!local.callmebotApiKey.trim()) { toast.error(t('settings.callmebotApiKeyRequired')); return; }
+    setTestingWa(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-whatsapp-alerts');
+      if (error) throw error;
+      const results: string[] = data?.results ?? [];
+      if (results.length === 0) {
+        toast.error(t('settings.testWhatsappNoConfig'));
+      } else {
+        toast.success(t('settings.testWhatsappSent'));
+      }
+    } catch {
+      toast.error(t('settings.testWhatsappError'));
+    } finally {
+      setTestingWa(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -430,6 +452,15 @@ export function SettingsPanel({
               <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
                 <strong className="text-primary">ℹ️</strong> {t('settings.whatsappAlertNote')}
               </div>
+
+              <button
+                onClick={handleTestWhatsapp}
+                disabled={testingWa || !user}
+                className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-[0.75rem] font-semibold text-green-700 transition-all hover:bg-green-500/20 disabled:opacity-50 dark:text-green-400"
+              >
+                <Send className="h-3.5 w-3.5" />
+                {testingWa ? t('settings.testWhatsappSending') : t('settings.testWhatsapp')}
+              </button>
             </div>
           </section>
         </div>

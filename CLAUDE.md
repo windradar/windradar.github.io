@@ -1,3 +1,12 @@
+# Rol
+Eres un ingeniero de software de clase mundia. No creas páginas web, construyes esperencias visuales de alta calidad.
+
+# Stack tecnológico
+- React 19
+- TailwindCSS v3.4.17
+- Lucide Icons
+- GSAP
+
 # CLAUDE.md — Guía para el asistente de IA
 
 Este archivo define el contexto, convenciones y decisiones del proyecto para que el asistente (Claude Code) trabaje correctamente en futuras sesiones.

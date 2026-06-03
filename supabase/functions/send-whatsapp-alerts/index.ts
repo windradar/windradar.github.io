@@ -12,6 +12,9 @@
 //
 // ENV VARS (Supabase Dashboard > Edge Functions > send-whatsapp-alerts > Secrets):
 //   CRON_SECRET  – any random string to prevent unauthorized calls
+//
+// TEST MODE: call via supabase.functions.invoke('send-whatsapp-alerts') with a
+// valid user JWT — sends immediately to that user only, ignoring time schedule.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -48,11 +51,23 @@ function humanDate(dateStr: string): string {
 
 Deno.serve(async (req) => {
   const cronSecret = Deno.env.get('CRON_SECRET')
-  if (cronSecret) {
-    const auth = req.headers.get('Authorization')
-    if (auth !== `Bearer ${cronSecret}`) {
-      return new Response('Unauthorized', { status: 401 })
-    }
+  const auth = req.headers.get('Authorization') ?? ''
+
+  // Determine call mode: cron (all users + time check) or test (single user, immediate)
+  let testUserId: string | null = null
+
+  if (cronSecret && auth === `Bearer ${cronSecret}`) {
+    // Authorized cron call — process all users
+  } else {
+    // Try as Supabase user JWT (test call from the frontend)
+    const anonClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+    )
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+    const { data: { user } } = await anonClient.auth.getUser(token)
+    if (!user) return new Response('Unauthorized', { status: 401 })
+    testUserId = user.id
   }
 
   const supabase = createClient(
@@ -60,13 +75,19 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  const { data: users, error } = await supabase
+  let query = supabase
     .from('profiles')
-    .select('whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, email_notif_min_wind')
+    .select('user_id, whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, email_notif_min_wind')
     .eq('whatsapp_alert_enabled', true)
     .not('whatsapp_number', 'is', null)
     .not('callmebot_apikey', 'is', null)
     .not('whatsapp_alert_lat', 'is', null)
+
+  if (testUserId) {
+    query = query.eq('user_id', testUserId)
+  }
+
+  const { data: users, error } = await query
 
   if (error || !users?.length) {
     return new Response(JSON.stringify({ processed: 0, error: error?.message ?? 'no users' }), {
@@ -93,7 +114,10 @@ Deno.serve(async (req) => {
       const localNow = new Date(localMs)
       const localHour = `${String(localNow.getUTCHours()).padStart(2, '0')}:00`
 
-      if (localHour !== u.whatsapp_alert_time1 && localHour !== (u.whatsapp_alert_time2 ?? '')) continue
+      // Time check is skipped in test mode
+      if (!testUserId && localHour !== u.whatsapp_alert_time1 && localHour !== (u.whatsapp_alert_time2 ?? '')) {
+        continue
+      }
 
       const rangeFrom: string  = u.whatsapp_alert_range_from ?? '06:00'
       const rangeTo: string    = u.whatsapp_alert_range_to   ?? '20:00'
@@ -123,7 +147,8 @@ Deno.serve(async (req) => {
 
       msg += `\n_WindFlowRadar · Open-Meteo_\n\nMás información en https://windradar.github.io/`
 
-      if (!hasWind) {
+      // In test mode send even below threshold; in cron mode skip if no wind
+      if (!testUserId && !hasWind) {
         results.push(`${u.whatsapp_alert_location}: por debajo del umbral, no enviado`)
         continue
       }
@@ -131,14 +156,15 @@ Deno.serve(async (req) => {
       const phone = (u.whatsapp_number as string).replace(/\D/g, '')
       const callUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}&apikey=${u.callmebot_apikey}`
       const callRes = await fetch(callUrl)
-      results.push(`${u.whatsapp_alert_location}: enviado (HTTP ${callRes.status})`)
+      const callBody = await callRes.text()
+      results.push(`${u.whatsapp_alert_location}: HTTP ${callRes.status} — ${callBody.slice(0, 120)}`)
 
     } catch (e: unknown) {
       results.push(`Error: ${(e as Error).message}`)
     }
   }
 
-  return new Response(JSON.stringify({ processed: users.length, results }), {
+  return new Response(JSON.stringify({ processed: users.length, results, testMode: !!testUserId }), {
     status: 200, headers: { 'Content-Type': 'application/json' },
   })
 })

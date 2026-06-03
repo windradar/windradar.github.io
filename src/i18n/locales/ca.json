@@ -167,7 +167,13 @@
     "callmebotActivation": "Activació (una sola vegada): envia «I allow callmebot to send me messages» al +34 644 91 96 80 per WhatsApp i rebràs la teva API Key.",
     "callmebotApiKey": "API Key CallMeBot",
     "whatsappAlertNote": "El número de telèfon es configura al teu perfil. El llindar de vent es comparteix amb l'alerta d'email.",
-    "whatsappAlertSaved": "Alertes WhatsApp desades"
+    "whatsappAlertSaved": "Alertes WhatsApp desades",
+    "testWhatsapp": "Provar alerta ara",
+    "testWhatsappSending": "Enviant...",
+    "testWhatsappSent": "Missatge de prova enviat",
+    "testWhatsappError": "Error en enviar la prova. Revisa la configuració.",
+    "testWhatsappNoConfig": "Configura el número i API Key al teu perfil abans de provar.",
+    "callmebotApiKeyRequired": "Introdueix la teva API Key de CallMeBot abans de provar."
   },
   "chart": {
     "forecast7days": "🌬️ Previsió 7 dies · cada 2h",
