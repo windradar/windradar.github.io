@@ -153,9 +153,21 @@ export function SettingsPanel({
     if (!local.callmebotApiKey.trim()) { toast.error(t('settings.callmebotApiKeyRequired')); return; }
     setTestingWa(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-whatsapp-alerts');
-      console.log('[WA test] data:', data, 'error:', error);
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-alerts`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+        }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
         toast.error(t('settings.testWhatsappNoConfig'));
