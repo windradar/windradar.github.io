@@ -18,6 +18,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': 'https://windradar.github.io',
+  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 const DIRS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO']
 
 function dirShort(deg: number): string {
@@ -50,6 +56,10 @@ function humanDate(dateStr: string): string {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS })
+  }
+
   const cronSecret = Deno.env.get('CRON_SECRET')
   const auth = req.headers.get('Authorization') ?? ''
 
@@ -66,7 +76,7 @@ Deno.serve(async (req) => {
     )
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
     const { data: { user } } = await anonClient.auth.getUser(token)
-    if (!user) return new Response('Unauthorized', { status: 401 })
+    if (!user) return new Response('Unauthorized', { status: 401, headers: CORS_HEADERS })
     testUserId = user.id
   }
 
@@ -91,7 +101,7 @@ Deno.serve(async (req) => {
 
   if (error || !users?.length) {
     return new Response(JSON.stringify({ processed: 0, error: error?.message ?? 'no users' }), {
-      status: 200, headers: { 'Content-Type': 'application/json' },
+      status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     })
   }
 
@@ -165,6 +175,6 @@ Deno.serve(async (req) => {
   }
 
   return new Response(JSON.stringify({ processed: users.length, results, testMode: !!testUserId }), {
-    status: 200, headers: { 'Content-Type': 'application/json' },
+    status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   })
 })
