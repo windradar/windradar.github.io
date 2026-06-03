@@ -24,7 +24,7 @@ SELECT cron.schedule(
   '0 * * * *',
   $job$
   SELECT net.http_post(
-    url     := 'https://iooyyrsrnlbuyxvquxbu.supabase.co/functions/v1/send-forecast-email',
+    url     := 'https://nextrkzcyddprywyvhsa.supabase.co/functions/v1/send-forecast-email',
     headers := '{"Content-Type":"application/json","Authorization":"Bearer <CRON_SECRET>"}'::jsonb,
     body    := '{}'::jsonb
   );
@@ -37,7 +37,7 @@ SELECT cron.schedule(
   '5 * * * *',
   $job$
   SELECT net.http_post(
-    url     := 'https://iooyyrsrnlbuyxvquxbu.supabase.co/functions/v1/send-whatsapp-alerts',
+    url     := 'https://nextrkzcyddprywyvhsa.supabase.co/functions/v1/send-whatsapp-alerts',
     headers := '{"Content-Type":"application/json","Authorization":"Bearer <CRON_SECRET>"}'::jsonb,
     body    := '{}'::jsonb
   );
