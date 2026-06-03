@@ -1,6 +1,6 @@
 // Supabase Edge Function — send-forecast-email
 // Schedule: every hour at :00 (Europe/Madrid timezone aware)
-// Requires env vars: RESEND_API_KEY, RESEND_FROM_EMAIL, CRON_SECRET
+// Requires env vars: BREVO_API_KEY, FROM_EMAIL, FROM_NAME, CRON_SECRET
 // Auto-injected by Supabase: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
 //
 // TEST MODE: call via fetch with user JWT Authorization header —
@@ -8,10 +8,11 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const RESEND_API_KEY        = Deno.env.get('RESEND_API_KEY')!;
-const RESEND_FROM_EMAIL     = Deno.env.get('RESEND_FROM_EMAIL') ?? 'WindFlowRadar <noreply@windflowradar.com>';
-const SUPABASE_URL          = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const BREVO_API_KEY    = Deno.env.get('BREVO_API_KEY')!;
+const FROM_EMAIL       = Deno.env.get('FROM_EMAIL') ?? 'noreply@windflowradar.com';
+const FROM_NAME        = Deno.env.get('FROM_NAME')  ?? 'WindFlowRadar';
+const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': 'https://windradar.github.io',
@@ -222,15 +223,20 @@ Deno.serve(async (req) => {
       const html = buildHtml(p as ProfileRow, wx.hourly as WxHourly, dateLabel);
       const subject = `💨 Previsión ${p.email_notif_location} · ${currentHour}`;
 
-      const res = await fetch('https://api.resend.com/emails', {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: RESEND_FROM_EMAIL, to: [p.email_notif_address], subject, html }),
+        headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: FROM_NAME, email: FROM_EMAIL },
+          to: [{ email: p.email_notif_address }],
+          subject,
+          htmlContent: html,
+        }),
       });
 
       const body = await res.text();
       if (!res.ok) {
-        console.error(`Resend error for ${p.email_notif_address}:`, body);
+        console.error(`Brevo error for ${p.email_notif_address}:`, body);
         results.push(`❌ ${p.email_notif_address}: ${body.slice(0, 120)}`);
       } else {
         results.push(`✅ ${p.email_notif_address}`);
