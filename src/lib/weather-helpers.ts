@@ -91,6 +91,7 @@ export function humanDate(s: string, locale = 'es-ES'): string {
 }
 
 export const WEATHER_MODELS = [
+  { id: 'arome_25',    label: 'AROME 2.5 km',   param: 'meteofrance_arome_france' },
   { id: 'arome_hd',    label: 'AROME 1.3 km',   param: 'meteofrance_arome_france_hd' },
   { id: 'mf_seamless', label: 'MF Seamless 7d',  param: 'meteofrance_seamless' },
   { id: 'global',      label: 'Global',           param: 'best_match' },

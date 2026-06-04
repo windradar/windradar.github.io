@@ -48,7 +48,7 @@ export default function Index() {
   const [favKey, setFavKey] = useState(0);
   const [isFav, setIsFav] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
-  const [weatherModel, setWeatherModel] = useState<WeatherModelId>('arome_hd');
+  const [weatherModel, setWeatherModel] = useState<WeatherModelId>('arome_25');
   const [modelFallback, setModelFallback] = useState<WeatherModelId | null>(null);
 
   const today = localDateStr(new Date());
@@ -85,10 +85,15 @@ export default function Index() {
       fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
 
-    // AROME out of coverage → auto-fallback to MF Seamless
-    if (wxRes.error && !isPast && model === 'arome_hd') {
-      setModelFallback('mf_seamless');
-      return fetchWeather(latitude, longitude, selectedDate, 'mf_seamless');
+    // Fallback chain: arome_hd → arome_25 → mf_seamless
+    const FALLBACK: Partial<Record<WeatherModelId, WeatherModelId>> = {
+      arome_hd: 'arome_25',
+      arome_25: 'mf_seamless',
+    };
+    if (wxRes.error && !isPast && FALLBACK[model]) {
+      const next = FALLBACK[model]!;
+      setModelFallback(next);
+      return fetchWeather(latitude, longitude, selectedDate, next);
     }
     if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
     if (!modelOverride) setModelFallback(null);
