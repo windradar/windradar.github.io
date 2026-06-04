@@ -98,6 +98,18 @@ function wrapText(
   return count + 1;
 }
 
+function countLines(ctx: CanvasRenderingContext2D, text: string, maxW: number, lh: number): number {
+  const words = text.split(' ');
+  let line = '';
+  let count = 0;
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxW && line) { line = word; count++; }
+    else line = test;
+  }
+  return count + 1;
+}
+
 function roundRect(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -119,7 +131,12 @@ function roundRect(
   ctx.closePath();
 }
 
-function drawStory(canvas: HTMLCanvasElement, session: Session, bgImg: HTMLImageElement | null) {
+function drawStory(
+  canvas: HTMLCanvasElement,
+  session: Session,
+  bgImg: HTMLImageElement | null,
+  matImgs: Record<string, HTMLImageElement>,
+) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   ctx.imageSmoothingEnabled = true;
@@ -133,145 +150,223 @@ function drawStory(canvas: HTMLCanvasElement, session: Session, bgImg: HTMLImage
     const sh = bgImg.naturalHeight * scale;
     ctx.drawImage(bgImg, (CW - sw) / 2, (CH - sh) / 2, sw, sh);
   } else {
-    const grad = ctx.createLinearGradient(0, 0, CW * 0.3, CH);
-    grad.addColorStop(0, '#06172d');
-    grad.addColorStop(0.5, '#073352');
-    grad.addColorStop(1, '#041220');
+    const grad = ctx.createLinearGradient(0, 0, CW, CH);
+    grad.addColorStop(0, '#010c1a');
+    grad.addColorStop(0.5, '#041622');
+    grad.addColorStop(1, '#010a12');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, CW, CH);
-    // decorative arcs
-    ctx.strokeStyle = 'rgba(56,189,248,0.06)';
-    ctx.lineWidth = 4;
-    for (let i = 0; i < 7; i++) {
+    ctx.strokeStyle = 'rgba(0,200,255,0.04)';
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx < CW; gx += 90) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, CH); ctx.stroke();
+    }
+    for (let gy = 0; gy < CH; gy += 90) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(CW, gy); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(0,200,255,0.07)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
       ctx.beginPath();
-      ctx.arc(CW * 0.85, CH * 0.22 + i * 260, 320 + i * 80, 0, Math.PI * 2);
+      ctx.arc(CW, CH * 0.4 + i * 270, 280 + i * 90, Math.PI, Math.PI * 2);
       ctx.stroke();
     }
   }
 
-  // ── Dark vignette / gradient overlay ────────────────────────
+  // ── Overlay gradient ─────────────────────────────────────────
   const ov = ctx.createLinearGradient(0, 0, 0, CH);
   if (bgImg) {
-    ov.addColorStop(0, 'rgba(0,0,0,0.45)');
-    ov.addColorStop(0.38, 'rgba(0,0,0,0.25)');
-    ov.addColorStop(0.6, 'rgba(0,0,0,0.55)');
-    ov.addColorStop(1, 'rgba(0,0,0,0.92)');
+    ov.addColorStop(0,    'rgba(0,8,18,0.65)');
+    ov.addColorStop(0.30, 'rgba(0,8,18,0.14)');
+    ov.addColorStop(0.55, 'rgba(0,8,18,0.38)');
+    ov.addColorStop(1,    'rgba(0,8,18,0.97)');
   } else {
     ov.addColorStop(0, 'rgba(0,0,0,0)');
-    ov.addColorStop(0.55, 'rgba(0,0,0,0.1)');
-    ov.addColorStop(1, 'rgba(0,0,0,0.7)');
+    ov.addColorStop(0.6, 'rgba(0,0,0,0.08)');
+    ov.addColorStop(1, 'rgba(0,0,0,0.58)');
   }
   ctx.fillStyle = ov;
   ctx.fillRect(0, 0, CW, CH);
 
+  const STRIP = 140;
+  const MX = STRIP + 60;
+  const MW = CW - MX - 64;
+
+  // ── Vertical separator line ───────────────────────────────────
+  const sg = ctx.createLinearGradient(0, 80, 0, CH - 80);
+  sg.addColorStop(0,   'rgba(0,200,255,0)');
+  sg.addColorStop(0.1, 'rgba(0,200,255,0.38)');
+  sg.addColorStop(0.9, 'rgba(0,200,255,0.38)');
+  sg.addColorStop(1,   'rgba(0,200,255,0)');
+  ctx.strokeStyle = sg;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(STRIP, 80);
+  ctx.lineTo(STRIP, CH - 80);
+  ctx.stroke();
+
+  // ── Location name — left strip, reads bottom-to-top ──────────
+  {
+    const loc = session.location_name || 'Sin ubicación';
+    ctx.save();
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    let fs = 88;
+    do {
+      ctx.font = `bold ${fs}px system-ui,-apple-system,sans-serif`;
+      if (ctx.measureText(loc).width <= CH - 280) break;
+      fs -= 4;
+    } while (fs > 30);
+    ctx.translate(STRIP / 2, CH - 130);
+    ctx.rotate(-Math.PI / 2);
+    ctx.shadowColor = 'rgba(0,200,255,0.55)';
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillText(loc, 0, 0);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
   // ── Brand header ─────────────────────────────────────────────
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(0, 0, CW, 188);
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 62px system-ui,-apple-system,sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.95)';
-  ctx.fillText('WindFlowRadar', CW / 2, 118);
-  // accent line
-  ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(CW / 2 - 130, 142, 260, 7);
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 54px system-ui,-apple-system,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.90)';
+  ctx.fillText('WindFlowRadar', MX, 285);
+  ctx.fillStyle = 'rgb(0, 255, 42)';
+  ctx.fillRect(MX, 302, 218, 4);
 
-  // ── Location name ────────────────────────────────────────────
-  const locStartY = bgImg ? 740 : 480;
-  ctx.font = 'bold 90px system-ui,-apple-system,sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(0,0,0,0.85)';
-  ctx.shadowBlur = 24;
-  const locLines = wrapText(
-    ctx,
-    session.location_name || 'Sin ubicación',
-    CW / 2,
-    locStartY,
-    CW - 140,
-    106,
-  );
-  ctx.shadowBlur = 0;
-
-  // ── Date + time ──────────────────────────────────────────────
-  let ty = locStartY + locLines * 106 + 52;
-  ctx.font = '54px system-ui,-apple-system,sans-serif';
-  ctx.fillStyle = 'rgba(190,225,255,0.92)';
-  ctx.fillText(humanDate(session.session_date), CW / 2, ty);
-  ty += 76;
-  ctx.font = '50px system-ui,-apple-system,sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.68)';
-  ctx.fillText(`${session.start_time} – ${session.end_time}`, CW / 2, ty);
-  ty += 110;
-
-  // ── Stats card ───────────────────────────────────────────────
+  // ── Build data first (needed for height measurement) ─────────
   const stats = getStats(session);
-  const cardX = 64;
-  const cardW = CW - 128;
-  const rowH = 116;
-
-  const rows: [string, string, string?][] = [];
+  const rows: [string, string][] = [];
   if (stats) {
-    rows.push(['💨', `${stats.windAvg} kn`, `ráf. ${stats.gustMax} kn`]);
-    rows.push([dirArrow(stats.dirAvg), stats.dirShort, `${stats.dirAvg}°`]);
-    if (stats.waveAvg !== null) rows.push(['🌊', `${stats.waveAvg.toFixed(1)} m`, 'altura olas']);
+    rows.push(['💨', `${stats.windAvg} kn  |  ráf. ${stats.gustMax} kn`]);
+    rows.push([dirArrow(stats.dirAvg), stats.dirShort]);
+    if (stats.waveAvg !== null) rows.push(['🌊', `${stats.waveAvg.toFixed(1)} m`]);
   } else {
-    rows.push(['💨', '—', ''], ['🌊', '—', '']);
+    rows.push(['💨', '—'], ['🌊', '—']);
   }
   rows.push(['⏱', `${session.start_time} – ${session.end_time}`]);
 
-  const cardH = rows.length * rowH + 88;
+  const matList = [session.material_1, session.material_2, session.material_3, session.material_4]
+    .filter((m): m is string => !!m);
 
-  ctx.fillStyle = 'rgba(4,22,45,0.78)';
-  roundRect(ctx, cardX, ty, cardW, cardH, 52);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(56,189,248,0.35)';
-  ctx.lineWidth = 3;
-  roundRect(ctx, cardX, ty, cardW, cardH, 52);
-  ctx.stroke();
+  const ROW_H = 116;
+  const THUMB = 96;
+  const THUMB_R = THUMB / 2;
+  const THUMB_GAP = 24;
 
-  ctx.textAlign = 'left';
-  rows.forEach(([icon, val, sub], i) => {
-    const ry = ty + 82 + i * rowH;
+  // ── Date + time — fijos bajo el título ──────────────────────
+  ctx.font = '50px system-ui,-apple-system,sans-serif';
+  ctx.fillStyle = 'hsl(128, 100%, 50%)';
+  ctx.fillText(humanDate(session.session_date), MX, 370);
+  ctx.font = '44px system-ui,-apple-system,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.50)';
+  ctx.fillText(`${session.start_time} – ${session.end_time}`, MX, 430);
+
+  // ── Measure bottom block height ───────────────────────────────
+  let blockH = 90 + rows.length * ROW_H + 28 + 20; // stats (gap reducido)
+  if (matList.length) {
+    blockH += 54;
+    for (const mat of matList) {
+      if (matImgs[mat]) { blockH += THUMB + 18; }
+      else {
+        ctx.font = '46px system-ui,-apple-system,sans-serif';
+        blockH += countLines(ctx, mat, MW, 54) * 54 + 12;
+      }
+    }
+    blockH += 32;
+  }
+  if (session.notes) {
+    blockH += 54;
+    ctx.font = 'italic 42px Georgia,serif';
+    blockH += countLines(ctx, session.notes, MW, 56) * 56 + 20;
+  }
+
+  // Anchor to bottom
+  let ty = (CH - 55) - 80 - blockH;
+
+  // ── Stats rows ────────────────────────────────────────────────
+  ctx.strokeStyle = 'hsla(128,100%,50%,0.55)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(MX, ty); ctx.lineTo(MX + MW, ty); ctx.stroke();
+
+  rows.forEach(([icon, val], i) => {
+    const baseline = ty + 90 + i * ROW_H;
+
+    ctx.textAlign = 'left';
     ctx.font = 'bold 64px system-ui,-apple-system,sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(icon, cardX + 54, ry);
-    ctx.font = 'bold 62px system-ui,-apple-system,sans-serif';
-    ctx.fillStyle = '#ddf0ff';
-    ctx.fillText(val, cardX + 168, ry);
-    if (sub) {
-      ctx.font = '46px system-ui,-apple-system,sans-serif';
-      ctx.fillStyle = 'rgba(155,205,245,0.72)';
-      ctx.fillText(sub, cardX + 570, ry);
-    }
+    ctx.fillText(icon, MX, baseline);
+
+    ctx.font = 'bold 64px system-ui,-apple-system,sans-serif';
+    ctx.fillStyle = 'rgba(220,240,255,0.92)';
+    ctx.fillText(val, MX + 132, baseline);
+
+    const ruleY = baseline + 28;
+    ctx.strokeStyle = i === rows.length - 1 ? 'hsla(128,100%,50%,0.55)' : 'hsla(128,100%,50%,0.20)';
+    ctx.lineWidth = i === rows.length - 1 ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(MX, ruleY); ctx.lineTo(MX + MW, ruleY); ctx.stroke();
   });
 
-  ty += cardH + 62;
+  ty += 90 + rows.length * ROW_H + 28 + 60;
 
-  // ── Materials ────────────────────────────────────────────────
-  const mats = [session.material_1, session.material_2, session.material_3, session.material_4]
-    .filter(Boolean)
-    .join(' · ');
-  if (mats) {
-    ctx.textAlign = 'center';
-    ctx.font = '46px system-ui,-apple-system,sans-serif';
-    ctx.fillStyle = 'rgba(200,230,255,0.82)';
-    wrapText(ctx, `🏄  ${mats}`, CW / 2, ty, CW - 140, 60);
-    ty += 70;
+  // ── Equipo ────────────────────────────────────────────────────
+  if (matList.length) {
+    ctx.textAlign = 'left';
+    ctx.font = '32px system-ui,-apple-system,sans-serif';
+    ctx.fillStyle = 'hsl(128,100%,50%)';
+    ctx.fillText('EQUIPO', MX, ty);
+    ty += 54;
+
+    for (const mat of matList) {
+      const img = matImgs[mat];
+      if (img) {
+        ctx.save();
+        roundRect(ctx, MX, ty, THUMB, THUMB, 16);
+        ctx.clip();
+        ctx.drawImage(img, MX, ty, THUMB, THUMB);
+        ctx.restore();
+        ctx.strokeStyle = 'hsla(128,100%,50%,0.55)';
+        ctx.lineWidth = 3;
+        roundRect(ctx, MX, ty, THUMB, THUMB, 16);
+        ctx.stroke();
+        ctx.font = '46px system-ui,-apple-system,sans-serif';
+        ctx.fillStyle = 'rgba(210,235,255,0.90)';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(mat, MX + THUMB + THUMB_GAP, ty + THUMB_R);
+        ctx.textBaseline = 'alphabetic';
+        ty += THUMB + 18;
+      } else {
+        ctx.font = '46px system-ui,-apple-system,sans-serif';
+        ctx.fillStyle = 'rgba(210,235,255,0.90)';
+        ctx.textAlign = 'left';
+        const lines = wrapText(ctx, mat, MX, ty, MW, 54);
+        ty += lines * 54 + 12;
+      }
+    }
+    ty += 32;
   }
 
-  // ── Notes (only if space remains) ────────────────────────────
-  if (session.notes && ty < CH - 240) {
-    ctx.textAlign = 'center';
-    ctx.font = 'italic 40px Georgia,serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.48)';
-    wrapText(ctx, `"${session.notes}"`, CW / 2, Math.min(ty + 20, CH - 240), CW - 200, 54);
+  // ── Notas ────────────────────────────────────────────────────
+  if (session.notes) {
+    ctx.textAlign = 'left';
+    ctx.font = '32px system-ui,-apple-system,sans-serif';
+    ctx.fillStyle = 'hsl(128,100%,50%)';
+    ctx.fillText('NOTAS', MX, ty);
+    ty += 54;
+    ctx.font = 'italic 42px Georgia,serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    wrapText(ctx, session.notes, MX, ty, MW, 56);
   }
 
-  // ── Footer brand ─────────────────────────────────────────────
-  ctx.textAlign = 'center';
-  ctx.font = '34px system-ui,-apple-system,sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.28)';
-  ctx.fillText('windflowradar.app', CW / 2, CH - 58);
+  // ── Footer ───────────────────────────────────────────────────
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.font = '32px system-ui,-apple-system,sans-serif';
+  ctx.fillStyle = 'rgb(0, 255, 0)';
+  ctx.fillText('windflowradar.app', MX, CH - 55);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -281,13 +376,32 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
   const [bgImg, setBgImg] = useState<HTMLImageElement | null>(null);
   const [bgBlobUrl, setBgBlobUrl] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [matImgs, setMatImgs] = useState<Record<string, HTMLImageElement>>({});
 
   const matEntries = Object.entries(materialPhotos);
 
   useEffect(() => {
+    if (!Object.keys(materialPhotos).length) return;
+    let cancelled = false;
+    (async () => {
+      const loaded: Record<string, HTMLImageElement> = {};
+      await Promise.all(
+        Object.entries(materialPhotos).map(async ([name, url]) => {
+          const blobUrl = await fetchAsBlobUrl(url);
+          if (blobUrl && !cancelled) {
+            try { loaded[name] = await loadImage(blobUrl); } catch { /* skip */ }
+          }
+        }),
+      );
+      if (!cancelled) setMatImgs(loaded);
+    })();
+    return () => { cancelled = true; };
+  }, [materialPhotos]);
+
+  useEffect(() => {
     if (!session || !canvasRef.current) return;
-    drawStory(canvasRef.current, session, bgImg);
-  }, [session, bgImg]);
+    drawStory(canvasRef.current, session, bgImg, matImgs);
+  }, [session, bgImg, matImgs]);
 
   // revoke blob url on unmount or change
   useEffect(() => {
