@@ -32,9 +32,19 @@ export function WindCharts({ wx, mar }: Props) {
   }
   if (s < 0) return null;
 
+  // 48 h of data: 48 slots hourly, 192 slots at 15-min resolution
+  const slotsFor48h = wx.resolution === 'minutely_15' ? 192 : 48;
   const sl = <T,>(arr: T[] | undefined): T[] => {
-    if (!arr) return new Array(48).fill(null);
-    return arr.slice(s, s + 48);
+    if (!arr) return new Array(slotsFor48h).fill(null);
+    return arr.slice(s, s + slotsFor48h);
+  };
+
+  // Marine is always hourly; map to same window
+  const marSlotsFor48h = 48;
+  const slMar = <T,>(arr: T[] | undefined): T[] => {
+    if (!arr) return new Array(marSlotsFor48h).fill(null);
+    const marStart = wx.resolution === 'minutely_15' ? Math.floor(s / 4) : s;
+    return arr.slice(marStart, marStart + marSlotsFor48h);
   };
 
   const labs = sl(times).map((t: any) => {
@@ -47,9 +57,9 @@ export function WindCharts({ wx, mar }: Props) {
   const wgKmh = sl(h.wind_gusts_10m);
   const wsKn = wsKmh.map(v => v != null ? Math.round(kmhToKnots(v) * 10) / 10 : null);
   const wgKn = wgKmh.map(v => v != null ? Math.round(kmhToKnots(v) * 10) / 10 : null);
-  const wv = mar?.hourly ? sl(mar.hourly.wave_height) : new Array(48).fill(null);
+  const wv = mar?.hourly ? slMar(mar.hourly.wave_height) : new Array(marSlotsFor48h).fill(null);
   const temp = sl(h.temperature_2m);
-  const sst = mar?.hourly ? sl(mar.hourly.sea_surface_temperature) : new Array(48).fill(null);
+  const sst = mar?.hourly ? slMar(mar.hourly.sea_surface_temperature) : new Array(marSlotsFor48h).fill(null);
 
   const baseOpts: any = {
     responsive: true,

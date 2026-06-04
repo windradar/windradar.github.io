@@ -90,13 +90,24 @@ export function humanDate(s: string, locale = 'es-ES'): string {
   return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
+export const WEATHER_MODELS = [
+  { id: 'arome_hd',    label: 'AROME 1.3 km',   param: 'meteofrance_arome_france_hd' },
+  { id: 'mf_seamless', label: 'MF Seamless 7d',  param: 'meteofrance_seamless' },
+  { id: 'global',      label: 'Global',           param: 'best_match' },
+] as const;
+
+export type WeatherModelId = typeof WEATHER_MODELS[number]['id'];
+
 export interface WeatherData {
+  resolution: 'hourly' | 'minutely_15';
   hourly: {
     time: string[];
     temperature_2m: number[];
     wind_speed_10m: number[];
     wind_gusts_10m: number[];
     wind_direction_10m: number[];
+    wind_speed_80m?: (number | null)[];
+    wind_direction_80m?: (number | null)[];
     precipitation: number[];
     weathercode: number[];
     cloud_cover: number[];
@@ -108,7 +119,11 @@ export interface MarineData {
     time: string[];
     wave_height: (number | null)[];
     wave_direction: (number | null)[];
+    wave_period?: (number | null)[];
     swell_wave_height: (number | null)[];
+    swell_wave_period?: (number | null)[];
+    wind_wave_height?: (number | null)[];
+    wind_wave_period?: (number | null)[];
     sea_surface_temperature: (number | null)[];
   };
 }
