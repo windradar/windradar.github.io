@@ -366,7 +366,7 @@ function drawStory(
   ctx.textAlign = 'left';
   ctx.font = '32px system-ui,-apple-system,sans-serif';
   ctx.fillStyle = 'rgb(0, 255, 0)';
-  ctx.fillText('windflowradar.app', MX, CH - 55);
+  ctx.fillText('windradar.github.io', MX, CH - 55);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
