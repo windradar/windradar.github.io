@@ -79,7 +79,9 @@ export default function Index() {
     }
 
     const [wxRes, marRes] = await Promise.all([
-      fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+      fetch(wxUrl)
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(e => ({ error: true, reason: String(e?.message ?? e) })),
       fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
 
