@@ -19,8 +19,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  type WeatherData, type MarineData, type WeatherModelId,
-  WEATHER_MODELS,
+  type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
   addToSearchHistory, getLastSearch, setLastSearch,
@@ -48,86 +47,43 @@ export default function Index() {
   const [favKey, setFavKey] = useState(0);
   const [isFav, setIsFav] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
-  const [weatherModel, setWeatherModel] = useState<WeatherModelId>('arome_25');
-  const [modelFallback, setModelFallback] = useState<WeatherModelId | null>(null);
 
   const today = localDateStr(new Date());
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
 
-  const fetchWeather = useCallback(async (
-    latitude: number,
-    longitude: number,
-    selectedDate?: string,
-    modelOverride?: WeatherModelId,
-  ) => {
+  const fetchWeather = useCallback(async (latitude: number, longitude: number, selectedDate?: string) => {
     setLoadingText(t('index.loadingText'));
     const targetDate = selectedDate || localDateStr(new Date());
     const isPast = targetDate < localDateStr(new Date());
-    const model = modelOverride ?? weatherModel;
-    const modelParam = WEATHER_MODELS.find(m => m.id === model)?.param ?? 'best_match';
 
     let wxUrl: string;
     let marUrl: string;
 
     if (isPast) {
       wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
-      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
     } else {
-      wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&minutely_15=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_80m,wind_direction_80m,precipitation,weather_code&wind_speed_unit=kmh&timezone=auto&forecast_days=7&models=${modelParam}`;
-      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,wind_wave_height,wind_wave_period,sea_surface_temperature&timezone=auto&forecast_days=7`;
+      wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
+      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
     }
 
     const [wxRes, marRes] = await Promise.all([
-      fetch(wxUrl)
-        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .catch(e => ({ error: true, reason: String(e?.message ?? e) })),
+      fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
       fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
 
-    // Fallback chain: arome_hd → arome_25 → mf_seamless
-    const FALLBACK: Partial<Record<WeatherModelId, WeatherModelId>> = {
-      arome_hd: 'arome_25',
-      arome_25: 'mf_seamless',
-    };
-    if (wxRes.error && !isPast && FALLBACK[model]) {
-      const next = FALLBACK[model]!;
-      setModelFallback(next);
-      return fetchWeather(latitude, longitude, selectedDate, next);
-    }
     if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
-    if (!modelOverride) setModelFallback(null);
 
+    // Extract API generation time
     const genTime = wxRes.generationtime_ms;
-    setApiUpdateTime(genTime ? t('index.generatedIn', { ms: genTime.toFixed(0) }) : null);
+    const updateStr = genTime ? t('index.generatedIn', { ms: genTime.toFixed(0) }) : null;
+    setApiUpdateTime(updateStr);
 
-    // Normalize minutely_15 response into our WeatherData shape
-    let normalizedWx: WeatherData;
-    if (!isPast && wxRes.minutely_15) {
-      const m15 = wxRes.minutely_15;
-      normalizedWx = {
-        resolution: 'minutely_15',
-        hourly: {
-          time: m15.time ?? [],
-          temperature_2m: m15.temperature_2m ?? [],
-          wind_speed_10m: m15.wind_speed_10m ?? [],
-          wind_gusts_10m: m15.wind_gusts_10m ?? [],
-          wind_direction_10m: m15.wind_direction_10m ?? [],
-          wind_speed_80m: m15.wind_speed_80m,
-          wind_direction_80m: m15.wind_direction_80m,
-          precipitation: m15.precipitation ?? [],
-          weathercode: m15.weather_code ?? [],
-          cloud_cover: [],
-        },
-      };
-    } else {
-      normalizedWx = { ...wxRes, resolution: 'hourly' };
-    }
-
-    setWx(normalizedWx);
+    setWx(wxRes);
     setMar(marRes);
     setLoading(false);
-  }, [t, weatherModel]);
+  }, [t]);
 
   const doSearch = useCallback(async (searchName: string, searchLat: number, searchLon: number) => {
     setError('');
@@ -161,17 +117,6 @@ export default function Index() {
     supabase.from('profiles').select('whatsapp_number').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data?.whatsapp_number) setWhatsappNumber(data.whatsapp_number); });
   }, [user]);
-
-  const handleModelChange = useCallback((newModel: WeatherModelId) => {
-    setWeatherModel(newModel);
-    setModelFallback(null);
-    if (lat !== null && lon !== null) {
-      setError('');
-      setLoading(true);
-      fetchWeather(lat, lon, date, newModel)
-        .catch(e => { setLoading(false); setError('Error: ' + e.message); });
-    }
-  }, [lat, lon, date, fetchWeather]);
 
   const handleToggleFav = useCallback(() => {
     if (lat === null || lon === null) return;
@@ -214,24 +159,18 @@ export default function Index() {
 
   let curRow = -1;
   if (h && date === today) {
-    const now = new Date();
-    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const nowH = new Date().getHours();
     for (let j = 0; j < dayIdxs.length; j++) {
-      const tStr = h.time[dayIdxs[j]];
-      const slotMin = parseInt(tStr.slice(11, 13), 10) * 60 + parseInt(tStr.slice(14, 16), 10);
-      if (slotMin <= nowMin) curRow = j;
-      else break;
+      if (parseInt(h.time[dayIdxs[j]].slice(11, 13), 10) === nowH) { curRow = j; break; }
     }
   }
   const refI = curRow >= 0 ? dayIdxs[curRow] : (dayIdxs.length > 0 ? dayIdxs[0] : 0);
 
-  // Marine data is always hourly; map 15-min forecast index → hourly marine index
   const marVal = (key: keyof MarineData['hourly'], i: number): number | null => {
     if (!mar?.hourly) return null;
     const arr = mar.hourly[key] as (number | null)[] | undefined;
     if (!arr) return null;
-    const marI = wx?.resolution === 'minutely_15' ? Math.floor(i / 4) : i;
-    const v = arr[marI];
+    const v = arr[i];
     return v !== undefined && v !== null ? v : null;
   };
 
@@ -240,10 +179,8 @@ export default function Index() {
     const ws = h.wind_speed_10m[refI] || 0;
     const wd = h.wind_direction_10m[refI] || 0;
     const wg = h.wind_gusts_10m[refI] || 0;
-    const ws80 = h.wind_speed_80m?.[refI] ?? null;
     const wh = marVal('wave_height', refI) || 0;
     const swh = marVal('swell_wave_height', refI);
-    const wp = marVal('wave_period', refI);
     const sst = marVal('sea_surface_temperature', refI);
     const temp = h.temperature_2m[refI];
     const code = h.weathercode[refI] || 0;
@@ -251,7 +188,7 @@ export default function Index() {
     const b = bft(ws);
     const wi = windInfo(wd);
     const bftColors = ['#7bb8d8','#7bb8d8','#44cc88','#44cc88','#ffcc44','#ffcc44','#ff8c00','#ff8c00','#ff5533','#ff5533','#ff3366','#ff3366','#ff3366'];
-    return { ws, wd, wg, ws80, wh, swh, wp, sst, temp, code, prec, b, wi, bftColor: bftColors[b[0]] };
+    return { ws, wd, wg, wh, swh, sst, temp, code, prec, b, wi, bftColor: bftColors[b[0]] };
   })() : null;
 
   return (
@@ -345,30 +282,6 @@ export default function Index() {
           </div>
         )}
 
-        {/* Model selector */}
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Modelo</span>
-          <div className="flex gap-1">
-            {WEATHER_MODELS.map(m => (
-              <button
-                key={m.id}
-                onClick={() => handleModelChange(m.id)}
-                className={`rounded-full px-2.5 py-1 text-[0.62rem] font-medium transition-colors ${(modelFallback ?? weatherModel) === m.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/70 hover:text-foreground'}`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-          {modelFallback && (
-            <span className="text-[0.58rem] text-amber-400">
-              ⚠️ AROME fuera de cobertura → {WEATHER_MODELS.find(m => m.id === modelFallback)?.label}
-            </span>
-          )}
-          {wx?.resolution === 'minutely_15' && (
-            <span className="text-[0.55rem] text-muted-foreground/50">· datos cada 15 min</span>
-          )}
-        </div>
-
         <SectionTitle>{t('index.conditionsTitle')}</SectionTitle>
 
         {!wx ? (
@@ -395,12 +308,9 @@ export default function Index() {
               <WindRose degrees={cardData.wd} speed={cardData.ws} gustSpeed={cardData.wg} />
             </div>
             <NowCard label={t('index.precipCard')} value={cardData.prec.toFixed(1)} unit="mm" sub={t('index.lastHour')} />
-            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}${cardData.wp !== null ? '  ·  T: ' + cardData.wp.toFixed(0) + 's' : ''}`} color={waveColor(cardData.wh)} />
+            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
             <NowCard label={t('index.airTempCard')} value={safeNum(cardData.temp, 1)} unit="°C" />
             <NowCard label={t('index.waterTempCard')} value={safeNum(cardData.sst, 1)} unit="°C" sub={t('index.surfaceSea')} color="#4dd9ff" />
-            {cardData.ws80 !== null && (
-              <NowCard label="Viento 80 m" value={`${Math.round(kmhToKnots(cardData.ws80 as number))}`} unit="kn" sub={`${Math.round(cardData.ws80 as number)} km/h`} color={windColor(cardData.ws80 as number)} />
-            )}
             <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
               <WeekForecastChart wx={wx} mar={mar} />
@@ -419,21 +329,19 @@ export default function Index() {
           <table className="w-full min-w-[850px] border-collapse font-mono text-[0.88rem]">
             <thead>
               <tr className="bg-secondary">
-                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind'),t('index.tableGust'),'V 80m',t('index.tableDir'),t('index.tableName'),t('index.tableWave'),'T.ola',t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
+                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind'),t('index.tableGust'),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
                   <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {!h || dayIdxs.length === 0 ? (
-                <tr><td colSpan={14} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
+                <tr><td colSpan={12} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
               ) : dayIdxs.map((idx, ri) => {
                 const ws = h.wind_speed_10m[idx] || 0;
                 const wd = h.wind_direction_10m[idx] || 0;
                 const wg = h.wind_gusts_10m[idx] || 0;
-                const ws80 = h.wind_speed_80m?.[idx] ?? null;
                 const wh = marVal('wave_height', idx) || 0;
-                const wavePeriod = marVal('wave_period', idx);
                 const wd2 = marVal('wave_direction', idx);
                 const sst = marVal('sea_surface_temperature', idx);
                 const temp = h.temperature_2m[idx];
@@ -455,11 +363,9 @@ export default function Index() {
                     <td className="text-center font-medium" style={{ color: rowStyle.color || '#0ea5e9' }}>{safeNum(sst, 1)}°</td>
                     <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
                     <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
-                    <td className="text-center text-[0.82rem]" style={{ color: rowStyle.color || (ws80 !== null ? windColor(ws80 as number) : undefined) }}>{ws80 !== null ? Math.round(kmhToKnots(ws80 as number)) : '—'}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.72rem]">{Math.round(wd)}°</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
-                    <td className="text-center text-[0.8rem]" style={rowStyle.color ? { color: rowStyle.color } : { color: '#7bb8d8' }}>{wavePeriod !== null ? wavePeriod.toFixed(0) + 's' : '—'}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{wdir2}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.75rem]">{WX_DESC[code] || ''}</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || (prec > 0.5 ? '#4dd9ff' : undefined) }}>{prec.toFixed(1)}</td>

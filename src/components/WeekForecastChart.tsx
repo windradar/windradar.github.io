@@ -29,28 +29,19 @@ interface Slot {
 }
 
 export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineData | null }) {
-  const marWave = (i: number): number | null => {
-    const arr = mar?.hourly?.wave_height;
-    if (!arr) return null;
-    const marI = wx.resolution === 'minutely_15' ? Math.floor(i / 4) : i;
-    return arr[marI] ?? null;
-  };
   const { t, i18n } = useTranslation();
   const h = wx.hourly;
 
   const slots: Slot[] = useMemo(() => {
     const result: Slot[] = [];
     for (let i = 0; i < h.time.length && result.length < 84; i++) {
-      const hr = parseInt(h.time[i].slice(11, 13), 10);
-      const min = h.time[i].slice(14, 16);
-      // keep only even-hour :00 slots (works for both hourly and minutely_15)
-      if (hr % 2 !== 0 || min !== '00') continue;
+      if (parseInt(h.time[i].slice(11, 13), 10) % 2 !== 0) continue;
       result.push({
         time: h.time[i],
         windKn: Math.round(kmhToKnots(h.wind_speed_10m[i] || 0)),
         gustKn: Math.round(kmhToKnots(h.wind_gusts_10m[i] || 0)),
         dir: h.wind_direction_10m[i] || 0,
-        wave: marWave(i),
+        wave: mar?.hourly?.wave_height?.[i] ?? null,
         wcode: h.weathercode?.[i] ?? 0,
       });
     }
