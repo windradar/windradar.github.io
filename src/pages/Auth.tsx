@@ -83,8 +83,8 @@ export default function Auth() {
         }
         navigate('/', { replace: true });
       }
-    } catch (err: any) {
-      toast.error(err.message || t('common.error'));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.error'));
     } finally {
       setSubmitting(false);
     }

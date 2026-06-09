@@ -51,8 +51,8 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
 
       onUpdated(newUrl);
       toast.success('Foto subida');
-    } catch (err: any) {
-      toast.error(err.message || 'Error subiendo foto');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error subiendo foto');
     } finally {
       setUploading(false);
     }

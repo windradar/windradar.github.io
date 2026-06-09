@@ -168,8 +168,7 @@ export function toggleFavorite(item: Omit<FavoriteSpot, 'addedAt'>): boolean {
     favs.unshift({ ...item, addedAt: Date.now() });
     localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 30)));
     return true;
-  } catch (e) {
-    console.error('[favorites] toggle failed', e);
+  } catch {
     return false;
   }
 }
@@ -178,8 +177,8 @@ export function removeFavorite(lat: number, lon: number) {
   try {
     const favs = getFavorites().filter(f => !(Math.abs(f.lat - lat) < 1e-4 && Math.abs(f.lon - lon) < 1e-4));
     localStorage.setItem(FAV_KEY, JSON.stringify(favs));
-  } catch (e) {
-    console.error('[favorites] remove failed', e);
+  } catch {
+    // localStorage unavailable — silently fail
   }
 }
 

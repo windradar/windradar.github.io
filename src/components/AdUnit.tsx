@@ -9,6 +9,7 @@ const CLIENT = 'ca-pub-7799630223343814';
 
 // Create ad units at https://adsense.google.com → Ads → By ad unit
 // and replace these slot IDs with the ones AdSense provides.
+// eslint-disable-next-line react-refresh/only-export-components
 export const AD_SLOTS = {
   mainPage: '5276015621',   // slot for / (Index)
   helpPage: '5276015621',   // slot for /help

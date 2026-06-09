@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type ChartOptions,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
@@ -37,7 +38,7 @@ export function WindCharts({ wx, mar }: Props) {
     return arr.slice(s, s + 48);
   };
 
-  const labs = sl(times).map((t: any) => {
+  const labs = (sl(times) as string[]).map(t => {
     if (!t) return '';
     const d = new Date(t);
     return `${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, '0')}h`;
@@ -51,7 +52,7 @@ export function WindCharts({ wx, mar }: Props) {
   const temp = sl(h.temperature_2m);
   const sst = mar?.hourly ? sl(mar.hourly.sea_surface_temperature) : new Array(48).fill(null);
 
-  const baseOpts: any = {
+  const baseOpts: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: true,
     plugins: {

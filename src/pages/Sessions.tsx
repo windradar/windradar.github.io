@@ -143,13 +143,13 @@ export default function Sessions() {
       setSnapshot(snap);
       setOrigKey(`${date}|${startH}|${endH}|${locLat}|${locLon}`);
       toast.success(t('sessions.hoursLoaded', { count: snap.length }));
-    } catch (e: any) {
-      toast.error(e.message || 'Error cargando datos');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error cargando datos');
       setSnapshot(null);
     } finally {
       setLoadingSnap(false);
     }
-  }, [locLat, locLon, date, startH, endH]);
+  }, [locLat, locLon, date, startH, endH, t]);
 
   // Auto-invalidar snapshot cuando cambian fecha/hora/ubicación respecto al origen
   useEffect(() => {

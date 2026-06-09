@@ -9,9 +9,19 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { kmhToKnots, localDateStr, humanDate } from '@/lib/weather-helpers';
+
+interface WindApiResponse {
+  hourly: {
+    wind_speed_10m: number[];
+    wind_gusts_10m: number[];
+  };
+  error?: boolean;
+  reason?: string;
+}
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -22,8 +32,8 @@ interface Props {
 
 export function WindCompareChart({ lat, lon }: Props) {
   const [compareDate, setCompareDate] = useState('');
-  const [compareData, setCompareData] = useState<any>(null);
-  const [todayData, setTodayData] = useState<any>(null);
+  const [compareData, setCompareData] = useState<WindApiResponse | null>(null);
+  const [todayData, setTodayData] = useState<WindApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -50,8 +60,8 @@ export function WindCompareChart({ lat, lon }: Props) {
       if (cRes.error) throw new Error(cRes.reason || 'Error');
       setCompareData(cRes);
       setTodayData(tRes);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error');
     } finally {
       setLoading(false);
     }
@@ -68,7 +78,7 @@ export function WindCompareChart({ lat, lon }: Props) {
   const toKn = (arr: number[] | undefined) =>
     arr ? arr.slice(0, 24).map(v => v != null ? Math.round(kmhToKnots(v) * 10) / 10 : null) : new Array(24).fill(null);
 
-  const baseOpts: any = {
+  const baseOpts: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: true,
     plugins: {
