@@ -11,7 +11,6 @@ import { loadSettings, type AppSettings, type SpotConfig } from '@/components/Se
 import { UserMenu } from '@/components/UserMenu';
 import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
-import { AdUnit, AD_SLOTS } from '@/components/AdUnit';
 import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { Star } from 'lucide-react';
@@ -364,25 +363,27 @@ export default function Index() {
               {lat.toFixed(4)}°N {Math.abs(lon!).toFixed(4)}°{lon! < 0 ? 'O' : 'E'}
             </span>
           )}
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]">
-            {wx ? t('index.live') : t('index.ready')}
-          </span>
-          {isBigDay && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-1.5 rounded-full border border-[#ffcc44]/60 bg-[#ffcc44]/10 px-3 py-1"
-            >
-              <img src={logoFlow} className="h-4 w-4 rounded-full" alt="" />
-              <motion.span
-                animate={{ opacity: [1, 1, 0, 1] }}
-                transition={{ duration: 1, repeat: Infinity, times: [0, 0.88, 0.9, 1], ease: 'linear' }}
-                className="font-bold tracking-wide text-[#ffcc44]"
+          <div className="ml-auto flex items-center gap-2">
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]">
+              {wx ? t('index.live') : t('index.ready')}
+            </span>
+            {isBigDay && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-1.5 rounded-full border border-[#ffcc44]/60 bg-[#ffcc44]/10 px-3 py-1"
               >
-                Big Day{matchedSpot?.name ? ` en ${matchedSpot.name}` : ''}
-              </motion.span>
-            </motion.div>
-          )}
+                <img src={logoFlow} className="h-4 w-4 rounded-full" alt="" />
+                <motion.span
+                  animate={{ opacity: [1, 1, 0, 1] }}
+                  transition={{ duration: 1, repeat: Infinity, times: [0, 0.88, 0.9, 1], ease: 'linear' }}
+                  className="font-bold tracking-wide text-[#ffcc44]"
+                >
+                  Big Day{matchedSpot?.name ? ` en ${matchedSpot.name}` : ''}
+                </motion.span>
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -428,7 +429,6 @@ export default function Index() {
         )}
 
         {/* Actions row */}
-        {wx && <AdUnit slot={AD_SLOTS.mainPage} format="horizontal" className="my-4" />}
 
         {/* Table */}
         <SectionTitle>{t('index.hourlyTitle')} — {humanDate(date, langLocale)}</SectionTitle>

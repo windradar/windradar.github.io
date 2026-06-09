@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { AdUnit, AD_SLOTS } from '@/components/AdUnit';
 import {
   ArrowLeft, Map, Star, CalendarDays, Wrench, UserCircle,
   Wind, Waves, Thermometer, Navigation, Plus, Camera,
@@ -238,7 +237,6 @@ export default function Help() {
             </section>
           ))}
 
-          <AdUnit slot={AD_SLOTS.helpPage} format="auto" className="my-6" />
 
           <p className="pb-8 text-center text-xs text-muted-foreground">
             ¿Tienes alguna duda o sugerencia?{' '}
