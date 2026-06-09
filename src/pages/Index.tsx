@@ -265,19 +265,16 @@ export default function Index() {
   }, [lat, lon, name, settings.spots]);
 
   const isBigDay = useMemo(() => {
-    const hourly = activeWx?.hourly;
+    const hourly = wx?.hourly;
     if (!hourly) return false;
     const dayIdxsAll: number[] = [];
     for (let i = 0; i < hourly.time.length; i++) {
-      if (hourly.time[i].slice(0, 10) === date) dayIdxsAll.push(i);
+      if (hourly.time[i].slice(0, 10) === today) dayIdxsAll.push(i);
     }
     if (dayIdxsAll.length < 2) return false;
     const thresholdKn = matchedSpot?.minWindKn ?? settings.minWindKn;
     const thresholdKmh = thresholdKn * 1.852;
-    const t0 = Date.parse(hourly.time[dayIdxsAll[0]]);
-    const t1 = Date.parse(hourly.time[dayIdxsAll[1]]);
-    const intervalMin = (t1 - t0) / 60000 || 60;
-    const neededSlots = Math.ceil(120 / intervalMin);
+    const neededSlots = 2;
     let streak = 0;
     for (const idx of dayIdxsAll) {
       if ((hourly.wind_speed_10m[idx] || 0) >= thresholdKmh) {
@@ -285,7 +282,7 @@ export default function Index() {
       } else { streak = 0; }
     }
     return false;
-  }, [activeWx, date, matchedSpot, settings.minWindKn]);
+  }, [wx, today, matchedSpot, settings.minWindKn]);
 
   return (
     <div className="relative z-[1] min-h-screen">
