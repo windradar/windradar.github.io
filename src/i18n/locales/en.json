@@ -295,5 +295,27 @@
         ]
       }
     }
+  },
+  "wind": {
+    "names": {
+      "0": "Tramontana", "1": "NNE", "2": "Gregal", "3": "ENE",
+      "4": "Levant", "5": "ESE", "6": "Sirocco", "7": "SSE",
+      "8": "South", "9": "SSW", "10": "Leveche", "11": "WSW",
+      "12": "West", "13": "WNW", "14": "Mistral", "15": "NNW"
+    }
+  },
+  "bft": {
+    "0": "Calm", "1": "Light air", "2": "Light breeze", "3": "Gentle breeze",
+    "4": "Moderate breeze", "5": "Fresh breeze", "6": "Strong breeze", "7": "High wind",
+    "8": "Gale", "9": "Strong gale", "10": "Storm", "11": "Violent storm", "12": "Hurricane"
+  },
+  "wmo": {
+    "0": "Clear sky", "1": "Mainly clear", "2": "Partly cloudy", "3": "Overcast",
+    "45": "Fog", "48": "Icy fog",
+    "51": "Light drizzle", "53": "Moderate drizzle", "55": "Dense drizzle",
+    "61": "Light rain", "63": "Moderate rain", "65": "Heavy rain",
+    "71": "Light snow", "73": "Moderate snow", "75": "Heavy snow",
+    "80": "Light showers", "81": "Moderate showers", "82": "Heavy showers",
+    "95": "Thunderstorm", "96": "Thunderstorm + hail", "99": "Heavy thunderstorm"
   }
 }

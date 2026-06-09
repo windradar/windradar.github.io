@@ -375,5 +375,27 @@
         ]
       }
     }
+  },
+  "wind": {
+    "names": {
+      "0": "Tramontana", "1": "Gregal NNE", "2": "Gregal", "3": "Gregal ENE",
+      "4": "Levante", "5": "Siroco ESE", "6": "Siroco", "7": "Siroco SSE",
+      "8": "Mediodía", "9": "Garbí SSO", "10": "Garbí", "11": "Garbí OSO",
+      "12": "Poniente", "13": "Mistral ONO", "14": "Mistral", "15": "Tramontana NNO"
+    }
+  },
+  "bft": {
+    "0": "Calma", "1": "Ventolina", "2": "Flojito", "3": "Flojo",
+    "4": "Bonancible", "5": "Fresquito", "6": "Fresco", "7": "Frescachón",
+    "8": "Temporal", "9": "Temporal F.", "10": "Temporal M.", "11": "Borrasca", "12": "Huracán"
+  },
+  "wmo": {
+    "0": "Despejado", "1": "Casi despejado", "2": "Parcial nublado", "3": "Nublado",
+    "45": "Niebla", "48": "Niebla helada",
+    "51": "Llovizna débil", "53": "Llovizna mod.", "55": "Llovizna densa",
+    "61": "Lluvia débil", "63": "Lluvia mod.", "65": "Lluvia fuerte",
+    "71": "Nieve débil", "73": "Nieve mod.", "75": "Nieve fuerte",
+    "80": "Chubascos débiles", "81": "Chubascos mod.", "82": "Chubascos fuertes",
+    "95": "Tormenta", "96": "Tormenta+granizo", "99": "Tormenta fuerte"
   }
 }

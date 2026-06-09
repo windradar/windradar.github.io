@@ -375,5 +375,27 @@
         ]
       }
     }
+  },
+  "wind": {
+    "names": {
+      "0": "Tramontana", "1": "Gregal NNE", "2": "Gregal", "3": "Gregal ENE",
+      "4": "Llevant", "5": "Xaloc ESE", "6": "Xaloc", "7": "Xaloc SSE",
+      "8": "Migjorn", "9": "Garbí SSO", "10": "Garbí", "11": "Garbí OSO",
+      "12": "Ponent", "13": "Mestral ONO", "14": "Mestral", "15": "Tramontana NNO"
+    }
+  },
+  "bft": {
+    "0": "Calma", "1": "Ventolina", "2": "Fluixet", "3": "Fluix",
+    "4": "Bonanada", "5": "Fresquet", "6": "Fresc", "7": "Fresquejant",
+    "8": "Temporal", "9": "Temporal fort", "10": "Temporal molt fort", "11": "Borrasca", "12": "Huracà"
+  },
+  "wmo": {
+    "0": "Clar", "1": "Quasi clar", "2": "Parcialment ennuvolat", "3": "Ennuvolat",
+    "45": "Boira", "48": "Boira gelant",
+    "51": "Plovisqueig feble", "53": "Plovisqueig mod.", "55": "Plovisqueig dens",
+    "61": "Pluja feble", "63": "Pluja mod.", "65": "Pluja forta",
+    "71": "Neu feble", "73": "Neu mod.", "75": "Neu forta",
+    "80": "Ruixats febles", "81": "Ruixats mod.", "82": "Ruixats forts",
+    "95": "Tempesta", "96": "Tempesta+calamarsa", "99": "Tempesta forta"
   }
 }

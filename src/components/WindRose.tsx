@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { windInfo, windColor, bft } from '@/lib/weather-helpers';
+import { useTranslation } from 'react-i18next';
+import { windInfo, windColor, bft, windIndex } from '@/lib/weather-helpers';
 
 interface Props {
   degrees: number;
@@ -19,6 +20,7 @@ const CARDINALS = [
 ];
 
 export function WindRose({ degrees, speed, gustSpeed }: Props) {
+  const { t } = useTranslation();
   const info = windInfo(degrees);
   const b = bft(speed);
   const color = windColor(speed);
@@ -125,9 +127,9 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
 
         {/* Info below the rose */}
         <div className="flex w-full flex-col items-center gap-0.5 text-center">
-          <span className="text-sm font-bold font-display" style={{ color }}>{info.full}</span>
+          <span className="text-sm font-bold font-display" style={{ color }}>{t(`wind.names.${windIndex(degrees)}`)}</span>
           <span className="text-[0.65rem] text-muted-foreground">
-            BFT {b[0]} · {b[1]}
+            BFT {b[0]} · {t(`bft.${b[0]}`)}
           </span>
         </div>
       </div>
