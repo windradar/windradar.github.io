@@ -26,27 +26,43 @@ interface Slot {
   dir: number;
   wave: number | null;
   wcode: number;
+  fromArome: boolean;
 }
 
-export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineData | null }) {
+export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar: MarineData | null; wxDetail?: WeatherData | null }) {
   const { t, i18n } = useTranslation();
   const h = wx.hourly;
+
+  // AROME hour index: "YYYY-MM-DDTHH" → AROME array index (only :00 slots)
+  const aromeHourMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!wxDetail) return map;
+    for (let i = 0; i < wxDetail.hourly.time.length; i++) {
+      if (wxDetail.hourly.time[i].slice(14, 16) === '00') {
+        map.set(wxDetail.hourly.time[i].slice(0, 13), i);
+      }
+    }
+    return map;
+  }, [wxDetail]);
 
   const slots: Slot[] = useMemo(() => {
     const result: Slot[] = [];
     for (let i = 0; i < h.time.length && result.length < 84; i++) {
       if (parseInt(h.time[i].slice(11, 13), 10) % 2 !== 0) continue;
+      const aromeI = aromeHourMap.get(h.time[i].slice(0, 13)) ?? -1;
+      const useArome = aromeI >= 0;
       result.push({
         time: h.time[i],
-        windKn: Math.round(kmhToKnots(h.wind_speed_10m[i] || 0)),
-        gustKn: Math.round(kmhToKnots(h.wind_gusts_10m[i] || 0)),
-        dir: h.wind_direction_10m[i] || 0,
+        windKn: Math.round(kmhToKnots(useArome ? (wxDetail!.hourly.wind_speed_10m[aromeI] || 0) : (h.wind_speed_10m[i] || 0))),
+        gustKn: Math.round(kmhToKnots(useArome ? (wxDetail!.hourly.wind_gusts_10m[aromeI] || 0) : (h.wind_gusts_10m[i] || 0))),
+        dir: useArome ? (wxDetail!.hourly.wind_direction_10m[aromeI] || 0) : (h.wind_direction_10m[i] || 0),
         wave: mar?.hourly?.wave_height?.[i] ?? null,
-        wcode: h.weathercode?.[i] ?? 0,
+        wcode: useArome ? (wxDetail!.hourly.weathercode[aromeI] ?? 0) : (h.weathercode?.[i] ?? 0),
+        fromArome: useArome,
       });
     }
     return result;
-  }, [h, mar]);
+  }, [h, mar, aromeHourMap, wxDetail]);
 
   const dayGroups = useMemo(() => {
     const groups: { dateStr: string; startIdx: number; count: number }[] = [];
@@ -61,6 +77,7 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
 
   if (!slots.length) return null;
 
+  const hasArome = slots.some(s => s.fromArome);
   const maxVal = Math.max(...slots.map(s => s.gustKn), 15);
   const totalW = slots.length * SLOT_W;
 
@@ -88,6 +105,11 @@ export function WeekForecastChart({ wx, mar }: { wx: WeatherData; mar: MarineDat
             <span className="inline-block h-px w-4 bg-[#ff8c00]" style={{ borderTop: '2px solid #ff8c00' }} />
             {t('chart.gust')}
           </span>
+          {hasArome && (
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.52rem] uppercase tracking-widest text-primary">
+              AROME HD · días 1-2
+            </span>
+          )}
         </span>
       </div>
 

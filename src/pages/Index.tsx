@@ -21,9 +21,9 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   type WeatherData, type MarineData,
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
-  WX_ICON, WX_DESC, safeNum, localDateStr, humanDate,
+  WX_ICON, safeNum, localDateStr, humanDate,
   addToSearchHistory, getLastSearch, setLastSearch,
-  isFavorite, toggleFavorite, LANG_LOCALE,
+  isFavorite, toggleFavorite, LANG_LOCALE, normalizeArome, windIndex,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
@@ -38,6 +38,7 @@ export default function Index() {
   const [name, setName] = useState('WindFlowRadar');
   const [date, setDate] = useState(localDateStr(new Date()));
   const [wx, setWx] = useState<WeatherData | null>(null);
+  const [wxDetail, setWxDetail] = useState<WeatherData | null>(null);
   const [mar, setMar] = useState<MarineData | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
@@ -47,6 +48,7 @@ export default function Index() {
   const [favKey, setFavKey] = useState(0);
   const [isFav, setIsFav] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
+  const [tableResolution, setTableResolution] = useState<'1h' | '30min' | '15min'>('1h');
 
   const today = localDateStr(new Date());
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
@@ -57,31 +59,41 @@ export default function Index() {
     const targetDate = selectedDate || localDateStr(new Date());
     const isPast = targetDate < localDateStr(new Date());
 
-    let wxUrl: string;
-    let marUrl: string;
-
     if (isPast) {
-      wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
-      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+      setWxDetail(null);
+      const wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+      const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+      const [wxRes, marRes] = await Promise.all([
+        fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+        fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
+      setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
+      setWx(wxRes);
+      setMar(marRes);
     } else {
-      wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
-      marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
+      // 1. AROME HD 1.3 km, 15 min — fallo silencioso
+      const aromeUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&minutely_15=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weather_code&models=meteofrance_arome_france_hd&forecast_days=2&wind_speed_unit=kmh&timezone=auto`;
+      try {
+        const aromeRaw = await fetch(aromeUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+        setWxDetail(aromeRaw && !aromeRaw.error ? normalizeArome(aromeRaw) : null);
+      } catch {
+        setWxDetail(null);
+      }
+
+      // 2. Seamless 7 días + marine en paralelo
+      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
+      const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
+      const [wxRes, marRes] = await Promise.all([
+        fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+        fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
+      setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
+      setWx(wxRes);
+      setMar(marRes);
     }
 
-    const [wxRes, marRes] = await Promise.all([
-      fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
-      fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
-    ]);
-
-    if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
-
-    // Extract API generation time
-    const genTime = wxRes.generationtime_ms;
-    const updateStr = genTime ? t('index.generatedIn', { ms: genTime.toFixed(0) }) : null;
-    setApiUpdateTime(updateStr);
-
-    setWx(wxRes);
-    setMar(marRes);
     setLoading(false);
   }, [t]);
 
@@ -89,6 +101,7 @@ export default function Index() {
     setError('');
     setLoading(true);
     setWx(null);
+    setWxDetail(null);
     try {
       setLat(searchLat);
       setLon(searchLon);
@@ -142,8 +155,19 @@ export default function Index() {
     }
   }, [lat, lon, fetchWeather]);
 
-  // Compute table data
-  const h = wx?.hourly;
+  // Active data source: AROME when it covers the selected date, else seamless
+  const wxDetailCoversDate = !!wxDetail?.hourly.time.some(t => t.slice(0, 10) === date);
+  const activeWx = (wxDetailCoversDate ? wxDetail : wx) ?? null;
+
+  // Marine lookup by time (works for both hourly and 15-min AROME indices)
+  const marineTimeIndex = useMemo(() => {
+    const idx = new Map<string, number>();
+    mar?.hourly?.time?.forEach((t, i) => idx.set(t.slice(0, 13), i));
+    return idx;
+  }, [mar]);
+
+  // Compute table data from active source
+  const h = activeWx?.hourly;
   const allDayIdxs: number[] = [];
   if (h) {
     for (let i = 0; i < h.time.length; i++) {
@@ -151,27 +175,49 @@ export default function Index() {
     }
   }
 
-  // Filter by settings hour range
+  // Seamless indices kept for WhatsApp modal (needs hourly seamless data)
+  const allSeamlessDayIdxs: number[] = [];
+  if (wx?.hourly) {
+    for (let i = 0; i < wx.hourly.time.length; i++) {
+      if (wx.hourly.time[i].slice(0, 10) === date) allSeamlessDayIdxs.push(i);
+    }
+  }
+
+  // Filter by settings hour range + selected time resolution
   const dayIdxs = allDayIdxs.filter(i => {
     if (!h) return false;
-    const hr = h.time[i].slice(11, 16);
-    return hr >= settings.gridFromHour && hr <= settings.gridToHour;
+    const t = h.time[i];
+    const hr = t.slice(11, 16);
+    if (hr < settings.gridFromHour || hr > settings.gridToHour) return false;
+    const mm = t.slice(14, 16);
+    if (tableResolution === '1h') return mm === '00';
+    if (tableResolution === '30min') return mm === '00' || mm === '30';
+    return true;
   });
 
   let curRow = -1;
   if (h && date === today) {
-    const nowH = new Date().getHours();
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    let minDiff = Infinity;
     for (let j = 0; j < dayIdxs.length; j++) {
-      if (parseInt(h.time[dayIdxs[j]].slice(11, 13), 10) === nowH) { curRow = j; break; }
+      const t = h.time[dayIdxs[j]].slice(11, 16);
+      const slotMin = parseInt(t.slice(0, 2)) * 60 + parseInt(t.slice(3, 5));
+      const diff = Math.abs(slotMin - nowMin);
+      if (diff < minDiff) { minDiff = diff; curRow = j; }
     }
   }
   const refI = curRow >= 0 ? dayIdxs[curRow] : (dayIdxs.length > 0 ? dayIdxs[0] : 0);
 
+  // Marine value lookup — uses timestamp to align hourly marine with any source resolution
   const marVal = (key: keyof MarineData['hourly'], i: number): number | null => {
-    if (!mar?.hourly) return null;
-    const arr = mar.hourly[key] as (number | null)[] | undefined;
-    if (!arr) return null;
-    const v = arr[i];
+    if (!h || !mar?.hourly) return null;
+    const hourKey = h.time[i]?.slice(0, 13);
+    if (!hourKey) return null;
+    const marI = marineTimeIndex.get(hourKey) ?? -1;
+    if (marI < 0) return null;
+    const arr = mar.hourly[key] as (number | null)[];
+    const v = arr[marI];
     return v !== undefined && v !== null ? v : null;
   };
 
@@ -219,7 +265,7 @@ export default function Index() {
   }, [lat, lon, name, settings.spots]);
 
   const isBigDay = useMemo(() => {
-    const hourly = wx?.hourly;
+    const hourly = activeWx?.hourly;
     if (!hourly) return false;
     const dayIdxsAll: number[] = [];
     for (let i = 0; i < hourly.time.length; i++) {
@@ -239,7 +285,7 @@ export default function Index() {
       } else { streak = 0; }
     }
     return false;
-  }, [wx, date, matchedSpot, settings.minWindKn]);
+  }, [activeWx, date, matchedSpot, settings.minWindKn]);
 
   return (
     <div className="relative z-[1] min-h-screen">
@@ -377,9 +423,9 @@ export default function Index() {
             <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
             <NowCard label={t('index.airTempCard')} value={safeNum(cardData.temp, 1)} unit="°C" />
             <NowCard label={t('index.waterTempCard')} value={safeNum(cardData.sst, 1)} unit="°C" sub={t('index.surfaceSea')} color="#4dd9ff" />
-            <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={WX_DESC[cardData.code] || ''} isEmoji />
+            <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-              <WeekForecastChart wx={wx} mar={mar} />
+              <WeekForecastChart wx={wx} mar={mar} wxDetail={wxDetail} />
             </div>
           </div>
         )}
@@ -389,6 +435,21 @@ export default function Index() {
 
         {/* Table */}
         <SectionTitle>{t('index.hourlyTitle')} — {humanDate(date, langLocale)}</SectionTitle>
+        {wxDetailCoversDate && (
+          <div className="mb-2.5 flex items-center gap-1">
+            <span className="text-[0.55rem] uppercase tracking-widest text-muted-foreground mr-1">Intervalo:</span>
+            {(['1h', '30min', '15min'] as const).map(r => (
+              <button
+                key={r}
+                onClick={() => setTableResolution(r)}
+                className={`rounded-md border px-2 py-0.5 font-mono text-[0.65rem] transition-colors ${tableResolution === r ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:border-primary/40'}`}
+              >
+                {r}
+              </button>
+            ))}
+            <span className="ml-1.5 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.55rem] uppercase tracking-widest text-primary">AROME HD</span>
+          </div>
+        )}
 
         {/* Desktop table */}
         <div className="mb-6 hidden overflow-x-auto rounded-lg border border-border md:block">
@@ -430,12 +491,12 @@ export default function Index() {
                     <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
                     <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.72rem]">{Math.round(wd)}°</span></td>
-                    <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{wi.full}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{t(`wind.names.${windIndex(wd)}`)}</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{wdir2}</td>
-                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.75rem]">{WX_DESC[code] || ''}</span></td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{WX_ICON[code] || ''} <span className="text-[0.75rem]">{t(`wmo.${code}`)}</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || (prec > 0.5 ? '#4dd9ff' : undefined) }}>{prec.toFixed(1)}</td>
-                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}><span className="font-bold">{b[0]}</span> <span className="text-[0.75rem]">{b[1]}</span></td>
+                    <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}><span className="font-bold">{b[0]}</span> <span className="text-[0.75rem]">{t(`bft.${b[0]}`)}</span></td>
                   </tr>
                 );
               })}
@@ -506,9 +567,9 @@ export default function Index() {
           <>
             <SectionTitle>{t('index.chartsTitle')}</SectionTitle>
             <div className="mb-6 grid grid-cols-1 gap-3.5 md:grid-cols-2">
-              <WindCharts wx={wx} mar={mar} />
+              <WindCharts wx={wx} mar={mar} wxDetail={wxDetail} />
               {lat !== null && lon !== null && (
-                <WindCompareChart lat={lat} lon={lon} />
+                <WindCompareChart lat={lat} lon={lon} wxDetail={wxDetail} />
               )}
             </div>
           </>
@@ -529,7 +590,7 @@ export default function Index() {
           mar={mar}
           name={name}
           date={date}
-          dayIdxs={allDayIdxs}
+          dayIdxs={allSeamlessDayIdxs}
           whatsappNumber={whatsappNumber}
         />
       )}

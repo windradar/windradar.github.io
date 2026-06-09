@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import type { WeatherData } from '@/lib/weather-helpers';
 import { kmhToKnots, localDateStr, humanDate } from '@/lib/weather-helpers';
 
 interface WindApiResponse {
@@ -28,9 +29,26 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 interface Props {
   lat: number;
   lon: number;
+  wxDetail?: WeatherData | null;
 }
 
-export function WindCompareChart({ lat, lon }: Props) {
+// Resample AROME minutely_15 → hourly WindApiResponse for today (hours 0-23)
+function aromeToHourlyResponse(wxDetail: WeatherData): WindApiResponse {
+  const h = wxDetail.hourly;
+  const ws = new Array(24).fill(null);
+  const wg = new Array(24).fill(null);
+  for (let i = 0; i < h.time.length; i++) {
+    if (h.time[i].slice(14, 16) !== '00') continue;
+    const hour = parseInt(h.time[i].slice(11, 13));
+    if (hour >= 0 && hour < 24) {
+      ws[hour] = h.wind_speed_10m[i] ?? null;
+      wg[hour] = h.wind_gusts_10m[i] ?? null;
+    }
+  }
+  return { hourly: { wind_speed_10m: ws, wind_gusts_10m: wg } };
+}
+
+export function WindCompareChart({ lat, lon, wxDetail }: Props) {
   const [compareDate, setCompareDate] = useState('');
   const [compareData, setCompareData] = useState<WindApiResponse | null>(null);
   const [todayData, setTodayData] = useState<WindApiResponse | null>(null);
@@ -39,6 +57,14 @@ export function WindCompareChart({ lat, lon }: Props) {
 
   const today = localDateStr(new Date());
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
+
+  // Update today's line whenever AROME data changes (while compare is loaded)
+  useEffect(() => {
+    if (!compareData) return;
+    if (wxDetail) {
+      setTodayData(aromeToHourlyResponse(wxDetail));
+    }
+  }, [wxDetail, compareData]);
 
   const loadComparison = useCallback(async (selectedDate: string) => {
     if (!selectedDate || selectedDate === today) return;
@@ -50,22 +76,24 @@ export function WindCompareChart({ lat, lon }: Props) {
         ? `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`
         : `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`;
 
-      const todayUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${today}&end_date=${today}`;
-
-      const [cRes, tRes] = await Promise.all([
-        fetch(compareUrl).then(r => r.json()),
-        fetch(todayUrl).then(r => r.json()),
-      ]);
-
+      const cRes = await fetch(compareUrl).then(r => r.json());
       if (cRes.error) throw new Error(cRes.reason || 'Error');
       setCompareData(cRes);
-      setTodayData(tRes);
+
+      // Today's line: prefer AROME HD if available
+      if (wxDetail) {
+        setTodayData(aromeToHourlyResponse(wxDetail));
+      } else {
+        const todayUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${today}&end_date=${today}`;
+        const tRes = await fetch(todayUrl).then(r => r.json());
+        setTodayData(tRes);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
       setLoading(false);
     }
-  }, [lat, lon, today]);
+  }, [lat, lon, today, wxDetail]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const d = e.target.value;
@@ -97,6 +125,9 @@ export function WindCompareChart({ lat, lon }: Props) {
   };
 
   const hasData = todayData && compareData;
+  const todayLabel = wxDetail
+    ? `Viento hoy (${humanDate(today)}) · AROME HD`
+    : `Viento hoy (${humanDate(today)})`;
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 col-span-full">
@@ -129,7 +160,7 @@ export function WindCompareChart({ lat, lon }: Props) {
             labels: hours,
             datasets: [
               {
-                label: `Viento hoy (${humanDate(today)})`,
+                label: todayLabel,
                 data: toKn(todayData.hourly.wind_speed_10m),
                 borderColor: '#00d4ff',
                 backgroundColor: 'rgba(0,212,255,.07)',

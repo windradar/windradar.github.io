@@ -5,14 +5,18 @@ export const LANG_LOCALE: Record<string, string> = {
 export const WIND_NAMES = [
   'Tramontana', 'Gregal NNE', 'Gregal', 'Gregal ENE',
   'Llevant', 'Xaloc ESE', 'Xaloc', 'Xaloc SSE',
-  'Migjorn', 'Llebeig SSO', 'Llebeig', 'Llebeig OSO',
+  'Migjorn', 'Garbí SSO', 'Garbí', 'Garbí OSO',
   'Ponent', 'Mestral ONO', 'Mestral', 'Tramontana NNO'
 ];
 export const CARD16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
 
-export function windInfo(deg: number) {
+export function windIndex(deg: number): number {
   const n = ((deg % 360) + 360) % 360;
-  const i = Math.round(n / 22.5) % 16;
+  return Math.round(n / 22.5) % 16;
+}
+
+export function windInfo(deg: number) {
+  const i = windIndex(deg);
   return { short: CARD16[i], full: WIND_NAMES[i] };
 }
 
@@ -110,6 +114,33 @@ export interface MarineData {
     wave_direction: (number | null)[];
     swell_wave_height: (number | null)[];
     sea_surface_temperature: (number | null)[];
+  };
+}
+
+export function normalizeArome(raw: Record<string, unknown>): WeatherData {
+  type M15 = {
+    time: string[];
+    temperature_2m?: number[];
+    wind_speed_10m: number[];
+    wind_gusts_10m: number[];
+    wind_direction_10m: number[];
+    precipitation?: number[];
+    weather_code?: number[];
+  };
+  const m = (raw as { minutely_15?: M15 }).minutely_15;
+  if (!m?.time?.length) throw new Error('AROME: sin datos minutely_15');
+  const len = m.time.length;
+  return {
+    hourly: {
+      time: m.time,
+      temperature_2m: m.temperature_2m ?? new Array(len).fill(null),
+      wind_speed_10m: m.wind_speed_10m,
+      wind_gusts_10m: m.wind_gusts_10m,
+      wind_direction_10m: m.wind_direction_10m,
+      precipitation: m.precipitation ?? new Array(len).fill(0),
+      weathercode: m.weather_code ?? new Array(len).fill(0),
+      cloud_cover: new Array(len).fill(null),
+    },
   };
 }
 
