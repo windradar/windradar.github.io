@@ -15,11 +15,14 @@ interface GeoResult {
 
 interface Props {
   onSelect: (name: string, lat: number, lon: number) => void;
+  initialQuery?: string;
+  hideHistory?: boolean;
+  compact?: boolean;
 }
 
-export function SearchWithSuggestions({ onSelect }: Props) {
+export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, compact }: Props) {
   const { t } = useTranslation();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery ?? '');
   const [results, setResults] = useState<GeoResult[]>([]);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,21 +86,21 @@ export function SearchWithSuggestions({ onSelect }: Props) {
     }
   };
 
-  const showHistory = query.length < 2 && history.length > 0;
+  const showHistory = !hideHistory && query.length < 2 && history.length > 0;
   const showResults = query.length >= 2 && results.length > 0;
   const showNoResults = query.length >= 2 && !loading && results.length === 0;
 
   return (
     <div ref={containerRef} className="relative flex min-w-0 flex-1 gap-2">
       <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground ${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
         <input
           value={query}
           onChange={e => handleChange(e.target.value)}
           onFocus={handleFocus}
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-          className="w-full rounded-lg border border-border bg-secondary py-2.5 pl-9 pr-8 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-          placeholder={t('search.placeholder')}
+          className={`w-full rounded-lg border border-border bg-secondary font-mono text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary ${compact ? 'py-1.5 pl-8 pr-7 text-[0.78rem]' : 'py-2.5 pl-9 pr-8 text-sm'}`}
+          placeholder={compact ? 'Ciudad, País...' : t('search.placeholder')}
         />
         {query && (
           <button
@@ -110,10 +113,14 @@ export function SearchWithSuggestions({ onSelect }: Props) {
       </div>
       <button
         onClick={handleSubmit}
-        className="flex-shrink-0 whitespace-nowrap rounded-lg bg-primary px-4 py-2.5 font-display text-[0.78rem] font-bold tracking-wider text-primary-foreground transition-all hover:-translate-y-0.5 hover:brightness-110"
+        className={`flex-shrink-0 whitespace-nowrap rounded-lg bg-primary font-display font-bold tracking-wider text-primary-foreground transition-all hover:brightness-110 ${compact ? 'px-2.5 py-1.5 text-[0.72rem]' : 'px-4 py-2.5 text-[0.78rem] hover:-translate-y-0.5'}`}
       >
-        <span className="hidden sm:inline">{t('search.searchBtn')}</span>
-        <Search className="h-4 w-4 sm:hidden" />
+        {compact ? <Search className="h-3.5 w-3.5" /> : (
+          <>
+            <span className="hidden sm:inline">{t('search.searchBtn')}</span>
+            <Search className="h-4 w-4 sm:hidden" />
+          </>
+        )}
       </button>
 
       <AnimatePresence>

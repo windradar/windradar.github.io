@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ThemeSelector } from '@/components/ThemeSelector';
@@ -7,7 +7,7 @@ import { WindRose } from '@/components/WindRose';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
 import { WindCompareChart } from '@/components/WindCompareChart';
-import { loadSettings, type AppSettings } from '@/components/SettingsPanel';
+import { loadSettings, type AppSettings, type SpotConfig } from '@/components/SettingsPanel';
 import { UserMenu } from '@/components/UserMenu';
 import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
@@ -88,6 +88,7 @@ export default function Index() {
   const doSearch = useCallback(async (searchName: string, searchLat: number, searchLon: number) => {
     setError('');
     setLoading(true);
+    setWx(null);
     try {
       setLat(searchLat);
       setLon(searchLon);
@@ -96,9 +97,9 @@ export default function Index() {
       setLastSearch({ name: searchName, lat: searchLat, lon: searchLon });
       setIsFav(isFavorite(searchLat, searchLon));
       await fetchWeather(searchLat, searchLon, date);
-    } catch (e: any) {
+    } catch (e) {
       setLoading(false);
-      setError('Error: ' + e.message);
+      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
     }
   }, [fetchWeather, date]);
 
@@ -124,7 +125,7 @@ export default function Index() {
     setIsFav(nowFav);
     setFavKey(k => k + 1);
     toast(nowFav ? t('index.favAdded', { name }) : t('index.favRemoved', { name }));
-  }, [lat, lon, name]);
+  }, [lat, lon, name, t]);
 
   // Reload data when date changes and we have coordinates
   const handleDateChange = useCallback(async (newDate: string) => {
@@ -134,9 +135,9 @@ export default function Index() {
       setLoading(true);
       try {
         await fetchWeather(lat, lon, newDate);
-      } catch (e: any) {
+      } catch (e) {
         setLoading(false);
-        setError('Error: ' + e.message);
+        setError('Error: ' + (e instanceof Error ? e.message : String(e)));
       }
     }
   }, [lat, lon, fetchWeather]);
@@ -190,6 +191,55 @@ export default function Index() {
     const bftColors = ['#7bb8d8','#7bb8d8','#44cc88','#44cc88','#ffcc44','#ffcc44','#ff8c00','#ff8c00','#ff5533','#ff5533','#ff3366','#ff3366','#ff3366'];
     return { ws, wd, wg, wh, swh, sst, temp, code, prec, b, wi, bftColor: bftColors[b[0]] };
   })() : null;
+
+  const matchedSpot = useMemo<SpotConfig | null>(() => {
+    if (!settings.spots?.length) return null;
+    if (lat !== null && lon !== null) {
+      let nearest: SpotConfig | null = null;
+      let nearestD = Infinity;
+      for (const s of settings.spots) {
+        if (s.lat == null || s.lon == null) continue;
+        const d = (s.lat - lat) ** 2 + (s.lon - lon) ** 2;
+        if (d < nearestD) { nearestD = d; nearest = s; }
+      }
+      if (nearest && nearestD < 0.0081) return nearest;
+    }
+    if (!name) return null;
+    const accentRx = new RegExp('[̀-ͯ]', 'g');
+    const strip = (s: string) => s.toLowerCase().normalize('NFD').replace(accentRx, '').trim();
+    const firstToken = (s: string) => strip(s).split(',')[0].split(' ')[0];
+    const nameToken = firstToken(name);
+    const normName = strip(name);
+    return settings.spots.find(s => {
+      if (!s.location) return false;
+      if (firstToken(s.location) === nameToken) return true;
+      const normLoc = strip(s.location);
+      return normName.includes(normLoc) || normLoc.includes(normName);
+    }) ?? null;
+  }, [lat, lon, name, settings.spots]);
+
+  const isBigDay = useMemo(() => {
+    const hourly = wx?.hourly;
+    if (!hourly) return false;
+    const dayIdxsAll: number[] = [];
+    for (let i = 0; i < hourly.time.length; i++) {
+      if (hourly.time[i].slice(0, 10) === date) dayIdxsAll.push(i);
+    }
+    if (dayIdxsAll.length < 2) return false;
+    const thresholdKn = matchedSpot?.minWindKn ?? settings.minWindKn;
+    const thresholdKmh = thresholdKn * 1.852;
+    const t0 = Date.parse(hourly.time[dayIdxsAll[0]]);
+    const t1 = Date.parse(hourly.time[dayIdxsAll[1]]);
+    const intervalMin = (t1 - t0) / 60000 || 60;
+    const neededSlots = Math.ceil(120 / intervalMin);
+    let streak = 0;
+    for (const idx of dayIdxsAll) {
+      if ((hourly.wind_speed_10m[idx] || 0) >= thresholdKmh) {
+        if (++streak >= neededSlots) return true;
+      } else { streak = 0; }
+    }
+    return false;
+  }, [wx, date, matchedSpot, settings.minWindKn]);
 
   return (
     <div className="relative z-[1] min-h-screen">
@@ -274,6 +324,22 @@ export default function Index() {
           <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]">
             {wx ? t('index.live') : t('index.ready')}
           </span>
+          {isBigDay && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-1.5 rounded-full border border-[#ffcc44]/60 bg-[#ffcc44]/10 px-3 py-1"
+            >
+              <img src={logoFlow} className="h-4 w-4 rounded-full" alt="" />
+              <motion.span
+                animate={{ opacity: [1, 1, 0, 1] }}
+                transition={{ duration: 1, repeat: Infinity, times: [0, 0.88, 0.9, 1], ease: 'linear' }}
+                className="font-bold tracking-wide text-[#ffcc44]"
+              >
+                Big Day{matchedSpot?.name ? ` en ${matchedSpot.name}` : ''}
+              </motion.span>
+            </motion.div>
+          )}
         </div>
 
         {error && (

@@ -6,12 +6,23 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Send } from 'lucide-react';
+import { Send, Plus, Trash2 } from 'lucide-react';
+import { SearchWithSuggestions } from '@/components/SearchSuggestions';
+
+export interface SpotConfig {
+  id: string;
+  name: string;
+  location: string;
+  lat: number | null;
+  lon: number | null;
+  minWindKn: number;
+}
 
 export interface AppSettings {
   minWindKn: number;
   gridFromHour: string;
   gridToHour: string;
+  spots: SpotConfig[];
   emailEnabled: boolean;
   emailAddress: string;
   emailLocation: string;
@@ -34,6 +45,7 @@ const defaultSettings: AppSettings = {
   minWindKn: 10,
   gridFromHour: '00:00',
   gridToHour: '23:00',
+  spots: [],
   emailEnabled: false,
   emailAddress: '',
   emailLocation: '',
@@ -50,11 +62,14 @@ const defaultSettings: AppSettings = {
   whatsappAlertRangeTo: '20:00',
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return { ...defaultSettings, ...JSON.parse(raw) };
-  } catch {}
+  } catch (_) {
+    // corrupted localStorage — fall back to defaults
+  }
   return { ...defaultSettings };
 }
 
@@ -63,6 +78,7 @@ function saveDisplaySettings(s: AppSettings) {
     minWindKn: s.minWindKn,
     gridFromHour: s.gridFromHour,
     gridToHour: s.gridToHour,
+    spots: s.spots,
   }));
 }
 
@@ -77,8 +93,54 @@ async function geocode(location: string): Promise<{ lat: number; lon: number } |
     if (data.results?.length) {
       return { lat: data.results[0].latitude, lon: data.results[0].longitude };
     }
-  } catch {}
+  } catch (_) {
+    // network error — caller will handle null
+  }
   return null;
+}
+
+function SpotRow({ spot, onChange, onDelete }: {
+  spot: SpotConfig; onChange: (s: SpotConfig) => void; onDelete: () => void;
+}) {
+  return (
+    <div className="space-y-2 rounded-lg border border-border bg-secondary/30 p-3">
+      <div className="flex items-center gap-2">
+        <input
+          value={spot.name}
+          onChange={e => onChange({ ...spot, name: e.target.value })}
+          placeholder="Nombre del spot"
+          className="flex-1 rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+        />
+        <button onClick={onDelete} className="rounded p-1 text-muted-foreground hover:text-destructive">
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <SearchWithSuggestions
+        key={spot.id}
+        initialQuery={spot.location}
+        hideHistory
+        compact
+        onSelect={(locationName, lat, lon) => onChange({ ...spot, location: locationName, lat, lon })}
+      />
+      {spot.lat !== null && spot.lon !== null && (
+        <p className="text-[0.58rem] text-muted-foreground">
+          {spot.lat.toFixed(4)}°N {Math.abs(spot.lon).toFixed(4)}°{spot.lon < 0 ? 'O' : 'E'}
+        </p>
+      )}
+      <div className="flex items-center gap-3 pt-1">
+        <span className="flex-shrink-0 text-[0.58rem] uppercase tracking-widest text-muted-foreground">Viento mín.</span>
+        <Slider
+          value={[spot.minWindKn]}
+          onValueChange={([v]) => onChange({ ...spot, minWindKn: v })}
+          min={5} max={30} step={1}
+          className="flex-1"
+        />
+        <span className="w-12 flex-shrink-0 rounded border border-border bg-secondary px-1.5 py-0.5 text-center font-mono text-[0.75rem] font-bold text-foreground">
+          {spot.minWindKn} kn
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function SettingsPanel({
@@ -108,10 +170,16 @@ export function SettingsPanel({
   };
 
   useEffect(() => {
-    setLocal(prev => ({ ...prev, minWindKn: settings.minWindKn, gridFromHour: settings.gridFromHour, gridToHour: settings.gridToHour }));
+    setLocal(prev => ({
+      ...prev,
+      minWindKn: settings.minWindKn,
+      gridFromHour: settings.gridFromHour,
+      gridToHour: settings.gridToHour,
+      spots: settings.spots,
+    }));
   }, [settings]);
 
-  // Load email settings from Supabase when dialog opens
+  // Load email/WhatsApp settings from Supabase when dialog opens
   useEffect(() => {
     if (!open || !user) return;
     setEmailLoading(true);
@@ -149,6 +217,21 @@ export function SettingsPanel({
 
   const update = (patch: Partial<AppSettings>) => setLocal(prev => ({ ...prev, ...patch }));
 
+  const addSpot = () => setLocal(prev => ({
+    ...prev,
+    spots: [...prev.spots, { id: crypto.randomUUID(), name: '', location: '', lat: null, lon: null, minWindKn: 10 }],
+  }));
+
+  const updateSpot = (i: number, s: SpotConfig) => setLocal(prev => ({
+    ...prev,
+    spots: prev.spots.map((sp, j) => j === i ? s : sp),
+  }));
+
+  const deleteSpot = (i: number) => setLocal(prev => ({
+    ...prev,
+    spots: prev.spots.filter((_, j) => j !== i),
+  }));
+
   const handleTestEmail = async () => {
     if (!user) { toast.error(t('settings.loginRequired')); return; }
     setTestingEmail(true);
@@ -168,15 +251,13 @@ export function SettingsPanel({
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      console.log('[Email test] response:', JSON.stringify(data));
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
         toast.error(t('settings.testEmailNoConfig'));
       } else {
         toast.success(results[0]);
       }
-    } catch (err) {
-      console.error('[Email test]', err);
+    } catch {
       toast.error(t('settings.testEmailError'));
     } finally {
       setTestingEmail(false);
@@ -203,15 +284,13 @@ export function SettingsPanel({
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      console.log('[WA test] response:', JSON.stringify(data));
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
         toast.error(t('settings.testWhatsappNoConfig'));
       } else {
         toast.success(results[0]);
       }
-    } catch (err) {
-      console.error('[WA test]', err);
+    } catch {
       toast.error(t('settings.testWhatsappError'));
     } finally {
       setTestingWa(false);
@@ -221,11 +300,9 @@ export function SettingsPanel({
   const handleSave = async () => {
     setSaving(true);
 
-    // Always save display settings to localStorage
     saveDisplaySettings(local);
     onChange(local);
 
-    // Email settings require login
     if (local.emailEnabled && !user) {
       toast.error(t('settings.loginRequired'));
       setSaving(false);
@@ -309,219 +386,255 @@ export function SettingsPanel({
           </button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">{t('settings.title')}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-2">
-          <section>
-            <h4 className="mb-2 text-sm font-bold text-foreground">{t('settings.windThreshold')}</h4>
-            <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.windThresholdDesc')}</p>
-            <div className="flex items-center gap-4">
-              <Slider
-                value={[local.minWindKn]}
-                onValueChange={([v]) => update({ minWindKn: v })}
-                min={5} max={30} step={1}
-                className="flex-1"
-              />
-              <span className="w-14 rounded-md border border-border bg-secondary px-2 py-1 text-center font-mono text-sm font-bold text-foreground">
-                {local.minWindKn} kn
-              </span>
+        <div className="py-2">
+          <div className="md:grid md:grid-cols-2 md:gap-x-8">
+            {/* Left column: display settings + spots */}
+            <div className="space-y-6">
+              <section>
+                <h4 className="mb-2 text-sm font-bold text-foreground">{t('settings.windThreshold')}</h4>
+                <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.windThresholdDesc')}</p>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[local.minWindKn]}
+                    onValueChange={([v]) => update({ minWindKn: v })}
+                    min={5} max={30} step={1}
+                    className="flex-1"
+                  />
+                  <span className="w-14 rounded-md border border-border bg-secondary px-2 py-1 text-center font-mono text-sm font-bold text-foreground">
+                    {local.minWindKn} kn
+                  </span>
+                </div>
+              </section>
+
+              <section>
+                <h4 className="mb-2 text-sm font-bold text-foreground">{t('settings.hourRange')}</h4>
+                <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.hourRangeDesc')}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.from')}</label>
+                    <select value={local.gridFromHour} onChange={e => update({ gridFromHour: e.target.value })}
+                      className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                      {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.to')}</label>
+                    <select value={local.gridToHour} onChange={e => update({ gridToHour: e.target.value })}
+                      className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                      {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-foreground">Mis Spots</h4>
+                  <button
+                    onClick={addSpot}
+                    className="flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[0.72rem] font-semibold text-primary transition-all hover:bg-primary/20"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Añadir spot
+                  </button>
+                </div>
+                <p className="mb-3 text-[0.7rem] text-muted-foreground">
+                  Configura tus spots favoritos para detectar días con viento suficiente.
+                </p>
+                <div className="space-y-3">
+                  {local.spots.length === 0 && (
+                    <p className="py-4 text-center text-[0.7rem] text-muted-foreground">Sin spots configurados</p>
+                  )}
+                  {local.spots.map((spot, i) => (
+                    <SpotRow
+                      key={spot.id}
+                      spot={spot}
+                      onChange={s => updateSpot(i, s)}
+                      onDelete={() => deleteSpot(i)}
+                    />
+                  ))}
+                </div>
+              </section>
             </div>
-          </section>
 
-          <section>
-            <h4 className="mb-2 text-sm font-bold text-foreground">{t('settings.hourRange')}</h4>
-            <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.hourRangeDesc')}</p>
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.from')}</label>
-                <select value={local.gridFromHour} onChange={e => update({ gridFromHour: e.target.value })}
-                  className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                  {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.to')}</label>
-                <select value={local.gridToHour} onChange={e => update({ gridToHour: e.target.value })}
-                  className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                  {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                </select>
-              </div>
+            {/* Right column: notifications */}
+            <div className="mt-6 space-y-6 md:mt-0 md:border-l md:pl-8">
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-foreground">{t('settings.emailNotif')}</h4>
+                  <Switch checked={local.emailEnabled} onCheckedChange={v => update({ emailEnabled: v })} disabled={emailLoading} />
+                </div>
+                <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.emailNotifDesc')}</p>
+
+                {!user && local.emailEnabled && (
+                  <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
+                    {t('settings.loginRequired')}
+                  </p>
+                )}
+
+                <div className={`space-y-3 transition-opacity ${local.emailEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.emailLabel')}</label>
+                    <input value={local.emailAddress} onChange={e => update({ emailAddress: e.target.value })}
+                      type="email" placeholder="tu@email.com"
+                      className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.locationLabel')}</label>
+                    <input value={local.emailLocation} onChange={e => update({ emailLocation: e.target.value })}
+                      placeholder="Ej: Gavà, España"
+                      className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.sendTime1')}</label>
+                      <select value={local.emailTime1} onChange={e => update({ emailTime1: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
+                        {t('settings.sendTime2')} <span className="normal-case text-muted-foreground">{t('settings.optional')}</span>
+                      </label>
+                      <select value={local.emailTime2} onChange={e => update({ emailTime2: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        <option value="">{t('settings.disabled')}</option>
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeFrom')}</label>
+                      <select value={local.emailRangeFrom} onChange={e => update({ emailRangeFrom: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeTo')}</label>
+                      <select value={local.emailRangeTo} onChange={e => update({ emailRangeTo: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                    <strong className="text-primary">ℹ️</strong> {t('settings.emailNote')}
+                  </div>
+
+                  <button
+                    onClick={handleTestEmail}
+                    disabled={testingEmail || !user}
+                    className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[0.75rem] font-semibold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    {testingEmail ? t('settings.testEmailSending') : t('settings.testEmail')}
+                  </button>
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-foreground">{t('settings.whatsappAlert')}</h4>
+                  <Switch checked={local.whatsappAlertEnabled} onCheckedChange={v => update({ whatsappAlertEnabled: v })} disabled={emailLoading} />
+                </div>
+                <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.whatsappAlertDesc')}</p>
+
+                {!user && local.whatsappAlertEnabled && (
+                  <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
+                    {t('settings.loginRequired')}
+                  </p>
+                )}
+
+                <div className={`space-y-3 transition-opacity ${local.whatsappAlertEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
+                  <div className="rounded-md border border-green-500/20 bg-green-500/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                    <strong className="text-green-600">📱</strong> {t('settings.callmebotActivation')}
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.callmebotApiKey')}</label>
+                    <input
+                      value={local.callmebotApiKey}
+                      onChange={e => update({ callmebotApiKey: e.target.value })}
+                      placeholder="1234567"
+                      className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.locationLabel')}</label>
+                    <input
+                      value={local.whatsappAlertLocation}
+                      onChange={e => update({ whatsappAlertLocation: e.target.value })}
+                      placeholder="Ej: Gavà, España"
+                      className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.sendTime1')}</label>
+                      <select value={local.whatsappAlertTime1} onChange={e => update({ whatsappAlertTime1: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
+                        {t('settings.sendTime2')} <span className="normal-case text-muted-foreground">{t('settings.optional')}</span>
+                      </label>
+                      <select value={local.whatsappAlertTime2} onChange={e => update({ whatsappAlertTime2: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        <option value="">{t('settings.disabled')}</option>
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeFrom')}</label>
+                      <select value={local.whatsappAlertRangeFrom} onChange={e => update({ whatsappAlertRangeFrom: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeTo')}</label>
+                      <select value={local.whatsappAlertRangeTo} onChange={e => update({ whatsappAlertRangeTo: e.target.value })}
+                        className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
+                        {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                    <strong className="text-primary">ℹ️</strong> {t('settings.whatsappAlertNote')}
+                  </div>
+
+                  <button
+                    onClick={handleTestWhatsapp}
+                    disabled={testingWa || !user}
+                    className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-[0.75rem] font-semibold text-green-700 transition-all hover:bg-green-500/20 disabled:opacity-50 dark:text-green-400"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    {testingWa ? t('settings.testWhatsappSending') : t('settings.testWhatsapp')}
+                  </button>
+                </div>
+              </section>
             </div>
-          </section>
-
-          <section>
-            <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-sm font-bold text-foreground">{t('settings.emailNotif')}</h4>
-              <Switch checked={local.emailEnabled} onCheckedChange={v => update({ emailEnabled: v })} disabled={emailLoading} />
-            </div>
-            <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.emailNotifDesc')}</p>
-
-            {!user && local.emailEnabled && (
-              <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
-                {t('settings.loginRequired')}
-              </p>
-            )}
-
-            <div className={`space-y-3 transition-opacity ${local.emailEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
-              <div className="flex flex-col gap-1">
-                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.emailLabel')}</label>
-                <input value={local.emailAddress} onChange={e => update({ emailAddress: e.target.value })}
-                  type="email" placeholder="tu@email.com"
-                  className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.locationLabel')}</label>
-                <input value={local.emailLocation} onChange={e => update({ emailLocation: e.target.value })}
-                  placeholder="Ej: Gavà, España"
-                  className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.sendTime1')}</label>
-                  <select value={local.emailTime1} onChange={e => update({ emailTime1: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
-                    {t('settings.sendTime2')} <span className="normal-case text-muted-foreground">{t('settings.optional')}</span>
-                  </label>
-                  <select value={local.emailTime2} onChange={e => update({ emailTime2: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    <option value="">{t('settings.disabled')}</option>
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeFrom')}</label>
-                  <select value={local.emailRangeFrom} onChange={e => update({ emailRangeFrom: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeTo')}</label>
-                  <select value={local.emailRangeTo} onChange={e => update({ emailRangeTo: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
-                <strong className="text-primary">ℹ️</strong> {t('settings.emailNote')}
-              </div>
-
-              <button
-                onClick={handleTestEmail}
-                disabled={testingEmail || !user}
-                className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[0.75rem] font-semibold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
-              >
-                <Send className="h-3.5 w-3.5" />
-                {testingEmail ? t('settings.testEmailSending') : t('settings.testEmail')}
-              </button>
-            </div>
-          </section>
-
-          {/* WhatsApp automatic alert */}
-          <section>
-            <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-sm font-bold text-foreground">{t('settings.whatsappAlert')}</h4>
-              <Switch checked={local.whatsappAlertEnabled} onCheckedChange={v => update({ whatsappAlertEnabled: v })} disabled={emailLoading} />
-            </div>
-            <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.whatsappAlertDesc')}</p>
-
-            {!user && local.whatsappAlertEnabled && (
-              <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
-                {t('settings.loginRequired')}
-              </p>
-            )}
-
-            <div className={`space-y-3 transition-opacity ${local.whatsappAlertEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
-              <div className="rounded-md border border-green-500/20 bg-green-500/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
-                <strong className="text-green-600">📱</strong> {t('settings.callmebotActivation')}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.callmebotApiKey')}</label>
-                <input
-                  value={local.callmebotApiKey}
-                  onChange={e => update({ callmebotApiKey: e.target.value })}
-                  placeholder="1234567"
-                  className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.locationLabel')}</label>
-                <input
-                  value={local.whatsappAlertLocation}
-                  onChange={e => update({ whatsappAlertLocation: e.target.value })}
-                  placeholder="Ej: Gavà, España"
-                  className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
-                />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.sendTime1')}</label>
-                  <select value={local.whatsappAlertTime1} onChange={e => update({ whatsappAlertTime1: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
-                    {t('settings.sendTime2')} <span className="normal-case text-muted-foreground">{t('settings.optional')}</span>
-                  </label>
-                  <select value={local.whatsappAlertTime2} onChange={e => update({ whatsappAlertTime2: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    <option value="">{t('settings.disabled')}</option>
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeFrom')}</label>
-                  <select value={local.whatsappAlertRangeFrom} onChange={e => update({ whatsappAlertRangeFrom: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.rangeTo')}</label>
-                  <select value={local.whatsappAlertRangeTo} onChange={e => update({ whatsappAlertRangeTo: e.target.value })}
-                    className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary">
-                    {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
-                <strong className="text-primary">ℹ️</strong> {t('settings.whatsappAlertNote')}
-              </div>
-
-              <button
-                onClick={handleTestWhatsapp}
-                disabled={testingWa || !user}
-                className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-[0.75rem] font-semibold text-green-700 transition-all hover:bg-green-500/20 disabled:opacity-50 dark:text-green-400"
-              >
-                <Send className="h-3.5 w-3.5" />
-                {testingWa ? t('settings.testWhatsappSending') : t('settings.testWhatsapp')}
-              </button>
-            </div>
-          </section>
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
