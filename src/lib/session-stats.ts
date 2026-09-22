@@ -81,46 +81,40 @@ export interface BreakdownRow {
 export interface SessionStats {
   count: number;
   hoursBySport: BreakdownRow[]; // value = hours
-  windByMaterial: BreakdownRow[]; // value = avg wind (kn)
+  sessionsBySport: BreakdownRow[]; // value = session count
+  hoursByMaterial: BreakdownRow[]; // value = hours
 }
 
-function sessionAvgWindKn(s: Session): number | null {
-  if (!Array.isArray(s.weather_snapshot) || !s.weather_snapshot.length) return null;
-  const total = s.weather_snapshot.reduce((sum, snap) => sum + snap.wind_kn, 0);
-  return total / s.weather_snapshot.length;
+function toSortedRows(map: Map<string, number>): BreakdownRow[] {
+  return [...map.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
 }
 
 export function computeStats(sessions: Session[]): SessionStats {
   const hoursBySport = new Map<string, number>();
-  const windByMaterial = new Map<string, { total: number; count: number }>();
+  const sessionsBySport = new Map<string, number>();
+  const hoursByMaterial = new Map<string, number>();
 
   for (const s of sessions) {
     const diff = timeToMinutes(s.end_time) - timeToMinutes(s.start_time);
     const hours = diff > 0 ? diff / 60 : 0;
     const sportLabel = s.sport_name?.trim() || 'Sin deporte';
     hoursBySport.set(sportLabel, (hoursBySport.get(sportLabel) || 0) + hours);
+    sessionsBySport.set(sportLabel, (sessionsBySport.get(sportLabel) || 0) + 1);
 
-    const sessionWindKn = sessionAvgWindKn(s);
-    if (sessionWindKn !== null) {
-      for (const mat of s.materials) {
-        const name = mat.name?.trim();
-        if (!name) continue;
-        const entry = windByMaterial.get(name) || { total: 0, count: 0 };
-        entry.total += sessionWindKn;
-        entry.count += 1;
-        windByMaterial.set(name, entry);
-      }
+    for (const mat of s.materials) {
+      const name = mat.name?.trim();
+      if (!name) continue;
+      hoursByMaterial.set(name, (hoursByMaterial.get(name) || 0) + hours);
     }
   }
 
   return {
     count: sessions.length,
-    hoursBySport: [...hoursBySport.entries()]
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value),
-    windByMaterial: [...windByMaterial.entries()]
-      .map(([label, { total, count }]) => ({ label, value: total / count }))
-      .sort((a, b) => b.value - a.value),
+    hoursBySport: toSortedRows(hoursBySport),
+    sessionsBySport: toSortedRows(sessionsBySport),
+    hoursByMaterial: toSortedRows(hoursByMaterial),
   };
 }
 
