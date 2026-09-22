@@ -413,14 +413,42 @@ export default function Index() {
           </div>
         ) : cardData && (
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
-            <NowCard highlight label={t('index.windCard')} value={`${Math.round(kmhToKnots(cardData.ws))}`} unit="kn" sub={t('index.windCardSub', { gust: Math.round(kmhToKnots(cardData.wg)), speed: Math.round(cardData.ws) })} color={windColor(cardData.ws)} />
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
               <WindRose degrees={cardData.wd} speed={cardData.ws} gustSpeed={cardData.wg} />
             </div>
             <NowCard label={t('index.precipCard')} value={cardData.prec.toFixed(1)} unit="mm" sub={t('index.lastHour')} />
+            <WindWidget
+              ws={cardData.ws} wd={cardData.wd} wg={cardData.wg}
+              wsMin={h && allDayIdxs.length ? Math.min(...allDayIdxs.map(i => h.wind_speed_10m[i] || 0)) : null}
+              color={windColor(cardData.ws)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
+            >
+              <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
+              <div className="mb-1.5 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.tempCard')}</div>
+              <div className="flex items-end gap-3">
+                <div>
+                  <div className="mb-0.5 text-[0.55rem] uppercase tracking-wide text-muted-foreground/60">Aire</div>
+                  <div className="font-display text-xl font-bold leading-none">
+                    {safeNum(cardData.temp, 1)}<span className="ml-0.5 text-[0.65rem] font-normal text-muted-foreground"> °C</span>
+                  </div>
+                </div>
+                {cardData.sst !== null && (
+                  <>
+                    <span className="mb-1 text-muted-foreground/40">·</span>
+                    <div>
+                      <div className="mb-0.5 text-[0.55rem] uppercase tracking-wide text-muted-foreground/60">Agua</div>
+                      <div className="font-display text-xl font-bold leading-none" style={{ color: '#4dd9ff' }}>
+                        {safeNum(cardData.sst, 1)}<span className="ml-0.5 text-[0.65rem] font-normal text-muted-foreground"> °C</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
             <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
-            <NowCard label={t('index.airTempCard')} value={safeNum(cardData.temp, 1)} unit="°C" />
-            <NowCard label={t('index.waterTempCard')} value={safeNum(cardData.sst, 1)} unit="°C" sub={t('index.surfaceSea')} color="#4dd9ff" />
             <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
               <WeekForecastChart wx={wx} mar={mar} wxDetail={wxDetail} />
@@ -601,6 +629,53 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
       {children}
       <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
     </div>
+  );
+}
+
+function WindWidget({ ws, wd, wg, wsMin, color }: {
+  ws: number; wd: number; wg: number; wsMin: number | null; color: string;
+}) {
+  const { t } = useTranslation();
+  const wi = windInfo(wd);
+  const avgKn = Math.round(kmhToKnots(ws));
+  const gustKn = Math.round(kmhToKnots(wg));
+  const minKn = wsMin !== null ? Math.round(kmhToKnots(wsMin)) : null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
+    >
+      <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
+      <div className="mb-2 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.windCard')}</div>
+      <div className="flex items-center gap-3">
+        <svg viewBox="0 0 60 60" width={52} height={52} className="flex-shrink-0">
+          <circle cx={30} cy={30} r={27} stroke={color} strokeWidth="1" fill="none" strokeOpacity="0.2" />
+          <g transform="translate(30,30)">
+            <motion.g
+              initial={{ rotate: 0 }}
+              animate={{ rotate: wd }}
+              transition={{ type: 'spring', stiffness: 60, damping: 15 }}
+              style={{ transformOrigin: '0px 0px' }}
+            >
+              <line x1={0} y1={18} x2={0} y2={-16} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+              <polygon points="0,-24 -6,-13 6,-13" fill={color} />
+              <line x1={-5} y1={20} x2={5} y2={20} stroke={color} strokeWidth="2" strokeLinecap="round" />
+            </motion.g>
+          </g>
+        </svg>
+        <div className="min-w-0 flex-1">
+          <div className="font-display text-2xl font-bold leading-none" style={{ color }}>
+            {avgKn}<span className="ml-1 text-[0.65rem] font-normal text-muted-foreground">kn</span>
+          </div>
+          <div className="mt-0.5 text-[0.78rem] font-medium text-foreground/80">{wi.short} · {Math.round(wd)}°</div>
+          <div className="mt-1.5 flex items-center gap-2.5 text-[0.65rem] text-muted-foreground">
+            <span>↑ {gustKn} kn</span>
+            {minKn !== null && <span>↓ {minKn} kn</span>}
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 

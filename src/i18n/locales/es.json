@@ -224,6 +224,7 @@
     "waveCard": "🌊 Altura ola",
     "airTempCard": "🌡️ Temp. aire",
     "waterTempCard": "🌊 Temp. agua",
+    "tempCard": "🌡️ Temperatura",
     "weatherCard": "☁️ Tiempo",
     "live": "EN VIVO",
     "ready": "LISTO",

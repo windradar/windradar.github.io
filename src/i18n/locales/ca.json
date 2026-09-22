@@ -224,6 +224,7 @@
     "waveCard": "🌊 Alçada d'ona",
     "airTempCard": "🌡️ Temp. aire",
     "waterTempCard": "🌊 Temp. aigua",
+    "tempCard": "🌡️ Temperatura",
     "weatherCard": "☁️ Temps",
     "live": "EN DIRECTE",
     "ready": "LLEST",
