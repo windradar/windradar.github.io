@@ -3,33 +3,7 @@ import { X, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { humanDate, dirArrow, windInfo } from '@/lib/weather-helpers';
 import { toast } from 'sonner';
-
-interface Snapshot {
-  hour: string;
-  wind_kn: number;
-  gust_kn: number;
-  dir_deg: number;
-  dir_short: string;
-  wave_m: number | null;
-  temp: number | null;
-}
-
-interface Session {
-  id: string;
-  session_date: string;
-  start_time: string;
-  end_time: string;
-  location_name: string | null;
-  location_lat: number | null;
-  location_lon: number | null;
-  weather_snapshot: Snapshot[] | null;
-  material_1: string | null;
-  material_2: string | null;
-  material_3: string | null;
-  material_4: string | null;
-  tracking_url: string | null;
-  notes: string | null;
-}
+import type { Session, Snapshot } from '@/lib/session-stats';
 
 interface Props {
   session: Session | null;
@@ -248,8 +222,7 @@ function drawStory(
   }
   rows.push(['⏱', `${session.start_time} – ${session.end_time}`]);
 
-  const matList = [session.material_1, session.material_2, session.material_3, session.material_4]
-    .filter((m): m is string => !!m);
+  const matList = session.materials.map(m => m.name).filter(Boolean);
 
   const ROW_H = 116;
   const THUMB = 96;

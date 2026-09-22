@@ -9,10 +9,12 @@ import { useTranslation } from 'react-i18next';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/weather-helpers';
 import MaterialSelect from '@/components/MaterialSelect';
+import SportSelect from '@/components/SportSelect';
+import type { Sport } from '@/components/MaterialsManager';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import SessionStoryShare from '@/components/SessionStoryShare';
 import { SessionsDashboard } from '@/components/SessionsDashboard';
-import type { Session, Snapshot } from '@/lib/session-stats';
+import type { Session, Snapshot, SessionMaterial } from '@/lib/session-stats';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
@@ -41,7 +43,9 @@ export default function Sessions() {
   const [locLon, setLocLon] = useState<number | null>(null);
   const [snapshot, setSnapshot] = useState<Snapshot[] | null>(null);
   const [loadingSnap, setLoadingSnap] = useState(false);
-  const [materials, setMaterials] = useState<Record<number, string>>({ 1: '', 2: '', 3: '', 4: '' });
+  const [sports, setSports] = useState<Sport[]>([]);
+  const [sportId, setSportId] = useState<string | null>(null);
+  const [materials, setMaterials] = useState<Record<string, string>>({});
   const [trackingUrl, setTrackingUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -70,6 +74,12 @@ export default function Sessions() {
         for (const it of data) { if (it.photo_url) map[it.name] = it.photo_url; }
         setMaterialPhotos(map);
       });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('sports').select('*').order('sort_order').order('name')
+      .then(({ data }) => { if (data) setSports(data as Sport[]); });
   }, [user]);
 
   const fetchWeatherSnapshot = useCallback(async () => {
@@ -141,7 +151,8 @@ export default function Sessions() {
   const resetForm = () => {
     setDate(localDateStr(new Date())); setStartH('10:00'); setEndH('13:00');
     setLocName(''); setLocLat(null); setLocLon(null); setSnapshot(null);
-    setMaterials({ 1: '', 2: '', 3: '', 4: '' });
+    setSportId(null);
+    setMaterials({});
     setTrackingUrl(''); setNotes('');
     setEditingId(null);
     setOrigKey('');
@@ -161,10 +172,8 @@ export default function Sessions() {
     setLocLat(s.location_lat);
     setLocLon(s.location_lon);
     setSnapshot(Array.isArray(s.weather_snapshot) ? s.weather_snapshot : null);
-    setMaterials({
-      1: s.material_1 || '', 2: s.material_2 || '',
-      3: s.material_3 || '', 4: s.material_4 || '',
-    });
+    setSportId(sports.find(sp => sp.name === s.sport_name)?.id ?? null);
+    setMaterials(Object.fromEntries((s.materials || []).map(m => [m.category_id, m.name])));
     setTrackingUrl(s.tracking_url || '');
     setNotes(s.notes || '');
     setOrigKey(`${s.session_date}|${s.start_time}|${s.end_time}|${s.location_lat}|${s.location_lon}`);
@@ -182,6 +191,10 @@ export default function Sessions() {
       if (!u.success) { toast.error('URL de tracking no válida'); return; }
     }
 
+    const materialsPayload: SessionMaterial[] = Object.entries(materials)
+      .filter(([, name]) => name?.trim())
+      .map(([category_id, name]) => ({ category_id, name: name.trim() }));
+
     const payload = {
       session_date: date,
       start_time: startH,
@@ -190,10 +203,8 @@ export default function Sessions() {
       location_lat: locLat,
       location_lon: locLon,
       weather_snapshot: snapshot as Snapshot[] | null,
-      material_1: materials[1]?.trim() || null,
-      material_2: materials[2]?.trim() || null,
-      material_3: materials[3]?.trim() || null,
-      material_4: materials[4]?.trim() || null,
+      sport_name: sports.find(sp => sp.id === sportId)?.name || null,
+      materials: materialsPayload,
       tracking_url: trackingUrl.trim() || null,
       notes: notes.trim() || null,
     };
@@ -292,11 +303,19 @@ export default function Sessions() {
                 </div>
               )}
 
+              <SportSelect
+                sports={sports}
+                value={sportId}
+                onChange={setSportId}
+                onCreated={sport => setSports(sp => [...sp, sport])}
+              />
+
               <div>
                 <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-2">{t('sessions.materialLabel')}</label>
                 <MaterialSelect
+                  sportId={sportId}
                   values={materials}
-                  onChange={(slot, value) => setMaterials(m => ({ ...m, [slot]: value }))}
+                  onChange={(categoryId, value) => setMaterials(m => ({ ...m, [categoryId]: value }))}
                 />
               </div>
 
@@ -352,7 +371,14 @@ export default function Sessions() {
                 <div key={s.id} className={`rounded-lg border bg-card p-4 ${editingId === s.id ? 'border-primary' : 'border-border'}`}>
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-display text-sm font-bold">{s.location_name || 'Sin ubicación'}</h3>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-display text-sm font-bold">{s.location_name || 'Sin ubicación'}</h3>
+                        {s.sport_name && (
+                          <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-primary">
+                            {s.sport_name}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {humanDate(s.session_date)} · {s.start_time}–{s.end_time}
                       </p>
@@ -391,29 +417,27 @@ export default function Sessions() {
                     </details>
                   )}
 
-                  {(s.material_1 || s.material_2 || s.material_3 || s.material_4) && (
+                  {s.materials.length > 0 && (
                     <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                       <span className="text-muted-foreground">Material: </span>
-                      {[s.material_1, s.material_2, s.material_3, s.material_4]
-                        .filter(Boolean)
-                        .map((name, i, arr) => (
-                          <span key={i} className="flex items-center gap-1">
-                            {materialPhotos[name!] && (
+                      {s.materials.map((m, i, arr) => (
+                          <span key={m.category_id} className="flex items-center gap-1">
+                            {materialPhotos[m.name] && (
                               <button
                                 type="button"
-                                onClick={() => setEnlargedPhoto(materialPhotos[name!])}
+                                onClick={() => setEnlargedPhoto(materialPhotos[m.name])}
                                 title="Ver foto"
                                 className="shrink-0"
                               >
                                 <img
-                                  src={materialPhotos[name!]}
-                                  alt={name!}
+                                  src={materialPhotos[m.name]}
+                                  alt={m.name}
                                   className="h-5 w-5 cursor-zoom-in rounded border border-border object-cover transition-colors hover:border-primary"
                                   loading="lazy"
                                 />
                               </button>
                             )}
-                            {name}
+                            {m.name}
                             {i < arr.length - 1 && <span className="text-muted-foreground/50">·</span>}
                           </span>
                         ))}

@@ -8,6 +8,11 @@ export interface Snapshot {
   temp: number | null;
 }
 
+export interface SessionMaterial {
+  category_id: string;
+  name: string;
+}
+
 export interface Session {
   id: string;
   session_date: string;
@@ -17,10 +22,8 @@ export interface Session {
   location_lat: number | null;
   location_lon: number | null;
   weather_snapshot: Snapshot[] | null;
-  material_1: string | null;
-  material_2: string | null;
-  material_3: string | null;
-  material_4: string | null;
+  sport_name: string | null;
+  materials: SessionMaterial[];
   tracking_url: string | null;
   notes: string | null;
 }
@@ -70,57 +73,54 @@ function timeToMinutes(t: string): number {
   return h * 60 + (m || 0);
 }
 
-export interface SessionStats {
-  count: number;
-  totalHours: number;
-  avgWindKn: number | null;
-  maxGustKn: number | null;
-  topLocation: { name: string; count: number } | null;
-  topMaterial: { name: string; count: number } | null;
+export interface BreakdownRow {
+  label: string;
+  value: number;
 }
 
-function topEntry(counts: Map<string, number>): { name: string; count: number } | null {
-  let best: { name: string; count: number } | null = null;
-  for (const [name, count] of counts) {
-    if (!best || count > best.count) best = { name, count };
-  }
-  return best;
+export interface SessionStats {
+  count: number;
+  hoursBySport: BreakdownRow[]; // value = hours
+  windByMaterial: BreakdownRow[]; // value = avg wind (kn)
+}
+
+function sessionAvgWindKn(s: Session): number | null {
+  if (!Array.isArray(s.weather_snapshot) || !s.weather_snapshot.length) return null;
+  const total = s.weather_snapshot.reduce((sum, snap) => sum + snap.wind_kn, 0);
+  return total / s.weather_snapshot.length;
 }
 
 export function computeStats(sessions: Session[]): SessionStats {
-  let totalMinutes = 0;
-  const windValues: number[] = [];
-  const gustValues: number[] = [];
-  const locationCounts = new Map<string, number>();
-  const materialCounts = new Map<string, number>();
+  const hoursBySport = new Map<string, number>();
+  const windByMaterial = new Map<string, { total: number; count: number }>();
 
   for (const s of sessions) {
     const diff = timeToMinutes(s.end_time) - timeToMinutes(s.start_time);
-    if (diff > 0) totalMinutes += diff;
+    const hours = diff > 0 ? diff / 60 : 0;
+    const sportLabel = s.sport_name?.trim() || 'Sin deporte';
+    hoursBySport.set(sportLabel, (hoursBySport.get(sportLabel) || 0) + hours);
 
-    if (Array.isArray(s.weather_snapshot)) {
-      for (const snap of s.weather_snapshot) {
-        windValues.push(snap.wind_kn);
-        gustValues.push(snap.gust_kn);
+    const sessionWindKn = sessionAvgWindKn(s);
+    if (sessionWindKn !== null) {
+      for (const mat of s.materials) {
+        const name = mat.name?.trim();
+        if (!name) continue;
+        const entry = windByMaterial.get(name) || { total: 0, count: 0 };
+        entry.total += sessionWindKn;
+        entry.count += 1;
+        windByMaterial.set(name, entry);
       }
-    }
-
-    const loc = s.location_name?.trim();
-    if (loc) locationCounts.set(loc, (locationCounts.get(loc) || 0) + 1);
-
-    for (const mat of [s.material_1, s.material_2, s.material_3, s.material_4]) {
-      const name = mat?.trim();
-      if (name) materialCounts.set(name, (materialCounts.get(name) || 0) + 1);
     }
   }
 
   return {
     count: sessions.length,
-    totalHours: totalMinutes / 60,
-    avgWindKn: windValues.length ? windValues.reduce((a, b) => a + b, 0) / windValues.length : null,
-    maxGustKn: gustValues.length ? Math.max(...gustValues) : null,
-    topLocation: topEntry(locationCounts),
-    topMaterial: topEntry(materialCounts),
+    hoursBySport: [...hoursBySport.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value),
+    windByMaterial: [...windByMaterial.entries()]
+      .map(([label, { total, count }]) => ({ label, value: total / count }))
+      .sort((a, b) => b.value - a.value),
   };
 }
 

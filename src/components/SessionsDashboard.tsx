@@ -11,7 +11,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 import {
   availableYears, filterSessions, computeStats, buildChartBuckets,
-  MONTH_LABELS_ES, type Session, type PeriodMode, type PeriodFilter,
+  MONTH_LABELS_ES, type Session, type PeriodMode, type PeriodFilter, type BreakdownRow,
 } from '@/lib/session-stats';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
@@ -28,7 +28,7 @@ const chartOpts: ChartOptions<'bar'> = {
   },
 };
 
-function StatTile({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub?: string }) {
+function StatTile({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div className="rounded-lg border border-border bg-card p-3">
       <div className="mb-1 truncate text-[0.58rem] uppercase tracking-widest text-muted-foreground">{label}</div>
@@ -36,7 +36,30 @@ function StatTile({ label, value, unit, sub }: { label: string; value: string; u
         {value}
         {unit && <span className="ml-0.5 text-[0.6rem] font-normal text-muted-foreground">{unit}</span>}
       </div>
-      {sub && <div className="mt-1 truncate text-[0.6rem] text-muted-foreground">{sub}</div>}
+    </div>
+  );
+}
+
+function BreakdownTile({ label, rows, unit, format, emptyLabel }: {
+  label: string; rows: BreakdownRow[]; unit: string; format: (v: number) => string; emptyLabel: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="mb-2 truncate text-[0.58rem] uppercase tracking-widest text-muted-foreground">{label}</div>
+      {rows.length === 0 ? (
+        <div className="text-xs text-muted-foreground">{emptyLabel}</div>
+      ) : (
+        <div className="space-y-1.5">
+          {rows.map(r => (
+            <div key={r.label} className="flex items-center justify-between gap-2 text-xs">
+              <span className="truncate text-foreground/85">{r.label}</span>
+              <span className="shrink-0 font-mono font-bold text-foreground">
+                {format(r.value)}<span className="ml-0.5 font-normal text-muted-foreground">{unit}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -114,20 +137,21 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
         </div>
       )}
 
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <StatTile label={t('sessions.statSessions')} value={String(stats.count)} />
-        <StatTile label={t('sessions.statHours')} value={stats.totalHours.toFixed(1)} unit="h" />
-        <StatTile label={t('sessions.statAvgWind')} value={stats.avgWindKn !== null ? String(Math.round(stats.avgWindKn)) : '—'} unit="kn" />
-        <StatTile label={t('sessions.statMaxGust')} value={stats.maxGustKn !== null ? String(Math.round(stats.maxGustKn)) : '—'} unit="kn" />
-        <StatTile
-          label={t('sessions.statTopSpot')}
-          value={stats.topLocation?.name ?? '—'}
-          sub={stats.topLocation ? `${stats.topLocation.count}×` : undefined}
+        <BreakdownTile
+          label={t('sessions.statHours')}
+          rows={stats.hoursBySport}
+          unit="h"
+          format={v => v.toFixed(1)}
+          emptyLabel={t('sessions.noDataInPeriod')}
         />
-        <StatTile
-          label={t('sessions.statTopMaterial')}
-          value={stats.topMaterial?.name ?? '—'}
-          sub={stats.topMaterial ? `${stats.topMaterial.count}×` : undefined}
+        <BreakdownTile
+          label={t('sessions.statAvgWind')}
+          rows={stats.windByMaterial}
+          unit="kn"
+          format={v => String(Math.round(v))}
+          emptyLabel={t('sessions.noDataInPeriod')}
         />
       </div>
 

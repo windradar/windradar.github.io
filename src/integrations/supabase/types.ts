@@ -20,6 +20,7 @@ export type Database = {
           id: string
           name: string
           slot: number
+          sport_id: string | null
           updated_at: string
           user_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           name: string
           slot: number
+          sport_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -36,10 +38,19 @@ export type Database = {
           id?: string
           name?: string
           slot?: number
+          sport_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "material_categories_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       material_items: {
         Row: {
@@ -177,12 +188,10 @@ export type Database = {
           location_lat: number | null
           location_lon: number | null
           location_name: string | null
-          material_1: string | null
-          material_2: string | null
-          material_3: string | null
-          material_4: string | null
+          materials: Json
           notes: string | null
           session_date: string
+          sport_name: string | null
           start_time: string
           tracking_url: string | null
           updated_at: string
@@ -196,12 +205,10 @@ export type Database = {
           location_lat?: number | null
           location_lon?: number | null
           location_name?: string | null
-          material_1?: string | null
-          material_2?: string | null
-          material_3?: string | null
-          material_4?: string | null
+          materials?: Json
           notes?: string | null
           session_date: string
+          sport_name?: string | null
           start_time: string
           tracking_url?: string | null
           updated_at?: string
@@ -215,17 +222,39 @@ export type Database = {
           location_lat?: number | null
           location_lon?: number | null
           location_name?: string | null
-          material_1?: string | null
-          material_2?: string | null
-          material_3?: string | null
-          material_4?: string | null
+          materials?: Json
           notes?: string | null
           session_date?: string
+          sport_name?: string | null
           start_time?: string
           tracking_url?: string | null
           updated_at?: string
           user_id?: string
           weather_snapshot?: Json | null
+        }
+        Relationships: []
+      }
+      sports: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          user_id?: string
         }
         Relationships: []
       }

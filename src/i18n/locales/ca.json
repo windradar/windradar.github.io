@@ -141,13 +141,14 @@
     "periodRange": "Rang",
     "periodAll": "Tot",
     "statSessions": "Sessions",
-    "statHours": "Hores a l'aigua",
-    "statAvgWind": "Vent mitjà",
-    "statMaxGust": "Ratxa màxima",
-    "statTopSpot": "Spot preferit",
-    "statTopMaterial": "Material preferit",
+    "statHours": "Hores a l'aigua per esport",
+    "statAvgWind": "Vent mitjà per material",
     "chartTitle": "Sessions per període",
-    "noDataInPeriod": "Sense sessions en aquest període"
+    "noDataInPeriod": "Sense sessions en aquest període",
+    "sportLabel": "Esport",
+    "sportNone": "— sense esport —",
+    "sportNewPlaceholder": "Nou esport...",
+    "sportAdded": "Esport afegit"
   },
   "settings": {
     "title": "⚙️ Configuració",
