@@ -40,6 +40,30 @@ export interface PeriodFilter {
 
 export const MONTH_LABELS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
+export const NO_SPORT_LABEL = 'Sin deporte';
+
+function sportLabelOf(s: Session): string {
+  return s.sport_name?.trim() || NO_SPORT_LABEL;
+}
+
+// Fixed, light/bright palette — colors read well on the app's dark background
+// and stay stable for a given sport name (see sportColor below).
+const SPORT_CHART_PALETTE = ['#00d4ff', '#4ade80', '#facc15', '#fb923c', '#f472b6', '#a78bfa', '#34d399', '#38bdf8'];
+const NO_SPORT_COLOR = '#94a3b8';
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(hash);
+}
+
+// Deterministic: the same sport name always maps to the same color,
+// regardless of which other sports are visible in the current period.
+export function sportColor(label: string): string {
+  if (label === NO_SPORT_LABEL) return NO_SPORT_COLOR;
+  return SPORT_CHART_PALETTE[hashString(label) % SPORT_CHART_PALETTE.length];
+}
+
 export function availableYears(sessions: Session[], fallback: number): number[] {
   const years = new Set<number>();
   for (const s of sessions) {
@@ -99,7 +123,7 @@ export function computeStats(sessions: Session[]): SessionStats {
   for (const s of sessions) {
     const diff = timeToMinutes(s.end_time) - timeToMinutes(s.start_time);
     const hours = diff > 0 ? diff / 60 : 0;
-    const sportLabel = s.sport_name?.trim() || 'Sin deporte';
+    const sportLabel = sportLabelOf(s);
     hoursBySport.set(sportLabel, (hoursBySport.get(sportLabel) || 0) + hours);
     sessionsBySport.set(sportLabel, (sessionsBySport.get(sportLabel) || 0) + 1);
 
@@ -120,7 +144,7 @@ export function computeStats(sessions: Session[]): SessionStats {
 
 export interface ChartBucket {
   label: string;
-  count: number;
+  bySport: Record<string, number>;
 }
 
 function ymLabel(ym: string): string {
@@ -128,33 +152,38 @@ function ymLabel(ym: string): string {
   return `${MONTH_LABELS_ES[parseInt(m, 10) - 1]} ${y.slice(2)}`;
 }
 
+function addToBucket(bucket: Record<string, number>, sportLabel: string) {
+  bucket[sportLabel] = (bucket[sportLabel] || 0) + 1;
+}
+
 export function buildChartBuckets(sessions: Session[], f: PeriodFilter): ChartBucket[] {
   if (f.mode === 'year') {
-    const counts = new Array(12).fill(0);
+    const buckets: Record<string, number>[] = Array.from({ length: 12 }, () => ({}));
     for (const s of sessions) {
       const m = parseInt(s.session_date.slice(5, 7), 10) - 1;
-      if (m >= 0 && m < 12) counts[m]++;
+      if (m >= 0 && m < 12) addToBucket(buckets[m], sportLabelOf(s));
     }
-    return MONTH_LABELS_ES.map((label, i) => ({ label, count: counts[i] }));
+    return MONTH_LABELS_ES.map((label, i) => ({ label, bySport: buckets[i] }));
   }
 
   if (f.mode === 'month') {
     const daysInMonth = new Date(f.year, f.month + 1, 0).getDate();
-    const counts = new Array(daysInMonth).fill(0);
+    const buckets: Record<string, number>[] = Array.from({ length: daysInMonth }, () => ({}));
     for (const s of sessions) {
       const d = parseInt(s.session_date.slice(8, 10), 10) - 1;
-      if (d >= 0 && d < daysInMonth) counts[d]++;
+      if (d >= 0 && d < daysInMonth) addToBucket(buckets[d], sportLabelOf(s));
     }
-    return counts.map((count, i) => ({ label: String(i + 1), count }));
+    return buckets.map((bySport, i) => ({ label: String(i + 1), bySport }));
   }
 
   if (f.mode === 'all') {
-    const map = new Map<string, number>();
+    const map = new Map<string, Record<string, number>>();
     for (const s of sessions) {
       const y = s.session_date.slice(0, 4);
-      map.set(y, (map.get(y) || 0) + 1);
+      if (!map.has(y)) map.set(y, {});
+      addToBucket(map.get(y)!, sportLabelOf(s));
     }
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, count]) => ({ label, count }));
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, bySport]) => ({ label, bySport }));
   }
 
   // range: zero-filled month buckets spanning rangeFrom..rangeTo when both are set,
@@ -167,17 +196,21 @@ export function buildChartBuckets(sessions: Session[], f: PeriodFilter): ChartBu
     const end = new Date(to.getFullYear(), to.getMonth(), 1);
     while (cursor <= end) {
       const ym = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
-      const count = sessions.filter(s => s.session_date.slice(0, 7) === ym).length;
-      buckets.push({ label: ymLabel(ym), count });
+      const bySport: Record<string, number> = {};
+      for (const s of sessions) {
+        if (s.session_date.slice(0, 7) === ym) addToBucket(bySport, sportLabelOf(s));
+      }
+      buckets.push({ label: ymLabel(ym), bySport });
       cursor.setMonth(cursor.getMonth() + 1);
     }
     return buckets;
   }
 
-  const map = new Map<string, number>();
+  const map = new Map<string, Record<string, number>>();
   for (const s of sessions) {
     const ym = s.session_date.slice(0, 7);
-    map.set(ym, (map.get(ym) || 0) + 1);
+    if (!map.has(ym)) map.set(ym, {});
+    addToBucket(map.get(ym)!, sportLabelOf(s));
   }
-  return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([ym, count]) => ({ label: ymLabel(ym), count }));
+  return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([ym, bySport]) => ({ label: ymLabel(ym), bySport }));
 }

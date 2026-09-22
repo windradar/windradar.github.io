@@ -143,7 +143,6 @@
     "statSessionsBySport": "Sessions per esport",
     "statHours": "Hores a l'aigua per esport",
     "statHoursByMaterial": "Hores per material",
-    "chartTitle": "Sessions per període",
     "noDataInPeriod": "Sense sessions en aquest període",
     "sportLabel": "Esport",
     "sportNone": "— sense esport —",

@@ -6,27 +6,38 @@ import {
   LinearScale,
   BarElement,
   Tooltip,
+  Legend,
   type ChartOptions,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import {
-  availableYears, filterSessions, computeStats, buildChartBuckets,
+  availableYears, filterSessions, computeStats, buildChartBuckets, sportColor, NO_SPORT_LABEL,
   MONTH_LABELS_ES, type Session, type PeriodMode, type PeriodFilter, type BreakdownRow,
 } from '@/lib/session-stats';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const PERIOD_MODES: PeriodMode[] = ['year', 'month', 'range', 'all'];
 
 const chartOpts: ChartOptions<'bar'> = {
   responsive: true,
   maintainAspectRatio: true,
-  plugins: { legend: { display: false } },
+  plugins: {
+    legend: { position: 'bottom', labels: { color: '#4a6a8a', font: { family: 'JetBrains Mono', size: 9 }, boxWidth: 10, padding: 8 } },
+  },
   scales: {
-    x: { ticks: { color: '#4a6a8a', font: { size: 9 }, maxTicksLimit: 16 }, grid: { display: false } },
-    y: { ticks: { color: '#4a6a8a', font: { size: 9 }, precision: 0 }, grid: { color: 'rgba(26,46,72,.4)' } },
+    x: { stacked: true, ticks: { color: '#4a6a8a', font: { size: 9 }, maxTicksLimit: 16 }, grid: { display: false } },
+    y: { stacked: true, ticks: { color: '#4a6a8a', font: { size: 9 }, precision: 0 }, grid: { color: 'rgba(26,46,72,.4)' } },
   },
 };
+
+function sortSportLabels(labels: string[]): string[] {
+  return [...labels].sort((a, b) => {
+    if (a === NO_SPORT_LABEL) return 1;
+    if (b === NO_SPORT_LABEL) return -1;
+    return a.localeCompare(b);
+  });
+}
 
 function BreakdownTile({ label, rows, unit, format, emptyLabel }: {
   label: string; rows: BreakdownRow[]; unit: string; format: (v: number) => string; emptyLabel: string;
@@ -77,6 +88,12 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
   const buckets = useMemo(() => buildChartBuckets(filtered, filter),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filtered, mode, year, month, rangeFrom, rangeTo]);
+
+  const chartSportLabels = useMemo(() => {
+    const set = new Set<string>();
+    for (const b of buckets) for (const label of Object.keys(b.bySport)) set.add(label);
+    return sortSportLabels([...set]);
+  }, [buckets]);
 
   const selectCls = 'rounded-md border border-border bg-secondary px-2 py-1.5 text-xs font-mono text-foreground outline-none focus:border-primary';
 
@@ -152,10 +169,14 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
       {stats.count > 0 ? (
         <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
           <Bar
-            key={`${mode}-${buckets.length}`}
+            key={`${mode}-${buckets.length}-${chartSportLabels.length}`}
             data={{
               labels: buckets.map(b => b.label),
-              datasets: [{ label: t('sessions.chartTitle'), data: buckets.map(b => b.count), backgroundColor: '#00d4ff99', borderColor: '#00d4ff', borderWidth: 1 }],
+              datasets: chartSportLabels.map(label => ({
+                label,
+                data: buckets.map(b => b.bySport[label] || 0),
+                backgroundColor: sportColor(label),
+              })),
             }}
             options={chartOpts}
             height={90}
