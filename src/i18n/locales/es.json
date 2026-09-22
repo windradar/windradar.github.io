@@ -134,7 +134,20 @@
     "material": "Material",
     "meteoData": "Datos meteo ({{count}} h)",
     "shareInstagram": "Compartir en Instagram",
-    "noDataForDate": "Sin datos meteo para esa fecha"
+    "noDataForDate": "Sin datos meteo para esa fecha",
+    "dashboardTitle": "📊 Resumen",
+    "periodYear": "Año",
+    "periodMonth": "Mes",
+    "periodRange": "Rango",
+    "periodAll": "Todo",
+    "statSessions": "Sesiones",
+    "statHours": "Horas en el agua",
+    "statAvgWind": "Viento medio",
+    "statMaxGust": "Racha máxima",
+    "statTopSpot": "Spot favorito",
+    "statTopMaterial": "Material favorito",
+    "chartTitle": "Sesiones por periodo",
+    "noDataInPeriod": "Sin sesiones en este periodo"
   },
   "settings": {
     "title": "⚙️ Configuración",

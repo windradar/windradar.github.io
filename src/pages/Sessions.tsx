@@ -11,33 +11,8 @@ import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/w
 import MaterialSelect from '@/components/MaterialSelect';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import SessionStoryShare from '@/components/SessionStoryShare';
-
-interface Snapshot {
-  hour: string;
-  wind_kn: number;
-  gust_kn: number;
-  dir_deg: number;
-  dir_short: string;
-  wave_m: number | null;
-  temp: number | null;
-}
-
-interface Session {
-  id: string;
-  session_date: string;
-  start_time: string;
-  end_time: string;
-  location_name: string | null;
-  location_lat: number | null;
-  location_lon: number | null;
-  weather_snapshot: Snapshot[] | null;
-  material_1: string | null;
-  material_2: string | null;
-  material_3: string | null;
-  material_4: string | null;
-  tracking_url: string | null;
-  notes: string | null;
-}
+import { SessionsDashboard } from '@/components/SessionsDashboard';
+import type { Session, Snapshot } from '@/lib/session-stats';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
@@ -49,6 +24,7 @@ export default function Sessions() {
     .refine(u => /^https?:\/\//i.test(u), t('sessions.invalidTrackingUrl'))
     .optional().or(z.literal(''));
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [displayedSessions, setDisplayedSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null); // null = nueva, id = editando
@@ -352,6 +328,10 @@ export default function Sessions() {
           </section>
         )}
 
+        {!loading && sessions.length > 0 && (
+          <SessionsDashboard sessions={sessions} onFilteredChange={setDisplayedSessions} />
+        )}
+
         {/* List */}
         <section>
           <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">Historial</h2>
@@ -362,9 +342,13 @@ export default function Sessions() {
             <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
               Aún no has registrado ninguna sesión.
             </div>
+          ) : displayedSessions.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              {t('sessions.noDataInPeriod')}
+            </div>
           ) : (
             <div className="space-y-3">
-              {sessions.map(s => (
+              {displayedSessions.map(s => (
                 <div key={s.id} className={`rounded-lg border bg-card p-4 ${editingId === s.id ? 'border-primary' : 'border-border'}`}>
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <div>

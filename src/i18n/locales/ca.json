@@ -134,7 +134,20 @@
     "material": "Material",
     "meteoData": "Dades meteo ({{count}} h)",
     "shareInstagram": "Compartir a Instagram",
-    "noDataForDate": "Sense dades meteo per a aquesta data"
+    "noDataForDate": "Sense dades meteo per a aquesta data",
+    "dashboardTitle": "📊 Resum",
+    "periodYear": "Any",
+    "periodMonth": "Mes",
+    "periodRange": "Rang",
+    "periodAll": "Tot",
+    "statSessions": "Sessions",
+    "statHours": "Hores a l'aigua",
+    "statAvgWind": "Vent mitjà",
+    "statMaxGust": "Ratxa màxima",
+    "statTopSpot": "Spot preferit",
+    "statTopMaterial": "Material preferit",
+    "chartTitle": "Sessions per període",
+    "noDataInPeriod": "Sense sessions en aquest període"
   },
   "settings": {
     "title": "⚙️ Configuració",
