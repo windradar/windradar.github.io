@@ -259,6 +259,7 @@
     "tableWater": "💧 AGUA",
     "tableWind": "💨 VIENTO (kn)",
     "tableGust": "⚡ RÁFAGA (kn)",
+    "tableWind100": "🌬️ 100 m (kn)",
     "tableDir": "🧭 DIRECCIÓN",
     "tableName": "⛵ NOMBRE",
     "tableWave": "🌊 OLA",

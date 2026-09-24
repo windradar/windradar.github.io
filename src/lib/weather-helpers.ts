@@ -104,6 +104,8 @@ export interface WeatherData {
     precipitation: number[];
     weathercode: number[];
     cloud_cover: number[];
+    wind_speed_100m?: number[];
+    wind_direction_100m?: number[];
   };
 }
 
@@ -124,6 +126,8 @@ export function normalizeArome(raw: Record<string, unknown>): WeatherData {
     wind_speed_10m: number[];
     wind_gusts_10m: number[];
     wind_direction_10m: number[];
+    wind_speed_100m?: number[];
+    wind_direction_100m?: number[];
     precipitation?: number[];
     weather_code?: number[];
   };
@@ -140,6 +144,8 @@ export function normalizeArome(raw: Record<string, unknown>): WeatherData {
       precipitation: m.precipitation ?? new Array(len).fill(0),
       weathercode: m.weather_code ?? new Array(len).fill(0),
       cloud_cover: new Array(len).fill(null),
+      wind_speed_100m: m.wind_speed_100m,
+      wind_direction_100m: m.wind_direction_100m,
     },
   };
 }

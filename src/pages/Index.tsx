@@ -60,7 +60,7 @@ export default function Index() {
 
     if (isPast) {
       setWxDetail(null);
-      const wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
+      const wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
       const [wxRes, marRes] = await Promise.all([
         fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
@@ -72,7 +72,7 @@ export default function Index() {
       setMar(marRes);
     } else {
       // 1. AROME HD 1.3 km, 15 min — fallo silencioso
-      const aromeUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&minutely_15=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weather_code&models=meteofrance_arome_france_hd&forecast_days=2&wind_speed_unit=kmh&timezone=auto`;
+      const aromeUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&minutely_15=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weather_code&models=meteofrance_arome_france_hd&forecast_days=2&wind_speed_unit=kmh&timezone=auto`;
       try {
         const aromeRaw = await fetch(aromeUrl).then(r => r.ok ? r.json() : null).catch(() => null);
         setWxDetail(aromeRaw && !aromeRaw.error ? normalizeArome(aromeRaw) : null);
@@ -81,7 +81,7 @@ export default function Index() {
       }
 
       // 2. Seamless 7 días + marine en paralelo
-      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
+      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
       const [wxRes, marRes] = await Promise.all([
         fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
@@ -481,18 +481,20 @@ export default function Index() {
           <table className="w-full min-w-[850px] border-collapse font-mono text-[0.88rem]">
             <thead>
               <tr className="bg-secondary">
-                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind'),t('index.tableGust'),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
+                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind'),t('index.tableGust'),t('index.tableWind100'),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
                   <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {!h || dayIdxs.length === 0 ? (
-                <tr><td colSpan={12} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
+                <tr><td colSpan={13} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
               ) : dayIdxs.map((idx, ri) => {
                 const ws = h.wind_speed_10m[idx] || 0;
                 const wd = h.wind_direction_10m[idx] || 0;
                 const wg = h.wind_gusts_10m[idx] || 0;
+                const ws100 = h.wind_speed_100m?.[idx];
+                const wd100 = h.wind_direction_100m?.[idx];
                 const wh = marVal('wave_height', idx) || 0;
                 const wd2 = marVal('wave_direction', idx);
                 const sst = marVal('sea_surface_temperature', idx);
@@ -515,6 +517,7 @@ export default function Index() {
                     <td className="text-center font-medium" style={{ color: rowStyle.color || '#0ea5e9' }}>{safeNum(sst, 1)}°</td>
                     <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
                     <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || (ws100 != null ? windColor(ws100) : undefined) }}>{ws100 != null ? <>{Math.round(kmhToKnots(ws100))}{wd100 != null && <span className="ml-1 text-[0.72rem]">{dirArrow(wd100)}</span>}</> : '—'}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.72rem]">{Math.round(wd)}°</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{t(`wind.names.${windIndex(wd)}`)}</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
@@ -537,6 +540,7 @@ export default function Index() {
             const ws = h.wind_speed_10m[idx] || 0;
             const wd = h.wind_direction_10m[idx] || 0;
             const wg = h.wind_gusts_10m[idx] || 0;
+            const ws100 = h.wind_speed_100m?.[idx];
             const wh = marVal('wave_height', idx) || 0;
             const sst = marVal('sea_surface_temperature', idx);
             const temp = h.temperature_2m[idx];
@@ -568,6 +572,11 @@ export default function Index() {
                     <span className="text-muted-foreground text-[0.7rem]">🧭 </span>
                     <span className="font-medium">{dirArrow(wd)} {wi.short}</span>
                   </div>
+                  {ws100 != null && (
+                    <div className="col-span-3 -mt-1 text-[0.72rem] text-muted-foreground">
+                      100 m: <span className="font-semibold" style={{ color: windColor(ws100) }}>{Math.round(kmhToKnots(ws100))} kn</span>
+                    </div>
+                  )}
                   <div>
                     <span className="text-muted-foreground text-[0.7rem]">🌊 </span>
                     <span className="font-medium" style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</span>
