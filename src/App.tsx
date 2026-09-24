@@ -6,6 +6,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ConsentProvider } from "@/hooks/useConsent";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
+import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
@@ -25,6 +26,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <PwaUpdatePrompt />
       <BrowserRouter>
         <ConsentProvider>
           <AuthProvider>

@@ -1,4 +1,8 @@
 {
+  "pwa": {
+    "newVersion": "Hay una nueva versión",
+    "reload": "Recargar"
+  },
   "common": {
     "back": "Volver",
     "save": "Guardar",
