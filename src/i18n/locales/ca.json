@@ -103,6 +103,62 @@
     "title": "Materials",
     "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió."
   },
+  "storyCard": {
+    "button": "Targeta",
+    "title": "Targeta per compartir",
+    "backToSessions": "Tornar a sessions",
+    "intro": "Tria la plantilla que s'utilitzarà per defecte en compartir una sessió i quines dades mostra. En compartir podràs canviar de plantilla.",
+    "defaultTemplate": "Plantilla per defecte",
+    "template": "Plantilla",
+    "templates": {
+      "franja": "Franja",
+      "foto": "Foto",
+      "ficha": "Fitxa"
+    },
+    "templateDesc": {
+      "franja": "Lloc en vertical i dades en files. La que admet més camps.",
+      "foto": "La foto mana i un número gran resumeix la sessió.",
+      "ficha": "Totes les dades en un panell, amb la gràfica de vent."
+    },
+    "previewSample": "Previsualització amb una sessió d'exemple.",
+    "previewLast": "Previsualització amb la teva última sessió.",
+    "fields": "Camps visibles",
+    "fieldsHint": "Els camps sense dades en una sessió no apareixen. El QR només surt si la sessió té enllaç de tracking.",
+    "fieldNames": {
+      "loc": "Lloc",
+      "date": "Data",
+      "time": "Horari",
+      "sport": "Esport",
+      "wind": "Vent mitjà",
+      "gust": "Ratxa",
+      "dir": "Direcció",
+      "wave": "Onades",
+      "temp": "Temperatura",
+      "dur": "Durada",
+      "chart": "Gràfica",
+      "mats": "Equip",
+      "notes": "Notes",
+      "qr": "QR tracking"
+    },
+    "position": "Posició de les dades",
+    "positions": {
+      "top": "A dalt",
+      "mid": "Centre",
+      "bottom": "A baix"
+    },
+    "alignment": "Alineació",
+    "aligns": {
+      "left": "Esquerra",
+      "center": "Centre"
+    },
+    "testPhoto": "Provar amb foto",
+    "uploadPhoto": "Pujar foto",
+    "removePhoto": "Treure foto",
+    "photoError": "No s'ha pogut carregar la imatge",
+    "reset": "Restablir",
+    "resetDone": "Targeta restablerta",
+    "savedHint": "Els canvis es desen automàticament en aquest dispositiu."
+  },
   "sessions": {
     "title": "Sessions",
     "newSession": "Nova",

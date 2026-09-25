@@ -103,6 +103,62 @@
     "title": "Materiales",
     "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión."
   },
+  "storyCard": {
+    "button": "Tarjeta",
+    "title": "Tarjeta para compartir",
+    "backToSessions": "Volver a sesiones",
+    "intro": "Elige la plantilla que se usará por defecto al compartir una sesión y qué datos muestra. Al compartir podrás cambiar de plantilla.",
+    "defaultTemplate": "Plantilla por defecto",
+    "template": "Plantilla",
+    "templates": {
+      "franja": "Franja",
+      "foto": "Foto",
+      "ficha": "Ficha"
+    },
+    "templateDesc": {
+      "franja": "Lugar en vertical y datos en filas. La que más campos admite.",
+      "foto": "La foto manda y un número grande resume la sesión.",
+      "ficha": "Todos los datos en un panel, con la gráfica de viento."
+    },
+    "previewSample": "Vista previa con una sesión de ejemplo.",
+    "previewLast": "Vista previa con tu última sesión.",
+    "fields": "Campos visibles",
+    "fieldsHint": "Los campos sin datos en una sesión no aparecen. El QR solo sale si la sesión tiene enlace de tracking.",
+    "fieldNames": {
+      "loc": "Lugar",
+      "date": "Fecha",
+      "time": "Horario",
+      "sport": "Deporte",
+      "wind": "Viento medio",
+      "gust": "Racha",
+      "dir": "Dirección",
+      "wave": "Olas",
+      "temp": "Temperatura",
+      "dur": "Duración",
+      "chart": "Gráfica",
+      "mats": "Equipo",
+      "notes": "Notas",
+      "qr": "QR tracking"
+    },
+    "position": "Posición de los datos",
+    "positions": {
+      "top": "Arriba",
+      "mid": "Centro",
+      "bottom": "Abajo"
+    },
+    "alignment": "Alineación",
+    "aligns": {
+      "left": "Izquierda",
+      "center": "Centro"
+    },
+    "testPhoto": "Probar con foto",
+    "uploadPhoto": "Subir foto",
+    "removePhoto": "Quitar foto",
+    "photoError": "No se pudo cargar la imagen",
+    "reset": "Restablecer",
+    "resetDone": "Tarjeta restablecida",
+    "savedHint": "Los cambios se guardan automáticamente en este dispositivo."
+  },
   "sessions": {
     "title": "Sesiones",
     "newSession": "Nueva",

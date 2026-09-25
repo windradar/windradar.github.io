@@ -13,6 +13,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Profile from "./pages/Profile.tsx";
 import Sessions from "./pages/Sessions.tsx";
 import Materials from "./pages/Materials.tsx";
+import StoryCardEditor from "./pages/StoryCardEditor.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Notice from "./pages/legal/Notice.tsx";
 import Privacy from "./pages/legal/Privacy.tsx";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+              <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
               <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
               <Route path="/help" element={<Help />} />
               <Route path="/legal/notice" element={<Notice />} />

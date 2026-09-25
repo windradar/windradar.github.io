@@ -102,6 +102,62 @@
     "title": "Matériel",
     "description": "Personnalisez le nom de chaque emplacement (Voiles, Planches...) et ajoutez votre matériel. Il apparaîtra en liste déroulante lors de l'enregistrement d'une session."
   },
+  "storyCard": {
+    "button": "Carte",
+    "title": "Carte à partager",
+    "backToSessions": "Retour aux sessions",
+    "intro": "Choisissez le modèle utilisé par défaut pour partager une session et les données affichées. Vous pourrez changer de modèle au moment du partage.",
+    "defaultTemplate": "Modèle par défaut",
+    "template": "Modèle",
+    "templates": {
+      "franja": "Bande",
+      "foto": "Photo",
+      "ficha": "Fiche"
+    },
+    "templateDesc": {
+      "franja": "Spot à la verticale et données en lignes. Celui qui accepte le plus de champs.",
+      "foto": "La photo domine et un grand chiffre résume la session.",
+      "ficha": "Toutes les données dans un panneau, avec le graphique du vent."
+    },
+    "previewSample": "Aperçu avec une session d'exemple.",
+    "previewLast": "Aperçu avec votre dernière session.",
+    "fields": "Champs visibles",
+    "fieldsHint": "Les champs sans données pour une session sont masqués. Le QR n'apparaît que si la session a un lien de tracking.",
+    "fieldNames": {
+      "loc": "Spot",
+      "date": "Date",
+      "time": "Horaire",
+      "sport": "Sport",
+      "wind": "Vent moyen",
+      "gust": "Rafale",
+      "dir": "Direction",
+      "wave": "Vagues",
+      "temp": "Température",
+      "dur": "Durée",
+      "chart": "Graphique",
+      "mats": "Matériel",
+      "notes": "Notes",
+      "qr": "QR tracking"
+    },
+    "position": "Position des données",
+    "positions": {
+      "top": "Haut",
+      "mid": "Centre",
+      "bottom": "Bas"
+    },
+    "alignment": "Alignement",
+    "aligns": {
+      "left": "Gauche",
+      "center": "Centre"
+    },
+    "testPhoto": "Essayer avec une photo",
+    "uploadPhoto": "Importer une photo",
+    "removePhoto": "Retirer la photo",
+    "photoError": "Impossible de charger l'image",
+    "reset": "Réinitialiser",
+    "resetDone": "Carte réinitialisée",
+    "savedHint": "Les modifications sont enregistrées automatiquement sur cet appareil."
+  },
   "sessions": {
     "title": "Sessions",
     "newSession": "Nouvelle",

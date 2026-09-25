@@ -102,6 +102,62 @@
     "title": "Materials",
     "description": "Customise each slot name (Sails, Boards...) and add your equipment. They'll appear as a dropdown when logging a session."
   },
+  "storyCard": {
+    "button": "Card",
+    "title": "Share card",
+    "backToSessions": "Back to sessions",
+    "intro": "Choose the default template for sharing a session and which data it shows. You can switch template when sharing.",
+    "defaultTemplate": "Default template",
+    "template": "Template",
+    "templates": {
+      "franja": "Strip",
+      "foto": "Photo",
+      "ficha": "Sheet"
+    },
+    "templateDesc": {
+      "franja": "Vertical spot name and data in rows. Fits the most fields.",
+      "foto": "The photo leads and one big number sums up the session.",
+      "ficha": "All data in a panel, with the wind chart."
+    },
+    "previewSample": "Preview with a sample session.",
+    "previewLast": "Preview with your latest session.",
+    "fields": "Visible fields",
+    "fieldsHint": "Fields without data for a session are hidden. The QR only shows if the session has a tracking link.",
+    "fieldNames": {
+      "loc": "Spot",
+      "date": "Date",
+      "time": "Time",
+      "sport": "Sport",
+      "wind": "Avg wind",
+      "gust": "Gust",
+      "dir": "Direction",
+      "wave": "Waves",
+      "temp": "Temperature",
+      "dur": "Duration",
+      "chart": "Chart",
+      "mats": "Gear",
+      "notes": "Notes",
+      "qr": "Tracking QR"
+    },
+    "position": "Data position",
+    "positions": {
+      "top": "Top",
+      "mid": "Middle",
+      "bottom": "Bottom"
+    },
+    "alignment": "Alignment",
+    "aligns": {
+      "left": "Left",
+      "center": "Center"
+    },
+    "testPhoto": "Try with a photo",
+    "uploadPhoto": "Upload photo",
+    "removePhoto": "Remove photo",
+    "photoError": "Could not load the image",
+    "reset": "Reset",
+    "resetDone": "Card reset",
+    "savedHint": "Changes are saved automatically on this device."
+  },
   "sessions": {
     "title": "Sessions",
     "newSession": "New",

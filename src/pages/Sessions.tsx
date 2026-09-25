@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ExternalLink, Pencil, X, Share2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink, Pencil, X, Share2, LayoutTemplate } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -242,11 +242,19 @@ export default function Sessions() {
 
         <div className="mb-6 flex items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-extrabold">⛵ {t('sessions.title')}</h1>
-          <button
-            onClick={() => showForm ? (resetForm(), setShowForm(false)) : openNewForm()}
-            className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110">
-            {showForm ? <><X size={16} /> {t('common.close')}</> : <><Plus size={16} /> {t('sessions.newSession')}</>}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/sessions/card"
+              title={t('storyCard.title')}
+              className="flex items-center gap-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm font-bold text-foreground hover:bg-secondary/70">
+              <LayoutTemplate size={16} /> {t('storyCard.button')}
+            </Link>
+            <button
+              onClick={() => showForm ? (resetForm(), setShowForm(false)) : openNewForm()}
+              className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110">
+              {showForm ? <><X size={16} /> {t('common.close')}</> : <><Plus size={16} /> {t('sessions.newSession')}</>}
+            </button>
+          </div>
         </div>
 
         {showForm && (
