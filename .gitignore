@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code, Supabase CLI y workspace local
+.claude/
+supabase/.temp/
+*.code-workspace
