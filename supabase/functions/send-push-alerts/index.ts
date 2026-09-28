@@ -12,7 +12,8 @@
 //   VAPID_KEYS     – JSON {"publicKey": JWK, "privateKey": JWK}
 //   VAPID_SUBJECT  – contact for push services, e.g. mailto:you@example.com
 //
-// Deploy with --no-verify-jwt: the cron sends CRON_SECRET, not a JWT.
+// Deploy like the other alert functions (JWT verification on; CRON_SECRET is a JWT):
+//   npx supabase functions deploy send-push-alerts --project-ref nextrkzcyddprywyvhsa
 //
 // TEST MODE: POST with a valid user JWT — pushes immediately to that user's
 // devices, ignoring the time schedule and the threshold.
