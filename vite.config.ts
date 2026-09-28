@@ -38,6 +38,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: "index.html",
+        importScripts: ["push-sw.js"],
         runtimeCaching: [
           {
             // Open-Meteo: siempre red primero; la copia solo sirve sin conexión

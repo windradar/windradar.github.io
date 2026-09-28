@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Send, Plus, Trash2 } from 'lucide-react';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
+import { PushAlertSection } from '@/components/PushAlertSection';
 
 export interface SpotConfig {
   id: string;
@@ -327,7 +328,8 @@ export function SettingsPanel({
 
       let waLat: number | null = null;
       let waLon: number | null = null;
-      if (local.whatsappAlertEnabled && local.whatsappAlertLocation.trim()) {
+      // Geocoded even with WhatsApp off: push alerts share this location
+      if (local.whatsappAlertLocation.trim()) {
         const geo = await geocode(local.whatsappAlertLocation.trim());
         if (!geo) {
           toast.error(t('settings.geoError'));
@@ -545,33 +547,10 @@ export function SettingsPanel({
               </section>
 
               <section>
-                <div className="mb-2 flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-foreground">{t('settings.whatsappAlert')}</h4>
-                  <Switch checked={local.whatsappAlertEnabled} onCheckedChange={v => update({ whatsappAlertEnabled: v })} disabled={emailLoading} />
-                </div>
-                <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.whatsappAlertDesc')}</p>
+                <h4 className="mb-2 text-sm font-bold text-foreground">{t('settings.windAlerts')}</h4>
+                <p className="mb-3 text-[0.7rem] text-muted-foreground">{t('settings.windAlertsDesc')}</p>
 
-                {!user && local.whatsappAlertEnabled && (
-                  <p className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
-                    {t('settings.loginRequired')}
-                  </p>
-                )}
-
-                <div className={`space-y-3 transition-opacity ${local.whatsappAlertEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
-                  <div className="rounded-md border border-green-500/20 bg-green-500/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
-                    <strong className="text-green-600">📱</strong> {t('settings.callmebotActivation')}
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.callmebotApiKey')}</label>
-                    <input
-                      value={local.callmebotApiKey}
-                      onChange={e => update({ callmebotApiKey: e.target.value })}
-                      placeholder="1234567"
-                      className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
-                    />
-                  </div>
-
+                <div className="space-y-3">
                   <div className="flex flex-col gap-1">
                     <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.locationLabel')}</label>
                     <input
@@ -619,18 +598,50 @@ export function SettingsPanel({
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
-                    <strong className="text-primary">ℹ️</strong> {t('settings.whatsappAlertNote')}
+                  <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <h5 className="text-[0.8rem] font-bold text-foreground">{t('settings.whatsappAlert')}</h5>
+                      <Switch checked={local.whatsappAlertEnabled} onCheckedChange={v => update({ whatsappAlertEnabled: v })} disabled={emailLoading} />
+                    </div>
+                    <p className="text-[0.7rem] text-muted-foreground">{t('settings.whatsappAlertDesc')}</p>
+
+                    {!user && local.whatsappAlertEnabled && (
+                      <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[0.7rem] text-amber-700">
+                        {t('settings.loginRequired')}
+                      </p>
+                    )}
+
+                    <div className={`space-y-3 transition-opacity ${local.whatsappAlertEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
+                      <div className="rounded-md border border-green-500/20 bg-green-500/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                        <strong className="text-green-600">📱</strong> {t('settings.callmebotActivation')}
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.callmebotApiKey')}</label>
+                        <input
+                          value={local.callmebotApiKey}
+                          onChange={e => update({ callmebotApiKey: e.target.value })}
+                          placeholder="1234567"
+                          className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-[0.67rem] leading-relaxed text-muted-foreground">
+                        <strong className="text-primary">ℹ️</strong> {t('settings.whatsappAlertNote')}
+                      </div>
+
+                      <button
+                        onClick={handleTestWhatsapp}
+                        disabled={testingWa || !user}
+                        className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-[0.75rem] font-semibold text-green-700 transition-all hover:bg-green-500/20 disabled:opacity-50 dark:text-green-400"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        {testingWa ? t('settings.testWhatsappSending') : t('settings.testWhatsapp')}
+                      </button>
+                    </div>
                   </div>
 
-                  <button
-                    onClick={handleTestWhatsapp}
-                    disabled={testingWa || !user}
-                    className="flex items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-[0.75rem] font-semibold text-green-700 transition-all hover:bg-green-500/20 disabled:opacity-50 dark:text-green-400"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    {testingWa ? t('settings.testWhatsappSending') : t('settings.testWhatsapp')}
-                  </button>
+                  <PushAlertSection />
                 </div>
               </section>
             </div>
