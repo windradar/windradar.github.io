@@ -12,8 +12,8 @@
 //   VAPID_KEYS     – JSON {"publicKey": JWK, "privateKey": JWK}
 //   VAPID_SUBJECT  – contact for push services, e.g. mailto:you@example.com
 //
-// Deploy like the other alert functions (JWT verification on; CRON_SECRET is a JWT):
-//   npx supabase functions deploy send-push-alerts --project-ref nextrkzcyddprywyvhsa
+// JWT verification must be off (supabase/config.toml): CRON_SECRET is not a JWT,
+// so the gateway would reject the cron call before reaching the check below.
 //
 // TEST MODE: POST with a valid user JWT — pushes immediately to that user's
 // devices, ignoring the time schedule and the threshold.

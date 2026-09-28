@@ -1,1 +1,12 @@
 project_id = "nextrkzcyddprywyvhsa"
+
+# The pg_cron jobs authenticate with CRON_SECRET (not a JWT); each function
+# checks CRON_SECRET or the user session itself
+[functions.send-forecast-email]
+verify_jwt = false
+
+[functions.send-whatsapp-alerts]
+verify_jwt = false
+
+[functions.send-push-alerts]
+verify_jwt = false
