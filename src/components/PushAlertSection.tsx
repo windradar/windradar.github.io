@@ -32,8 +32,10 @@ export function PushAlertSection() {
       setStatus(next);
       if (next === 'on') toast.success(t('settings.pushEnabled'));
       else if (status === 'on') toast.success(t('settings.pushDisabled'));
-    } catch {
-      toast.error(t('settings.pushError'));
+    } catch (err) {
+      // Browser/push-service errors vary a lot (Brave, blocked OS notifications…); show the cause
+      const detail = err instanceof Error ? `${err.name}: ${err.message}` : (err as { message?: string })?.message;
+      toast.error(t('settings.pushError'), { description: detail });
     } finally {
       setBusy(false);
     }
