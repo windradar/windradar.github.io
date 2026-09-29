@@ -26,7 +26,8 @@ export function UserMenu({ settings, onSettingsChange, onShareWhatsapp }: UserMe
     return (
       <Link
         to="/auth"
-        className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-bold text-foreground transition hover:border-primary hover:text-primary"
+        aria-label={t('nav.signIn')}
+        className="flex h-[42px] items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 text-xs font-bold text-foreground transition hover:border-primary hover:text-primary"
       >
         <LogIn size={14} />
         <span className="hidden sm:inline">{t('nav.signIn')}</span>
@@ -42,7 +43,7 @@ export function UserMenu({ settings, onSettingsChange, onShareWhatsapp }: UserMe
         <DropdownMenuTrigger asChild>
           <button
             aria-label={t('nav.profile')}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-xs font-bold text-primary transition hover:border-primary"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-xs font-bold text-primary transition hover:border-primary"
           >
             {initials}
           </button>

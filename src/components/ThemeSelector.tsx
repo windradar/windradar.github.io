@@ -28,8 +28,9 @@ export function ThemeSelector() {
   return (
     <button
       onClick={cycleTheme}
-      className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary"
+      className="flex h-[42px] items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 text-xs font-medium text-foreground transition-colors hover:border-primary"
       title={META[theme].title}
+      aria-label={`${META[theme].label}. ${META[theme].title}`}
     >
       <span>{META[theme].icon}</span>
       <span className="hidden sm:inline">{META[theme].label}</span>

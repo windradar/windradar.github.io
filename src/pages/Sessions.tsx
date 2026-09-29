@@ -276,8 +276,8 @@ export default function Sessions() {
                 {locName && <p className="mt-1 text-xs text-primary">📍 {locName}</p>}
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="col-span-2 sm:col-span-1">
                   <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.dateLabel')}</label>
                   <input type="date" value={date} onChange={e => setDate(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary" />
@@ -401,17 +401,20 @@ export default function Sessions() {
                       <button
                         onClick={() => setStorySession(s)}
                         title="Compartir en Instagram"
-                        className="text-muted-foreground hover:text-pink-500">
+                        aria-label="Compartir en Instagram"
+                        className="rounded-md p-2 text-muted-foreground hover:text-pink-500">
                         <Share2 size={15} />
                       </button>
                       <button onClick={() => openEditForm(s)}
                         title="Editar"
-                        className="text-muted-foreground hover:text-primary">
+                        aria-label="Editar sesión"
+                        className="rounded-md p-2 text-muted-foreground hover:text-primary">
                         <Pencil size={15} />
                       </button>
                       <button onClick={() => deleteSession(s.id)}
                         title="Eliminar"
-                        className="text-muted-foreground hover:text-destructive">
+                        aria-label="Eliminar sesión"
+                        className="rounded-md p-2 text-muted-foreground hover:text-destructive">
                         <Trash2 size={16} />
                       </button>
                     </div>

@@ -12,6 +12,7 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { memo, useMemo } from 'react';
+import { useChartTheme, type ChartTheme } from '@/hooks/useChartTheme';
 import { Line, Bar } from 'react-chartjs-2';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
 import { waveColor, localDateStr } from '@/lib/weather-helpers';
@@ -27,19 +28,19 @@ interface Props {
   wxDetail?: WeatherData | null;
 }
 
-const commonOpts = {
-  responsive: true,
-  maintainAspectRatio: true,
-  plugins: {
-    legend: { labels: { color: '#4a6a8a', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } }
-  },
-  scales: {
-    x: { ticks: { color: '#4a6a8a', font: { size: 8 }, maxTicksLimit: 12 }, grid: { color: 'rgba(26,46,72,.4)' } },
-    y: { ticks: { color: '#4a6a8a', font: { size: 9 } }, grid: { color: 'rgba(26,46,72,.4)' } }
-  }
-};
-const lineOpts: ChartOptions<'line'> = commonOpts;
-const barOpts: ChartOptions<'bar'> = commonOpts;
+function buildOpts({ text, grid }: ChartTheme) {
+  return {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { labels: { color: text, font: { family: 'JetBrains Mono', size: 11 }, boxWidth: 12 } }
+    },
+    scales: {
+      x: { ticks: { color: text, font: { size: 10 }, maxTicksLimit: 12 }, grid: { color: grid } },
+      y: { ticks: { color: text, font: { size: 10 } }, grid: { color: grid } }
+    }
+  };
+}
 
 // Stable data objects: react-chartjs-2 updates the chart whenever `data` changes identity
 function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string, unit: WindUnit) {
@@ -137,6 +138,11 @@ function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: Weath
 export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props) {
   const today = localDateStr(new Date());
   const unit = useWindUnit();
+  const chartTheme = useChartTheme();
+  const { lineOpts, barOpts } = useMemo(() => {
+    const opts = buildOpts(chartTheme);
+    return { lineOpts: opts as ChartOptions<'line'>, barOpts: opts as ChartOptions<'bar'> };
+  }, [chartTheme]);
   const charts = useMemo(() => buildChartData(wx, mar, wxDetail, today, unit), [wx, mar, wxDetail, today, unit]);
   if (!charts) return null;
 

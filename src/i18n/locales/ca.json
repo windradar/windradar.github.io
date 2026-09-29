@@ -17,6 +17,9 @@
     "message": "Aquesta pàgina no existeix.",
     "home": "Tornar a l'inici"
   },
+  "offline": {
+    "message": "Sense connexió: la previsió pot no estar actualitzada"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sessions",
@@ -308,6 +311,15 @@
     "configureCookies": "Configurar cookies"
   },
   "index": {
+    "dateLabel": "Data de la previsió",
+    "errors": {
+      "offline": "No hi ha connexió. Comprova la xarxa i torna-ho a provar.",
+      "tooMany": "Massa consultes seguides. Espera un minut i torna-ho a provar.",
+      "server": "El servei meteorològic no respon ara mateix. Torna-ho a provar d'aquí a uns minuts.",
+      "noArchive": "Encara no hi ha dades històriques per a aquest dia. Prova una altra data o torna més tard.",
+      "generic": "No s'ha pogut carregar la previsió. Torna-ho a provar.",
+      "retry": "Tornar-ho a provar"
+    },
     "loadingText": "Descarregant previsió meteorològica...",
     "conditionsTitle": "Condicions actuals",
     "searchPrompt": "Introdueix una ubicació i prem CERCAR per carregar la previsió",

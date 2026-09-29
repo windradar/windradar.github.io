@@ -106,10 +106,10 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
                 </button>
                 <button
                   onClick={() => { removeFavorite(f.lat, f.lon); reload(); onFavChanged?.(); }}
-                  className="rounded p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
-                  aria-label={t('common.close')}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
+                  aria-label={`Eliminar ${f.name}`}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             ))}

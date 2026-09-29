@@ -41,7 +41,7 @@ export function CookieBanner() {
           </div>
           <button
             onClick={() => setExpanded(e => !e)}
-            className="rounded text-muted-foreground hover:text-foreground"
+            className="rounded-md p-2 text-muted-foreground hover:text-foreground"
             aria-label="Configurar cookies"
             title="Configurar"
           >

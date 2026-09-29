@@ -32,6 +32,18 @@ function isAbortError(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
 }
 
+// i18n key for a user-facing message; the raw error goes to the console
+function fetchErrorKey(e: unknown, isPastDate: boolean): string {
+  console.error('Forecast error:', e);
+  if (!navigator.onLine || e instanceof TypeError) return 'index.errors.offline';
+  const status = Number(/^HTTP (\d+)/.exec(e instanceof Error ? e.message : '')?.[1]);
+  if (status === 429) return 'index.errors.tooMany';
+  if (status >= 500) return 'index.errors.server';
+  // Open-Meteo answers 400 (or error:true) when the archive has no data for that day yet
+  if (isPastDate) return 'index.errors.noArchive';
+  return 'index.errors.generic';
+}
+
 export default function Index() {
   const { t, i18n } = useTranslation();
   const langLocale = LANG_LOCALE[i18n.language] || 'es-ES';
@@ -134,9 +146,9 @@ export default function Index() {
     } catch (e) {
       if (isAbortError(e)) return;
       setLoading(false);
-      setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+      setError(t(fetchErrorKey(e, date < localDateStr(new Date()))));
     }
-  }, [fetchWeather, date]);
+  }, [fetchWeather, date, t]);
 
   // Auto-load last search on mount
   useEffect(() => {
@@ -180,10 +192,10 @@ export default function Index() {
       } catch (e) {
         if (isAbortError(e)) return;
         setLoading(false);
-        setError('Error: ' + (e instanceof Error ? e.message : String(e)));
+        setError(t(fetchErrorKey(e, newDate < localDateStr(new Date()))));
       }
     }
-  }, [lat, lon, fetchWeather]);
+  }, [lat, lon, fetchWeather, t]);
 
   // Active data source: AROME when it covers the selected date, else seamless
   const wxDetailCoversDate = !!wxDetail?.hourly.time.some(t => t.slice(0, 10) === date);
@@ -314,19 +326,32 @@ export default function Index() {
     return false;
   }, [wx, today, matchedSpot, settings.minWindKn]);
 
+  const dateInput = (
+    <input
+      type="date"
+      value={date}
+      min={minDate}
+      max={maxDate}
+      onChange={e => handleDateChange(e.target.value)}
+      aria-label={t('index.dateLabel')}
+      className="h-[42px] w-[132px] rounded-lg border border-border bg-secondary px-2 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary sm:w-auto sm:px-2.5"
+    />
+  );
+
   return (
     <div className="relative z-[1] min-h-screen">
-      {/* Spinner */}
+      {/* Top progress bar: loading no longer blocks the page (header and search stay usable) */}
       <AnimatePresence>
         {loading && (
           <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 bg-background/90 backdrop-blur-lg"
+            role="progressbar"
+            aria-label={loadingText}
+            className="fixed inset-x-0 top-0 z-[200] h-0.5 overflow-hidden bg-primary/20"
           >
-            <div className="h-11 w-11 rounded-full border-[3px] border-border border-t-primary animate-spin" />
-            <div className="text-xs tracking-widest text-muted-foreground">{loadingText}</div>
+            <div className="h-full w-1/3 animate-loadbar bg-primary" />
           </m.div>
         )}
       </AnimatePresence>
@@ -351,14 +376,8 @@ export default function Index() {
                 setFavKey(k => k + 1);
               }}
             />
-            <input
-              type="date"
-              value={date}
-              min={minDate}
-              max={maxDate}
-              onChange={e => handleDateChange(e.target.value)}
-              className="min-w-0 max-w-[130px] flex-shrink rounded-lg border border-border bg-secondary px-1.5 py-2 font-mono text-[0.7rem] text-foreground outline-none focus:border-primary sm:px-2.5 sm:text-[0.78rem]"
-            />
+            <div className="hidden sm:block">{dateInput}</div>
+            <div className="flex-1 sm:hidden" />
             <ThemeSelector />
             <LanguageSelector />
             <UserMenu
@@ -367,14 +386,21 @@ export default function Index() {
               onShareWhatsapp={wx ? () => setWhatsappModalOpen(true) : undefined}
             />
           </div>
+          {/* Mobile: search and date get their own row instead of squeezing into the first one */}
           <div className="mt-2 flex items-center gap-2 sm:hidden">
-            <SearchWithSuggestions onSelect={doSearch} />
+            <div className="min-w-0 flex-1">
+              <SearchWithSuggestions onSelect={doSearch} />
+            </div>
+            {dateInput}
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="relative z-[1] mx-auto max-w-[1300px] px-3 py-4 sm:py-6 md:px-5">
+      <main
+        aria-busy={loading}
+        className={`relative z-[1] mx-auto max-w-[1300px] px-3 py-4 transition-opacity duration-200 sm:py-6 md:px-5 ${loading && wx ? 'opacity-60' : ''}`}
+      >
         {/* Location bar */}
         <div className="mb-4 flex flex-wrap items-baseline gap-2 sm:gap-3">
           <h1 className="font-display text-xl font-extrabold tracking-tight sm:text-2xl md:text-3xl">{name}</h1>
@@ -418,14 +444,27 @@ export default function Index() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            ⚠️ {error}
+          <div role="alert" className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <span className="min-w-0 flex-1">⚠️ {error}</span>
+            {lat !== null && lon !== null && (
+              <button
+                onClick={() => handleDateChange(date)}
+                className="rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-bold hover:bg-destructive/10"
+              >
+                {t('index.errors.retry')}
+              </button>
+            )}
           </div>
         )}
 
         <SectionTitle>{t('index.conditionsTitle')}</SectionTitle>
 
-        {!wx ? (
+        {!wx && loading ? (
+          <div className="mb-6 flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card p-10">
+            <div className="h-9 w-9 rounded-full border-[3px] border-border border-t-primary animate-spin" />
+            <div className="text-xs tracking-widest text-muted-foreground">{loadingText}</div>
+          </div>
+        ) : !wx ? (
           <div className="mb-6 space-y-3">
             <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground sm:p-8">
               {t('index.searchPrompt')}
@@ -498,7 +537,8 @@ export default function Index() {
               <button
                 key={r}
                 onClick={() => setTableResolution(r)}
-                className={`rounded-md border px-2 py-0.5 font-mono text-[0.65rem] transition-colors ${tableResolution === r ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:border-primary/40'}`}
+                aria-pressed={tableResolution === r}
+                className={`min-h-[34px] rounded-md border px-3 py-1.5 font-mono text-[0.72rem] transition-colors ${tableResolution === r ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-border bg-secondary text-muted-foreground hover:border-primary/40'}`}
               >
                 {r}
               </button>

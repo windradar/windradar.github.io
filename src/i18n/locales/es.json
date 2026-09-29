@@ -17,6 +17,9 @@
     "message": "Esta página no existe.",
     "home": "Volver al inicio"
   },
+  "offline": {
+    "message": "Sin conexión: la previsión puede no estar actualizada"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sesiones",
@@ -308,6 +311,15 @@
     "configureCookies": "Configurar cookies"
   },
   "index": {
+    "dateLabel": "Fecha de la previsión",
+    "errors": {
+      "offline": "No hay conexión. Comprueba tu red e inténtalo de nuevo.",
+      "tooMany": "Demasiadas consultas seguidas. Espera un minuto y vuelve a intentarlo.",
+      "server": "El servicio meteorológico no responde ahora mismo. Inténtalo en unos minutos.",
+      "noArchive": "Todavía no hay datos históricos para ese día. Prueba con otra fecha o vuelve más tarde.",
+      "generic": "No se pudo cargar la previsión. Inténtalo de nuevo.",
+      "retry": "Reintentar"
+    },
     "loadingText": "Descargando previsión meteorológica...",
     "conditionsTitle": "Condiciones actuales",
     "searchPrompt": "Introduce una ubicación y pulsa BUSCAR para cargar la previsión",

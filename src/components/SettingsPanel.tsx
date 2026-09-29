@@ -111,8 +111,8 @@ function SpotRow({ spot, onChange, onDelete }: {
           placeholder="Nombre del spot"
           className="flex-1 rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary"
         />
-        <button onClick={onDelete} className="rounded p-1 text-muted-foreground hover:text-destructive">
-          <Trash2 className="h-3.5 w-3.5" />
+        <button onClick={onDelete} aria-label="Eliminar spot" className="rounded-md p-2 text-muted-foreground hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
       <SearchWithSuggestions

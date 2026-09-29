@@ -24,7 +24,7 @@ export function LanguageSelector() {
   return (
     <button
       onClick={() => i18n.changeLanguage(next.code)}
-      className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground transition-colors hover:border-primary"
+      className="flex h-[42px] items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 text-xs font-medium text-foreground transition-colors hover:border-primary"
       title={`${current.label} → ${next.label}`}
       aria-label={`Idioma: ${current.label}. Cambiar a ${next.label}`}
     >

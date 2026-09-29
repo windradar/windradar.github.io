@@ -15,6 +15,7 @@ import { Line } from 'react-chartjs-2';
 import type { WeatherData } from '@/lib/weather-helpers';
 import { localDateStr, humanDate } from '@/lib/weather-helpers';
 import { useWindUnit, convertKmh, WIND_UNIT_LABEL } from '@/lib/wind-units';
+import { useChartTheme } from '@/hooks/useChartTheme';
 
 interface WindApiResponse {
   hourly: {
@@ -105,25 +106,26 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
   };
 
   const unit = useWindUnit();
+  const { text, grid } = useChartTheme();
 
   // Stable options: react-chartjs-2 updates the chart whenever they change identity
   const baseOpts = useMemo<ChartOptions<'line'>>(() => ({
     responsive: true,
     maintainAspectRatio: true,
     plugins: {
-      legend: { labels: { color: '#4a6a8a', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } },
+      legend: { labels: { color: text, font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } },
       tooltip: { mode: 'index', intersect: false },
     },
     scales: {
-      x: { ticks: { color: '#4a6a8a', font: { size: 8 }, maxTicksLimit: 12 }, grid: { color: 'rgba(26,46,72,.4)' } },
+      x: { ticks: { color: text, font: { size: 10 }, maxTicksLimit: 12 }, grid: { color: grid } },
       y: {
-        title: { display: true, text: WIND_UNIT_LABEL[unit], color: '#4a6a8a', font: { size: 9 } },
-        ticks: { color: '#4a6a8a', font: { size: 9 } },
-        grid: { color: 'rgba(26,46,72,.4)' },
+        title: { display: true, text: WIND_UNIT_LABEL[unit], color: text, font: { size: 9 } },
+        ticks: { color: text, font: { size: 10 } },
+        grid: { color: grid },
       },
     },
     interaction: { mode: 'index', intersect: false },
-  }), [unit]);
+  }), [unit, text, grid]);
 
   const hasData = todayData && compareData;
 

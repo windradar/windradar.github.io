@@ -99,13 +99,14 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
           onChange={e => handleChange(e.target.value)}
           onFocus={handleFocus}
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-          className={`w-full rounded-lg border border-border bg-secondary font-mono text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary ${compact ? 'py-1.5 pl-8 pr-7 text-[0.78rem]' : 'py-2.5 pl-9 pr-8 text-sm'}`}
+          className={`w-full rounded-lg border border-border bg-secondary font-mono text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary ${compact ? 'py-1.5 pl-8 pr-9 text-[0.78rem]' : 'py-2.5 pl-9 pr-10 text-sm'}`}
           placeholder={compact ? 'Ciudad, País...' : t('search.placeholder')}
         />
         {query && (
           <button
             onClick={() => { setQuery(''); setResults([]); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+            aria-label="Borrar búsqueda"
+            className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -113,6 +114,7 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
       </div>
       <button
         onClick={handleSubmit}
+        aria-label={t('search.searchBtn')}
         className={`flex-shrink-0 whitespace-nowrap rounded-lg bg-primary font-display font-bold tracking-wider text-primary-foreground transition-all hover:brightness-110 ${compact ? 'px-2.5 py-1.5 text-[0.72rem]' : 'px-4 py-2.5 text-[0.78rem] hover:-translate-y-0.5'}`}
       >
         {compact ? <Search className="h-3.5 w-3.5" /> : (

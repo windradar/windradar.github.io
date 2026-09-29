@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { WindUnitSync } from "@/components/WindUnitSync";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { lazy, Suspense } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 import Index from "./pages/Index.tsx";
@@ -36,6 +37,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <PwaUpdatePrompt />
+      <OfflineIndicator />
       <BrowserRouter>
         <ConsentProvider>
           <AuthProvider>

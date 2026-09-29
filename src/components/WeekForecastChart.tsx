@@ -98,7 +98,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
         <span className="text-[0.62rem] uppercase tracking-widest text-muted-foreground">
           {t('chart.forecast7days')}
         </span>
-        <span className="flex items-center gap-2 text-[0.58rem] text-muted-foreground">
+        <span className="flex items-center gap-2 text-[0.65rem] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="inline-block h-2.5 w-3.5 rounded-sm bg-[#44cc88] opacity-80" />
             {t('chart.wind')}
@@ -108,7 +108,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
             {t('chart.gust')}
           </span>
           {hasArome && (
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.52rem] uppercase tracking-widest text-primary">
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary">
               AROME HD · días 1-2
             </span>
           )}
@@ -125,7 +125,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                 style={{ width: dg.count * SLOT_W, flexShrink: 0 }}
                 className="overflow-hidden border-l border-border/50 pl-0.5"
               >
-                <span className="whitespace-nowrap text-[0.52rem] font-bold text-primary/80">
+                <span className="whitespace-nowrap text-[0.6rem] font-bold text-primary/80">
                   {formatDay(dg.dateStr)}
                 </span>
               </div>
@@ -155,7 +155,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                 key={dg.dateStr}
                 x1={dg.startIdx * SLOT_W} y1={0}
                 x2={dg.startIdx * SLOT_W} y2={BAR_H}
-                stroke="rgba(100,120,150,0.25)" strokeWidth={1}
+                className="stroke-border" strokeWidth={1}
               />
             ))}
             {/* horizontal guides */}
@@ -164,7 +164,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                 key={f}
                 x1={0} y1={BAR_H - f * BAR_H}
                 x2={totalW} y2={BAR_H - f * BAR_H}
-                stroke="rgba(100,120,150,0.1)" strokeWidth={0.5}
+                className="stroke-border" strokeOpacity={0.5} strokeWidth={0.5}
               />
             ))}
             {/* scale labels */}
@@ -173,8 +173,8 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                 key={f}
                 x={2}
                 y={BAR_H - f * BAR_H - 2}
-                fontSize={6}
-                fill="rgba(100,120,150,0.5)"
+                fontSize={9}
+                className="fill-muted-foreground"
               >
                 {Math.round(windFromKnots(f * maxVal, unit))}{WIND_UNIT_LABEL[unit]}
               </text>
@@ -250,7 +250,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
               >
                 {s.wave !== null ? (
                   <span
-                    style={{ color: waveColor(s.wave), fontSize: '0.44rem' }}
+                    style={{ color: waveColor(s.wave), fontSize: '0.55rem' }}
                     className="font-mono leading-none"
                   >
                     {s.wave.toFixed(1)}
@@ -273,7 +273,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                   style={{ width: SLOT_W, flexShrink: 0 }}
                   className="flex justify-center items-center"
                 >
-                  <span className="text-[0.44rem] text-muted-foreground">{hr}h</span>
+                  <span className="text-[0.55rem] text-muted-foreground">{hr}h</span>
                 </div>
               );
             })}
