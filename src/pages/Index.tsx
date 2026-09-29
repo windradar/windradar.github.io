@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ThemeSelector } from '@/components/ThemeSelector';
@@ -27,6 +27,10 @@ import {
 import { windRowStyle } from '@/lib/wind-row-color';
 import logoFlow from '@/assets/logo-flow.png';
 
+function isAbortError(e: unknown): boolean {
+  return e instanceof DOMException && e.name === 'AbortError';
+}
+
 export default function Index() {
   const { t, i18n } = useTranslation();
   const langLocale = LANG_LOCALE[i18n.language] || 'es-ES';
@@ -53,7 +57,18 @@ export default function Index() {
   const minDate = localDateStr(new Date(Date.now() - 7 * 86400000));
   const maxDate = localDateStr(new Date(Date.now() + 6 * 86400000));
 
+  // A slower earlier request (another spot or date) must not overwrite the latest one
+  const fetchAbortRef = useRef<AbortController | null>(null);
+  // What is on screen once a fetch completes; null while one is in flight
+  const loadedRef = useRef<{ lat: number; lon: number; forecast: boolean; day: string } | null>(null);
+
   const fetchWeather = useCallback(async (latitude: number, longitude: number, selectedDate?: string) => {
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+    const { signal } = controller;
+    loadedRef.current = null;
+
     setLoadingText(t('index.loadingText'));
     const targetDate = selectedDate || localDateStr(new Date());
     const isPast = targetDate < localDateStr(new Date());
@@ -63,9 +78,10 @@ export default function Index() {
       const wxUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&start_date=${targetDate}&end_date=${targetDate}`;
       const [wxRes, marRes] = await Promise.all([
-        fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
-        fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(wxUrl, { signal }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+        fetch(marUrl, { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
+      if (signal.aborted) return;
       if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
       setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
       setWx(wxRes);
@@ -76,10 +92,11 @@ export default function Index() {
       const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
       const [aromeRaw, wxRes, marRes] = await Promise.all([
-        fetch(aromeUrl).then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
-        fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(aromeUrl, { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(wxUrl, { signal }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+        fetch(marUrl, { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
+      if (signal.aborted) return;
       let detail: ReturnType<typeof normalizeArome> | null = null;
       try {
         detail = aromeRaw && !aromeRaw.error ? normalizeArome(aromeRaw) : null;
@@ -93,6 +110,7 @@ export default function Index() {
       setMar(marRes);
     }
 
+    loadedRef.current = { lat: latitude, lon: longitude, forecast: !isPast, day: localDateStr(new Date()) };
     setLoading(false);
   }, [t]);
 
@@ -110,6 +128,7 @@ export default function Index() {
       setIsFav(isFavorite(searchLat, searchLon));
       await fetchWeather(searchLat, searchLon, date);
     } catch (e) {
+      if (isAbortError(e)) return;
       setLoading(false);
       setError('Error: ' + (e instanceof Error ? e.message : String(e)));
     }
@@ -121,6 +140,7 @@ export default function Index() {
     if (last) {
       doSearch(last.name, last.lat, last.lon);
     }
+    return () => fetchAbortRef.current?.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -142,12 +162,19 @@ export default function Index() {
   // Reload data when date changes and we have coordinates
   const handleDateChange = useCallback(async (newDate: string) => {
     setDate(newDate);
+    // The 7-day forecast loaded today already covers every non-past date
+    const loaded = loadedRef.current;
+    const todayStr = localDateStr(new Date());
+    if (newDate >= todayStr && loaded?.forecast && loaded.day === todayStr && loaded.lat === lat && loaded.lon === lon) {
+      return;
+    }
     if (lat !== null && lon !== null) {
       setError('');
       setLoading(true);
       try {
         await fetchWeather(lat, lon, newDate);
       } catch (e) {
+        if (isAbortError(e)) return;
         setLoading(false);
         setError('Error: ' + (e instanceof Error ? e.message : String(e)));
       }
