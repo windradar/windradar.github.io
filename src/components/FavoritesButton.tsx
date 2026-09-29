@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Star, MapPin, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getFavorites, removeFavorite, toggleFavorite, isFavorite, type FavoriteSpot } from '@/lib/weather-helpers';
@@ -56,7 +56,7 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
 
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -113,7 +113,7 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
                 </button>
               </div>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

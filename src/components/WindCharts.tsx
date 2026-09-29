@@ -11,6 +11,7 @@ import {
   Filler,
   type ChartOptions,
 } from 'chart.js';
+import { memo, useMemo } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
 import { waveColor, localDateStr, kmhToKnots } from '@/lib/weather-helpers';
@@ -25,9 +26,20 @@ interface Props {
   wxDetail?: WeatherData | null;
 }
 
-export function WindCharts({ wx, mar, wxDetail }: Props) {
-  const today = localDateStr(new Date());
+const baseOpts: ChartOptions<'line'> = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: {
+    legend: { labels: { color: '#4a6a8a', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } }
+  },
+  scales: {
+    x: { ticks: { color: '#4a6a8a', font: { size: 8 }, maxTicksLimit: 12 }, grid: { color: 'rgba(26,46,72,.4)' } },
+    y: { ticks: { color: '#4a6a8a', font: { size: 9 } }, grid: { color: 'rgba(26,46,72,.4)' } }
+  }
+};
 
+// Stable data objects: react-chartjs-2 updates the chart whenever `data` changes identity
+function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string) {
   // Find start of today in seamless data (used as backbone for chart times)
   let seamlessStart = -1;
   for (let i = 0; i < wx.hourly.time.length; i++) {
@@ -90,19 +102,41 @@ export function WindCharts({ wx, mar, wxDetail }: Props) {
     sst.push(marI >= 0 ? (mar!.hourly.sea_surface_temperature[marI] ?? null) : null);
   });
 
-  const baseOpts: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: { labels: { color: '#4a6a8a', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } }
+  return {
+    hasArome,
+    wind: {
+      labels: labs,
+      datasets: [
+        { label: 'Viento (kn)', data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+        { label: 'Ráfagas (kn)', data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
+      ]
     },
-    scales: {
-      x: { ticks: { color: '#4a6a8a', font: { size: 8 }, maxTicksLimit: 12 }, grid: { color: 'rgba(26,46,72,.4)' } },
-      y: { ticks: { color: '#4a6a8a', font: { size: 9 } }, grid: { color: 'rgba(26,46,72,.4)' } }
-    }
+    waves: {
+      labels: labs,
+      datasets: [{
+        label: 'Ola (m)',
+        data: wv,
+        backgroundColor: wv.map(v => waveColor(v || 0) + '99'),
+        borderColor: wv.map(v => waveColor(v || 0)),
+        borderWidth: 1
+      }]
+    },
+    temps: {
+      labels: labs,
+      datasets: [
+        { label: 'Aire °C', data: temp, borderColor: '#ffcc44', backgroundColor: 'rgba(255,204,68,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+        { label: 'Agua °C', data: sst, borderColor: '#4dd9ff', backgroundColor: 'rgba(77,217,255,.06)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }
+      ]
+    },
   };
+}
 
-  const windTitle = hasArome
+export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props) {
+  const today = localDateStr(new Date());
+  const charts = useMemo(() => buildChartData(wx, mar, wxDetail, today), [wx, mar, wxDetail, today]);
+  if (!charts) return null;
+
+  const windTitle = charts.hasArome
     ? '💨 Viento y ráfagas (nudos) · AROME HD días 1-2 · Seamless días 3-4'
     : '💨 Viento y ráfagas (nudos) · 4 días';
 
@@ -111,45 +145,24 @@ export function WindCharts({ wx, mar, wxDetail }: Props) {
       <div className="rounded-lg border border-border bg-card p-4 col-span-full">
         <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">{windTitle}</div>
         <Line
-          data={{
-            labels: labs,
-            datasets: [
-              { label: 'Viento (kn)', data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
-              { label: 'Ráfagas (kn)', data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
-            ]
-          }}
+          data={charts.wind}
           options={baseOpts}
         />
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">🌊 Altura de ola (m)</div>
         <Bar
-          data={{
-            labels: labs,
-            datasets: [{
-              label: 'Ola (m)',
-              data: wv,
-              backgroundColor: (wv as (number | null)[]).map(v => waveColor(v || 0) + '99'),
-              borderColor: (wv as (number | null)[]).map(v => waveColor(v || 0)),
-              borderWidth: 1
-            }]
-          }}
+          data={charts.waves}
           options={baseOpts}
         />
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">🌡️ Temperatura aire / agua (°C)</div>
         <Line
-          data={{
-            labels: labs,
-            datasets: [
-              { label: 'Aire °C', data: temp, borderColor: '#ffcc44', backgroundColor: 'rgba(255,204,68,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
-              { label: 'Agua °C', data: sst, borderColor: '#4dd9ff', backgroundColor: 'rgba(77,217,255,.06)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }
-            ]
-          }}
+          data={charts.temps}
           options={baseOpts}
         />
       </div>
     </>
   );
-}
+});

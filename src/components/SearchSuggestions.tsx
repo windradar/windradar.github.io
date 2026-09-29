@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { MapPin, Search, Loader2, Clock, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { type SearchHistoryItem, getSearchHistory } from '@/lib/weather-helpers';
@@ -125,7 +125,7 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
 
       <AnimatePresence>
         {open && (showHistory || showResults || showNoResults || loading) && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -184,7 +184,7 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
                 ))}
               </>
             )}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

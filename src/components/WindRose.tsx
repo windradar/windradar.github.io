@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { windInfo, windColor, bft, windIndex } from '@/lib/weather-helpers';
 
@@ -32,7 +32,7 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
   const tickR = 78;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-lg border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50"
@@ -88,7 +88,7 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
 
           {/* Wind arrow — translated to center so rotation is always around (0,0) */}
           <g transform={`translate(${cx}, ${cy})`}>
-            <motion.g
+            <m.g
               initial={{ rotate: 0 }}
               animate={{ rotate: degrees }}
               transition={{ type: 'spring', stiffness: 60, damping: 15 }}
@@ -108,7 +108,7 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
                 x2={5} y2={innerR - 2}
                 stroke={color} strokeWidth="2" strokeLinecap="round"
               />
-            </motion.g>
+            </m.g>
           </g>
 
           {/* Center circle */}
@@ -133,6 +133,6 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
           </span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

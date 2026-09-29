@@ -32,6 +32,10 @@ jobs:
 
       - name: Build
         run: bun run build
+        # Public values (URL + anon JWT), kept in Settings > Variables instead of a committed .env
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: SPA routing fallback
         run: cp dist/index.html dist/404.html

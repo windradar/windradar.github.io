@@ -27,3 +27,8 @@ dist-ssr
 .claude/
 supabase/.temp/
 *.code-workspace
+
+# Variables de entorno locales (en CI vienen de Settings > Variables)
+.env
+.env.*
+!.env.example

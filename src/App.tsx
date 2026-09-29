@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { lazy, Suspense } from "react";
+import { LazyMotion, domAnimation } from "framer-motion";
 import Index from "./pages/Index.tsx";
 
 const Auth            = lazy(() => import("./pages/Auth.tsx"));
@@ -28,35 +29,38 @@ const PageFallback = () => (
   </div>
 );
 
+// Only the reduced feature set (no layout/drag); `strict` rejects a stray full `motion` component
 const App = () => (
-  <TooltipProvider>
-    <Toaster />
-    <PwaUpdatePrompt />
-    <BrowserRouter>
-      <ConsentProvider>
-        <AuthProvider>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-              <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
-              <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/legal/notice" element={<Notice />} />
-              <Route path="/legal/privacy" element={<Privacy />} />
-              <Route path="/legal/cookies" element={<Cookies />} />
-              <Route path="/legal/terms" element={<Terms />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <CookieBanner />
-        </AuthProvider>
-      </ConsentProvider>
-    </BrowserRouter>
-  </TooltipProvider>
+  <LazyMotion features={domAnimation} strict>
+    <TooltipProvider>
+      <Toaster />
+      <PwaUpdatePrompt />
+      <BrowserRouter>
+        <ConsentProvider>
+          <AuthProvider>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+                <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
+                <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/legal/notice" element={<Notice />} />
+                <Route path="/legal/privacy" element={<Privacy />} />
+                <Route path="/legal/cookies" element={<Cookies />} />
+                <Route path="/legal/terms" element={<Terms />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            <CookieBanner />
+          </AuthProvider>
+        </ConsentProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </LazyMotion>
 );
 
 export default App;

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -194,32 +194,32 @@ export default function Index() {
 
   // Compute table data from active source
   const h = activeWx?.hourly;
-  const allDayIdxs: number[] = [];
-  if (h) {
-    for (let i = 0; i < h.time.length; i++) {
-      if (h.time[i].slice(0, 10) === date) allDayIdxs.push(i);
-    }
-  }
+  const allDayIdxs = useMemo(() => {
+    const idxs: number[] = [];
+    h?.time.forEach((t, i) => { if (t.slice(0, 10) === date) idxs.push(i); });
+    return idxs;
+  }, [h, date]);
 
   // Seamless indices kept for WhatsApp modal (needs hourly seamless data)
-  const allSeamlessDayIdxs: number[] = [];
-  if (wx?.hourly) {
-    for (let i = 0; i < wx.hourly.time.length; i++) {
-      if (wx.hourly.time[i].slice(0, 10) === date) allSeamlessDayIdxs.push(i);
-    }
-  }
+  const allSeamlessDayIdxs = useMemo(() => {
+    const idxs: number[] = [];
+    wx?.hourly?.time.forEach((t, i) => { if (t.slice(0, 10) === date) idxs.push(i); });
+    return idxs;
+  }, [wx, date]);
 
-  // Filter by settings hour range + selected time resolution
-  const dayIdxs = allDayIdxs.filter(i => {
-    if (!h) return false;
-    const t = h.time[i];
-    const hr = t.slice(11, 16);
-    if (hr < settings.gridFromHour || hr > settings.gridToHour) return false;
-    const mm = t.slice(14, 16);
-    if (tableResolution === '1h') return mm === '00';
-    if (tableResolution === '30min') return mm === '00' || mm === '30';
-    return true;
-  });
+  // Selected day, filtered by settings hour range + selected time resolution
+  const dayIdxs = useMemo(() => {
+    if (!h) return [];
+    return allDayIdxs.filter(i => {
+      const t = h.time[i];
+      const hr = t.slice(11, 16);
+      if (hr < settings.gridFromHour || hr > settings.gridToHour) return false;
+      const mm = t.slice(14, 16);
+      if (tableResolution === '1h') return mm === '00';
+      if (tableResolution === '30min') return mm === '00' || mm === '30';
+      return true;
+    });
+  }, [h, allDayIdxs, settings.gridFromHour, settings.gridToHour, tableResolution]);
 
   let curRow = -1;
   if (h && date === today) {
@@ -315,7 +315,7 @@ export default function Index() {
       {/* Spinner */}
       <AnimatePresence>
         {loading && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -323,7 +323,7 @@ export default function Index() {
           >
             <div className="h-11 w-11 rounded-full border-[3px] border-border border-t-primary animate-spin" />
             <div className="text-xs tracking-widest text-muted-foreground">{loadingText}</div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -395,20 +395,20 @@ export default function Index() {
               {wx ? t('index.live') : t('index.ready')}
             </span>
             {isBigDay && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex items-center gap-1.5 rounded-full border border-[#ffcc44]/60 bg-[#ffcc44]/10 px-3 py-1"
               >
                 <img src={logoFlow} className="h-4 w-4 rounded-full" alt="" />
-                <motion.span
+                <m.span
                   animate={{ opacity: [1, 1, 0, 1] }}
                   transition={{ duration: 1, repeat: Infinity, times: [0, 0.88, 0.9, 1], ease: 'linear' }}
                   className="font-bold tracking-wide text-[#ffcc44]"
                 >
                   Big Day{matchedSpot?.name ? ` en ${matchedSpot.name}` : ''}
-                </motion.span>
-              </motion.div>
+                </m.span>
+              </m.div>
             )}
           </div>
         </div>
@@ -449,7 +449,7 @@ export default function Index() {
               wsMin={h && allDayIdxs.length ? Math.min(...allDayIdxs.map(i => h.wind_speed_10m[i] || 0)) : null}
               color={windColor(cardData.ws)}
             />
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
             >
@@ -474,7 +474,7 @@ export default function Index() {
                   </>
                 )}
               </div>
-            </motion.div>
+            </m.div>
             <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
             <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
@@ -677,7 +677,7 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
   const gustKn = Math.round(kmhToKnots(wg));
   const minKn = wsMin !== null ? Math.round(kmhToKnots(wsMin)) : null;
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
@@ -688,7 +688,7 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
         <svg viewBox="0 0 60 60" width={52} height={52} className="flex-shrink-0">
           <circle cx={30} cy={30} r={27} stroke={color} strokeWidth="1" fill="none" strokeOpacity="0.2" />
           <g transform="translate(30,30)">
-            <motion.g
+            <m.g
               initial={{ rotate: 0 }}
               animate={{ rotate: wd }}
               transition={{ type: 'spring', stiffness: 60, damping: 15 }}
@@ -697,7 +697,7 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
               <line x1={0} y1={18} x2={0} y2={-16} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
               <polygon points="0,-24 -6,-13 6,-13" fill={color} />
               <line x1={-5} y1={20} x2={5} y2={20} stroke={color} strokeWidth="2" strokeLinecap="round" />
-            </motion.g>
+            </m.g>
           </g>
         </svg>
         <div className="min-w-0 flex-1">
@@ -711,7 +711,7 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -719,7 +719,7 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
   label: string; value: string; unit?: string; sub?: string; color?: string; highlight?: boolean; isEmoji?: boolean;
 }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
@@ -730,7 +730,7 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
         {value}{unit && <span className="text-[0.65rem] font-normal text-muted-foreground sm:text-xs"> {unit}</span>}
       </div>
       {sub && <div className="mt-1 text-[0.58rem] text-muted-foreground sm:text-[0.62rem]">{sub}</div>}
-    </motion.div>
+    </m.div>
   );
 }
 
