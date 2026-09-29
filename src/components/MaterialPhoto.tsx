@@ -91,7 +91,7 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
 
   return (
     <>
-      <div className={`relative ${dim} shrink-0 overflow-hidden rounded-md border border-border bg-secondary/40`}>
+      <div className={`group relative ${dim} shrink-0 overflow-hidden rounded-md border border-border bg-secondary/40`}>
         <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFile} className="hidden" />
         {photoUrl ? (
           <>
@@ -104,24 +104,26 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
             >
               <img src={photoUrl} alt="material" className="h-full w-full object-cover" loading="lazy" />
             </button>
-            {/* Delete – top-right corner, visible on group hover */}
+            {/* Delete – top-right corner, on hover (always visible on touch screens) */}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); removePhoto(); }}
-              className="absolute right-0 top-0 rounded-bl bg-background/80 p-0.5 text-destructive opacity-0 transition group-hover:opacity-100"
+              className="absolute right-0 top-0 rounded-bl bg-background/80 p-1 text-destructive opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
               title="Eliminar foto"
+              aria-label="Eliminar foto"
             >
-              <X size={10} />
+              <X size={12} />
             </button>
-            {/* Change – bottom-right corner, visible on group hover */}
+            {/* Change – bottom-right corner, on hover (always visible on touch screens) */}
             {!uploading && (
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
-                className="absolute bottom-0 right-0 rounded-tl bg-background/80 p-0.5 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-primary"
+                className="absolute bottom-0 right-0 rounded-tl bg-background/80 p-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary [@media(hover:none)]:opacity-100"
                 title="Cambiar foto"
+                aria-label="Cambiar foto"
               >
-                <ImagePlus size={10} />
+                <ImagePlus size={12} />
               </button>
             )}
           </>

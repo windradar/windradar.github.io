@@ -13,6 +13,10 @@
     "close": "Fermer",
     "error": "Erreur inattendue"
   },
+  "notFound": {
+    "message": "Cette page n'existe pas.",
+    "home": "Retour à l'accueil"
+  },
   "nav": {
     "profile": "Profil",
     "sessions": "Sessions",
@@ -74,6 +78,7 @@
     "namePlaceholder": "Votre nom ou alias",
     "preferences": "Préférences",
     "windUnits": "Unités de vent",
+    "windUnitsHint": "Le seuil de vent et les alertes sont toujours réglés en nœuds.",
     "dateFormat": "Format de date",
     "knots": "Nœuds (kn)",
     "saveChanges": "Enregistrer les modifications",

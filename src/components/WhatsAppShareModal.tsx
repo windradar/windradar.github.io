@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { kmhToKnots, windInfo, humanDate, LANG_LOCALE, type WeatherData, type MarineData } from '@/lib/weather-helpers';
+import { windInfo, humanDate, LANG_LOCALE, type WeatherData, type MarineData } from '@/lib/weather-helpers';
+import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon';
 
 interface Props {
@@ -37,6 +38,8 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
     return '☁️';
   };
 
+  const unit = useWindUnit();
+
   const share = () => {
     const idxs = dayIdxs.filter(i => {
       const hr = h.time[i].slice(11, 16);
@@ -46,14 +49,14 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
 
     let msg = `💨 *WindFlowRadar – ${name}*\n📅 ${humanDate(date, langLocale)} (${fromH}–${toH})\n\n`;
     for (const idx of idxs) {
-      const ws = Math.round(h.wind_speed_10m[idx] || 0);
-      const wg = Math.round(h.wind_gusts_10m[idx] || 0);
+      const ws = h.wind_speed_10m[idx] || 0;
+      const wg = h.wind_gusts_10m[idx] || 0;
       const wd = h.wind_direction_10m[idx] || 0;
       const wi = windInfo(wd);
       const wh = mar?.hourly?.wave_height?.[idx] ?? null;
       const wc = h.weathercode?.[idx] ?? 0;
       const hr = h.time[idx].slice(11, 16);
-      msg += `${wmoEmoji(wc)} *${hr}* — 💨 ${Math.round(kmhToKnots(ws))}kn ⚡raf.${Math.round(kmhToKnots(wg))}kn 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
+      msg += `${wmoEmoji(wc)} *${hr}* — 💨 ${formatWind(windFromKmh(ws, unit), unit)}${WIND_UNIT_LABEL[unit]} ⚡raf.${formatWind(windFromKmh(wg, unit), unit)}${WIND_UNIT_LABEL[unit]} 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
     }
     msg += `\n_WindFlowRadar · Open-Meteo_\n\nMás información en https://windradar.github.io/`;
 

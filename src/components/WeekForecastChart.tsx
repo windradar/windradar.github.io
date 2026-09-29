@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
 import { kmhToKnots, windColor, waveColor } from '@/lib/weather-helpers';
+import { useWindUnit, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 
 const SLOT_W = 20;
 const BAR_H = 176;
@@ -31,6 +32,7 @@ interface Slot {
 
 export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar: MarineData | null; wxDetail?: WeatherData | null }) {
   const { t, i18n } = useTranslation();
+  const unit = useWindUnit();
   const h = wx.hourly;
 
   // AROME hour index: "YYYY-MM-DDTHH" → AROME array index (only :00 slots)
@@ -174,7 +176,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                 fontSize={6}
                 fill="rgba(100,120,150,0.5)"
               >
-                {Math.round(f * maxVal)}kn
+                {Math.round(windFromKnots(f * maxVal, unit))}{WIND_UNIT_LABEL[unit]}
               </text>
             ))}
             {/* wind bars */}
@@ -206,7 +208,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                   fontSize={8}
                   className="fill-foreground/70"
                 >
-                  {s.windKn}
+                  {formatWind(windFromKnots(s.windKn, unit), unit)}
                 </text>
               );
             })}
@@ -230,7 +232,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
                 className="flex items-center justify-center"
               >
                 <svg width={13} height={13} viewBox="-6.5 -6.5 13 13">
-                  <g transform={`rotate(${s.dir})`}>
+                  <g transform={`rotate(${s.dir + 180})`}>
                     <polygon points="0,-5.5 2.5,3 0,1.5 -2.5,3" fill="#60a5fa" />
                   </g>
                 </svg>

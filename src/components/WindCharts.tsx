@@ -14,7 +14,8 @@ import {
 import { memo, useMemo } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
-import { waveColor, localDateStr, kmhToKnots } from '@/lib/weather-helpers';
+import { waveColor, localDateStr } from '@/lib/weather-helpers';
+import { useWindUnit, convertKmh, WIND_UNIT_LABEL, type WindUnit } from '@/lib/wind-units';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
@@ -41,7 +42,7 @@ const lineOpts: ChartOptions<'line'> = commonOpts;
 const barOpts: ChartOptions<'bar'> = commonOpts;
 
 // Stable data objects: react-chartjs-2 updates the chart whenever `data` changes identity
-function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string) {
+function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string, unit: WindUnit) {
   // Find start of today in seamless data (used as backbone for chart times)
   let seamlessStart = -1;
   for (let i = 0; i < wx.hourly.time.length; i++) {
@@ -97,8 +98,8 @@ function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: Weath
       ? (wxDetail!.hourly.temperature_2m[aromeI] ?? null)
       : (wx.hourly.temperature_2m[seamlessI] ?? null);
 
-    wsKn.push(wsRaw != null ? Math.round(kmhToKnots(wsRaw) * 10) / 10 : null);
-    wgKn.push(wgRaw != null ? Math.round(kmhToKnots(wgRaw) * 10) / 10 : null);
+    wsKn.push(wsRaw != null ? Math.round(convertKmh(wsRaw, unit) * 10) / 10 : null);
+    wgKn.push(wgRaw != null ? Math.round(convertKmh(wgRaw, unit) * 10) / 10 : null);
     temp.push(tRaw);
     wv.push(marI >= 0 ? (mar!.hourly.wave_height[marI] ?? null) : null);
     sst.push(marI >= 0 ? (mar!.hourly.sea_surface_temperature[marI] ?? null) : null);
@@ -109,8 +110,8 @@ function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: Weath
     wind: {
       labels: labs,
       datasets: [
-        { label: 'Viento (kn)', data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
-        { label: 'Ráfagas (kn)', data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
+        { label: `Viento (${WIND_UNIT_LABEL[unit]})`, data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+        { label: `Ráfagas (${WIND_UNIT_LABEL[unit]})`, data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
       ]
     },
     waves: {
@@ -135,12 +136,13 @@ function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: Weath
 
 export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props) {
   const today = localDateStr(new Date());
-  const charts = useMemo(() => buildChartData(wx, mar, wxDetail, today), [wx, mar, wxDetail, today]);
+  const unit = useWindUnit();
+  const charts = useMemo(() => buildChartData(wx, mar, wxDetail, today, unit), [wx, mar, wxDetail, today, unit]);
   if (!charts) return null;
 
   const windTitle = charts.hasArome
-    ? '💨 Viento y ráfagas (nudos) · AROME HD días 1-2 · Seamless días 3-4'
-    : '💨 Viento y ráfagas (nudos) · 4 días';
+    ? `💨 Viento y ráfagas (${WIND_UNIT_LABEL[unit]}) · AROME HD días 1-2 · Seamless días 3-4`
+    : `💨 Viento y ráfagas (${WIND_UNIT_LABEL[unit]}) · 4 días`;
 
   return (
     <>

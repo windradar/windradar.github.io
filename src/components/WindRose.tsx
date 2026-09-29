@@ -86,11 +86,12 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
             );
           })}
 
-          {/* Wind arrow — translated to center so rotation is always around (0,0) */}
+          {/* Wind arrow — translated to center so rotation is always around (0,0).
+              Points where the wind blows to (+180°), like every other arrow in the app */}
           <g transform={`translate(${cx}, ${cy})`}>
             <m.g
               initial={{ rotate: 0 }}
-              animate={{ rotate: degrees }}
+              animate={{ rotate: degrees + 180 }}
               transition={{ type: 'spring', stiffness: 60, damping: 15 }}
               style={{ transformOrigin: '0px 0px' }}
             >

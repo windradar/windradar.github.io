@@ -123,7 +123,12 @@ const SECTIONS: HelpSection[] = [
       },
       {
         heading: 'Unidades',
-        body: 'El viento siempre se muestra en nudos (kn), la ola en metros, la temperatura en °C y la lluvia en mm. La dirección indica de dónde sopla el viento, con 16 puntos cardinales (la O es oeste).',
+        body: 'El viento se muestra en nudos (kn) o en la unidad que elijas en tu Perfil (km/h o m/s). La ola va en metros, la temperatura en °C y la lluvia en mm.',
+        tip: 'El umbral de viento y las alertas se configuran siempre en nudos.',
+      },
+      {
+        heading: 'Dirección del viento',
+        body: 'El texto (SO, 225°, Garbí…) indica de dónde viene el viento, con 16 puntos cardinales (la O es oeste). Las flechas, en la rosa, la tabla y los gráficos, indican hacia dónde sopla.',
       },
     ],
   },
@@ -290,7 +295,7 @@ const SECTIONS: HelpSection[] = [
       },
       {
         heading: 'Perfil',
-        body: 'Menú de usuario → «Perfil». Puedes poner un alias, tu número de WhatsApp (sin + ni espacios, necesario para las alertas de CallMeBot) y cambiar la contraseña al momento o pedir un email para restablecerla.',
+        body: 'Menú de usuario → «Perfil». Puedes elegir las unidades de viento (nudos, km/h o m/s), poner un alias, tu número de WhatsApp (sin + ni espacios, necesario para las alertas de CallMeBot) y cambiar la contraseña al momento o pedir un email para restablecerla.',
         tags: ['cuenta'],
       },
       {

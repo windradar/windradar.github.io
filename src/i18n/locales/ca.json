@@ -13,6 +13,10 @@
     "close": "Tancar",
     "error": "Error inesperat"
   },
+  "notFound": {
+    "message": "Aquesta pàgina no existeix.",
+    "home": "Tornar a l'inici"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sessions",
@@ -75,6 +79,7 @@
     "namePlaceholder": "El teu nom o àlies",
     "preferences": "Preferències",
     "windUnits": "Unitats de vent",
+    "windUnitsHint": "El llindar de vent i les alertes es configuren sempre en nusos.",
     "dateFormat": "Format de data",
     "knots": "Nusos (kn)",
     "saveChanges": "Desar canvis",
@@ -323,7 +328,7 @@
     "hourlyTitle": "Previsió horària",
     "noDataTable": "Sense dades — introdueix una ubicació i prem Cercar",
     "noDataShort": "Sense dades",
-    "chartsTitle": "Gràfics — pròximes 48h",
+    "chartsTitle": "Gràfics — propers dies",
     "dataSource": "Open-Meteo API · GFS + ECMWF · Copernicus Marine · Sense API key · Dades gratuïtes",
     "generatedIn": "Generat en {{ms}}ms",
     "favAdded": "⭐ \"{{name}}\" afegit a favorits",
@@ -336,9 +341,9 @@
     "tableHour": "HORA",
     "tableAir": "🌡️ AIRE",
     "tableWater": "💧 AIGUA",
-    "tableWind": "💨 VENT (kn)",
-    "tableGust": "⚡ RATXA (kn)",
-    "tableWind100": "🌬️ 100 m (kn)",
+    "tableWind": "💨 VENT ({{unit}})",
+    "tableGust": "⚡ RATXA ({{unit}})",
+    "tableWind100": "🌬️ 100 m ({{unit}})",
     "tableDir": "🧭 DIRECCIÓ",
     "tableName": "⛵ NOM",
     "tableWave": "🌊 ONA",

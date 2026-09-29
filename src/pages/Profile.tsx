@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { ArrowLeft, MessageCircle, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { setWindUnit, type WindUnit } from '@/lib/wind-units';
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -23,8 +24,9 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [callmebotApiKey, setCallmebotApiKey] = useState('');
-  const [windUnits, setWindUnits] = useState<'kn' | 'kmh' | 'ms'>('kn');
-  const [dateFormat, setDateFormat] = useState<'dmy' | 'mdy' | 'iso'>('dmy');
+  const [windUnits, setWindUnits] = useState<WindUnit>('kn');
+  // Saving before the profile loads would overwrite it with empty values
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [newPass, setNewPass] = useState('');
@@ -38,7 +40,7 @@ export default function Profile() {
     if (!user) return;
     supabase
       .from('profiles')
-      .select('display_name, whatsapp_number, callmebot_apikey, wind_units, date_format')
+      .select('display_name, whatsapp_number, callmebot_apikey, wind_units')
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -46,14 +48,14 @@ export default function Profile() {
           setDisplayName(data.display_name || '');
           setWhatsappNumber(data.whatsapp_number || '');
           setCallmebotApiKey(data.callmebot_apikey || '');
-          setWindUnits((data.wind_units as 'kn' | 'kmh' | 'ms') || 'kn');
-          setDateFormat((data.date_format as 'dmy' | 'mdy' | 'iso') || 'dmy');
+          setWindUnits((data.wind_units as WindUnit) || 'kn');
         }
+        setProfileLoaded(true);
       });
   }, [user]);
 
   const saveProfile = async () => {
-    if (!user) return;
+    if (!user || !profileLoaded) return;
     setSavingProfile(true);
     const cleanWa = whatsappNumber.replace(/\D/g, '');
     const { error } = await supabase.from('profiles').update({
@@ -61,11 +63,11 @@ export default function Profile() {
       whatsapp_number: cleanWa || null,
       callmebot_apikey: callmebotApiKey.trim() || null,
       wind_units: windUnits,
-      date_format: dateFormat,
     }).eq('user_id', user.id);
     setSavingProfile(false);
-    if (error) toast.error(error.message);
-    else toast.success(t('profile.profileUpdated'));
+    if (error) { toast.error(error.message); return; }
+    setWindUnit(windUnits);
+    toast.success(t('profile.profileUpdated'));
   };
 
   const changePassword = async () => {
@@ -95,10 +97,18 @@ export default function Profile() {
     try {
       await supabase.from('material_items').delete().eq('user_id', user.id);
       await supabase.from('material_categories').delete().eq('user_id', user.id);
-      const { data: files } = await supabase.storage.from('material-photos').list(user.id);
-      if (files && files.length > 0) {
-        const paths = files.map(f => `${user.id}/${f.name}`);
-        await supabase.storage.from('material-photos').remove(paths);
+      // list() returns at most `limit` files: collect every page before removing
+      const paths: string[] = [];
+      for (let offset = 0; ; offset += 100) {
+        const { data: files, error: listError } = await supabase.storage.from('material-photos')
+          .list(user.id, { limit: 100, offset });
+        if (listError) throw listError;
+        paths.push(...(files ?? []).map(f => `${user.id}/${f.name}`));
+        if (!files || files.length < 100) break;
+      }
+      for (let i = 0; i < paths.length; i += 100) {
+        const { error: removeError } = await supabase.storage.from('material-photos').remove(paths.slice(i, i + 100));
+        if (removeError) throw removeError;
       }
       const { error } = await supabase.rpc('delete_own_account');
       if (error) throw error;
@@ -148,6 +158,7 @@ export default function Profile() {
                   <button
                     key={u}
                     onClick={() => setWindUnits(u)}
+                    aria-pressed={windUnits === u}
                     className={`rounded-md border px-4 py-2 text-sm font-bold transition-colors ${
                       windUnits === u
                         ? 'border-primary bg-primary text-primary-foreground'
@@ -158,28 +169,10 @@ export default function Profile() {
                   </button>
                 ))}
               </div>
+              <p className="mt-1.5 text-[0.65rem] text-muted-foreground">{t('profile.windUnitsHint')}</p>
             </div>
 
-            <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.dateFormat')}</label>
-              <div className="flex gap-2 flex-wrap">
-                {(['dmy', 'mdy', 'iso'] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setDateFormat(f)}
-                    className={`rounded-md border px-4 py-2 text-sm font-bold transition-colors ${
-                      dateFormat === f
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-secondary text-muted-foreground hover:border-primary hover:text-primary'
-                    }`}
-                  >
-                    {f === 'dmy' ? 'dd/mm/aaaa' : f === 'mdy' ? 'mm/dd/aaaa' : 'aaaa-mm-dd'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button onClick={saveProfile} disabled={savingProfile}
+            <button onClick={saveProfile} disabled={savingProfile || !profileLoaded}
               className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
               {savingProfile ? t('common.saving') : t('profile.saveChanges')}
             </button>
@@ -215,7 +208,7 @@ export default function Profile() {
               />
               <p className="mt-1 text-[0.62rem] text-muted-foreground">{t('profile.callmebotHint')}</p>
             </div>
-            <button onClick={saveProfile} disabled={savingProfile}
+            <button onClick={saveProfile} disabled={savingProfile || !profileLoaded}
               className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
               {savingProfile ? t('common.saving') : t('common.save')}
             </button>

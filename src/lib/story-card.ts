@@ -3,6 +3,7 @@
 import QRCode from 'qrcode';
 import { humanDate, dirArrow, windInfo } from '@/lib/weather-helpers';
 import type { Session, Snapshot } from '@/lib/session-stats';
+import { getWindUnit, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 
 export const CW = 1080;
 export const CH = 1920;
@@ -97,8 +98,10 @@ interface CardData {
   dateShort: string | null;
   time: string | null;
   sport: string | null;
-  wind: number | null;
-  gust: number | null;
+  // Already converted to the user's wind unit and formatted
+  wind: string | null;
+  gust: string | null;
+  unit: string;
   dir: { arrow: string; short: string } | null;
   wave: number | null;
   temp: number | null;
@@ -111,6 +114,7 @@ interface CardData {
 
 function buildData(session: Session, f: Record<StoryField, boolean>): CardData {
   const st = getStats(session);
+  const unit = getWindUnit();
   const snap = (session.weather_snapshot as Snapshot[]) ?? [];
   const d = new Date(session.session_date + 'T12:00:00');
   const mats = session.materials.map(m => m.name).filter(Boolean);
@@ -120,8 +124,9 @@ function buildData(session: Session, f: Record<StoryField, boolean>): CardData {
     dateShort: f.date ? d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }) : null,
     time: f.time ? `${session.start_time} – ${session.end_time}` : null,
     sport: f.sport ? session.sport_name : null,
-    wind: f.wind && st ? st.windAvg : null,
-    gust: f.gust && st ? st.gustMax : null,
+    wind: f.wind && st ? formatWind(windFromKnots(st.windAvg, unit), unit) : null,
+    gust: f.gust && st ? formatWind(windFromKnots(st.gustMax, unit), unit) : null,
+    unit: WIND_UNIT_LABEL[unit],
     dir: f.dir && st ? { arrow: dirArrow(st.dirAvg), short: st.dirShort } : null,
     wave: f.wave && st ? st.waveAvg : null,
     temp: f.temp && st ? st.tempAvg : null,
@@ -531,8 +536,8 @@ function drawFranja(c: Ctx, hasPhoto: boolean) {
 
   // Filas de datos: con 5 o más se reparten en dos columnas para no encoger tanto
   const rows: [string, string][] = [];
-  if (d.wind !== null) rows.push(['💨', `${d.wind} kn`]);
-  if (d.gust !== null) rows.push(['⚡', `ráf. ${d.gust} kn`]);
+  if (d.wind !== null) rows.push(['💨', `${d.wind} ${d.unit}`]);
+  if (d.gust !== null) rows.push(['⚡', `ráf. ${d.gust} ${d.unit}`]);
   if (d.dir) rows.push([d.dir.arrow, d.dir.short]);
   if (d.wave !== null) rows.push(['🌊', `${fmt1(d.wave)} m`]);
   if (d.temp !== null) rows.push(['🌡️', `${d.temp} °C`]);
@@ -635,7 +640,7 @@ function drawFoto(c: Ctx, hasPhoto: boolean) {
   if (dateLine) items.push(textItem(c, dateLine, PAD, W, 44, 58, 'rgba(255,255,255,0.78)'));
 
   if (d.wind !== null) {
-    const num = String(d.wind);
+    const num = d.wind;
     items.push({
       h: s => 250 * s,
       draw: (y, s) => {
@@ -644,7 +649,7 @@ function drawFoto(c: Ctx, hasPhoto: boolean) {
         ctx.font = font(270 * s, '800');
         const nw = ctx.measureText(num).width;
         ctx.font = font(76 * s, 'bold');
-        const uw = ctx.measureText('kn').width;
+        const uw = ctx.measureText(d.unit).width;
         const total = nw + 22 * s + uw;
         const x0 = center ? PAD + (W - total) / 2 : PAD;
         const base = y + 225 * s;
@@ -655,14 +660,14 @@ function drawFoto(c: Ctx, hasPhoto: boolean) {
         ctx.fillText(num, x0, base);
         ctx.shadowBlur = 0;
         ctx.font = font(76 * s, 'bold');
-        ctx.fillText('kn', x0 + nw + 22 * s, base);
+        ctx.fillText(d.unit, x0 + nw + 22 * s, base);
       },
     });
   }
 
   // Datos secundarios en línea, con etiqueta tenue
   const facts: [string, string][] = [];
-  if (d.gust !== null) facts.push(['ráf.', `${d.gust} kn`]);
+  if (d.gust !== null) facts.push(['ráf.', `${d.gust} ${d.unit}`]);
   if (d.dir) facts.push(['dir.', `${d.dir.arrow} ${d.dir.short}`]);
   if (d.wave !== null) facts.push(['olas', `${fmt1(d.wave)} m`]);
   if (d.temp !== null) facts.push(['temp.', `${d.temp} °C`]);
@@ -784,8 +789,8 @@ function drawFicha(c: Ctx, hasPhoto: boolean) {
 
   // Cuadrícula de datos, dos columnas
   const cells: [string, string, string][] = [];
-  if (d.wind !== null) cells.push(['VIENTO MEDIO', String(d.wind), 'kn']);
-  if (d.gust !== null) cells.push(['RACHA MÁX.', String(d.gust), 'kn']);
+  if (d.wind !== null) cells.push(['VIENTO MEDIO', d.wind, d.unit]);
+  if (d.gust !== null) cells.push(['RACHA MÁX.', d.gust, d.unit]);
   if (d.dir) cells.push(['DIRECCIÓN', `${d.dir.arrow} ${d.dir.short}`, '']);
   if (d.wave !== null) cells.push(['OLAS', fmt1(d.wave), 'm']);
   if (d.temp !== null) cells.push(['TEMPERATURA', String(d.temp), '°C']);

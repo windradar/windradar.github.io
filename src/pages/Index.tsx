@@ -25,6 +25,7 @@ import {
   isFavorite, toggleFavorite, LANG_LOCALE, normalizeArome, windIndex,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
+import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 import logoFlow from '@/assets/logo-flow.png';
 
 function isAbortError(e: unknown): boolean {
@@ -35,6 +36,9 @@ export default function Index() {
   const { t, i18n } = useTranslation();
   const langLocale = LANG_LOCALE[i18n.language] || 'es-ES';
   const { user } = useAuth();
+  const unit = useWindUnit();
+  const unitLabel = WIND_UNIT_LABEL[unit];
+  const fmtWind = (kmh: number) => formatWind(windFromKmh(kmh, unit), unit);
   const [whatsappNumber, setWhatsappNumber] = useState<string>('');
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
@@ -508,7 +512,7 @@ export default function Index() {
           <table className="w-full min-w-[850px] border-collapse font-mono text-[0.88rem]">
             <thead>
               <tr className="bg-secondary">
-                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind'),t('index.tableGust'),t('index.tableWind100'),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
+                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind', { unit: unitLabel }),t('index.tableGust', { unit: unitLabel }),t('index.tableWind100', { unit: unitLabel }),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
                   <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
@@ -542,9 +546,9 @@ export default function Index() {
                     <td className={`py-2.5 pl-3.5 text-left ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
                     <td className="text-center" style={{ color: rowStyle.color || undefined }}>{safeNum(temp, 1)}°</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || '#0ea5e9' }}>{safeNum(sst, 1)}°</td>
-                    <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{knots}</td>
-                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{Math.round(kmhToKnots(wg))}</td>
-                    <td className="text-center" style={{ color: rowStyle.color || (ws100 != null ? windColor(ws100) : undefined) }}>{ws100 != null ? <>{Math.round(kmhToKnots(ws100))}{wd100 != null && <span className="ml-1 text-[0.72rem]">{dirArrow(wd100)}</span>}</> : '—'}</td>
+                    <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{fmtWind(ws)}</td>
+                    <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{fmtWind(wg)}</td>
+                    <td className="text-center" style={{ color: rowStyle.color || (ws100 != null ? windColor(ws100) : undefined) }}>{ws100 != null ? <>{fmtWind(ws100)}{wd100 != null && <span className="ml-1 text-[0.72rem]">{dirArrow(wd100)}</span>}</> : '—'}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.72rem]">{Math.round(wd)}°</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{t(`wind.names.${windIndex(wd)}`)}</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
@@ -589,11 +593,11 @@ export default function Index() {
                 <div className="grid grid-cols-3 gap-x-3 gap-y-2 text-[0.82rem]">
                   <div>
                     <span className="text-muted-foreground text-[0.7rem]">💨 </span>
-                    <span className="font-bold text-[0.9rem]" style={{ color: windColor(ws) }}>{Math.round(kmhToKnots(ws))} kn</span>
+                    <span className="font-bold text-[0.9rem]" style={{ color: windColor(ws) }}>{fmtWind(ws)} {unitLabel}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground text-[0.7rem]">⚡ </span>
-                    <span className="font-semibold text-[0.9rem]" style={{ color: windColor(wg) }}>{Math.round(kmhToKnots(wg))} kn</span>
+                    <span className="font-semibold text-[0.9rem]" style={{ color: windColor(wg) }}>{fmtWind(wg)} {unitLabel}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground text-[0.7rem]">🧭 </span>
@@ -601,7 +605,7 @@ export default function Index() {
                   </div>
                   {ws100 != null && (
                     <div className="col-span-3 -mt-1 text-[0.72rem] text-muted-foreground">
-                      100 m: <span className="font-semibold" style={{ color: windColor(ws100) }}>{Math.round(kmhToKnots(ws100))} kn</span>
+                      100 m: <span className="font-semibold" style={{ color: windColor(ws100) }}>{fmtWind(ws100)} {unitLabel}</span>
                     </div>
                   )}
                   <div>
@@ -673,9 +677,11 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
 }) {
   const { t } = useTranslation();
   const wi = windInfo(wd);
-  const avgKn = Math.round(kmhToKnots(ws));
-  const gustKn = Math.round(kmhToKnots(wg));
-  const minKn = wsMin !== null ? Math.round(kmhToKnots(wsMin)) : null;
+  const unit = useWindUnit();
+  const unitLabel = WIND_UNIT_LABEL[unit];
+  const avg = formatWind(windFromKmh(ws, unit), unit);
+  const gust = formatWind(windFromKmh(wg, unit), unit);
+  const min = wsMin !== null ? formatWind(windFromKmh(wsMin, unit), unit) : null;
   return (
     <m.div
       initial={{ opacity: 0, y: 10 }}
@@ -690,7 +696,7 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
           <g transform="translate(30,30)">
             <m.g
               initial={{ rotate: 0 }}
-              animate={{ rotate: wd }}
+              animate={{ rotate: wd + 180 }}
               transition={{ type: 'spring', stiffness: 60, damping: 15 }}
               style={{ transformOrigin: '0px 0px' }}
             >
@@ -702,12 +708,12 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
         </svg>
         <div className="min-w-0 flex-1">
           <div className="font-display text-2xl font-bold leading-none" style={{ color }}>
-            {avgKn}<span className="ml-1 text-[0.65rem] font-normal text-muted-foreground">kn</span>
+            {avg}<span className="ml-1 text-[0.65rem] font-normal text-muted-foreground">{unitLabel}</span>
           </div>
           <div className="mt-0.5 text-[0.78rem] font-medium text-foreground/80">{wi.short} · {Math.round(wd)}°</div>
           <div className="mt-1.5 flex items-center gap-2.5 text-[0.65rem] text-muted-foreground">
-            <span>↑ {gustKn} kn</span>
-            {minKn !== null && <span>↓ {minKn} kn</span>}
+            <span>↑ {gust} {unitLabel}</span>
+            {min !== null && <span>↓ {min} {unitLabel}</span>}
           </div>
         </div>
       </div>

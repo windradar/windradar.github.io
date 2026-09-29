@@ -13,6 +13,10 @@
     "close": "Cerrar",
     "error": "Error inesperado"
   },
+  "notFound": {
+    "message": "Esta página no existe.",
+    "home": "Volver al inicio"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sesiones",
@@ -75,6 +79,7 @@
     "namePlaceholder": "Tu nombre o alias",
     "preferences": "Preferencias",
     "windUnits": "Unidades de viento",
+    "windUnitsHint": "El umbral de viento y las alertas se configuran siempre en nudos.",
     "dateFormat": "Formato de fecha",
     "knots": "Nudos (kn)",
     "saveChanges": "Guardar cambios",
@@ -323,7 +328,7 @@
     "hourlyTitle": "Previsión horaria",
     "noDataTable": "Sin datos — introduce una ubicación y pulsa Buscar",
     "noDataShort": "Sin datos",
-    "chartsTitle": "Gráficos — próximas 48h",
+    "chartsTitle": "Gráficos — próximos días",
     "dataSource": "Open-Meteo API · GFS + ECMWF · Copernicus Marine · Sin API key · Datos gratuitos",
     "generatedIn": "Generado en {{ms}}ms",
     "favAdded": "⭐ \"{{name}}\" añadido a favoritos",
@@ -336,9 +341,9 @@
     "tableHour": "HORA",
     "tableAir": "🌡️ AIRE",
     "tableWater": "💧 AGUA",
-    "tableWind": "💨 VIENTO (kn)",
-    "tableGust": "⚡ RÁFAGA (kn)",
-    "tableWind100": "🌬️ 100 m (kn)",
+    "tableWind": "💨 VIENTO ({{unit}})",
+    "tableGust": "⚡ RÁFAGA ({{unit}})",
+    "tableWind100": "🌬️ 100 m ({{unit}})",
     "tableDir": "🧭 DIRECCIÓN",
     "tableName": "⛵ NOMBRE",
     "tableWave": "🌊 OLA",

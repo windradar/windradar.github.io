@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, memo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +13,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { WeatherData } from '@/lib/weather-helpers';
-import { kmhToKnots, localDateStr, humanDate } from '@/lib/weather-helpers';
+import { localDateStr, humanDate } from '@/lib/weather-helpers';
+import { useWindUnit, convertKmh, WIND_UNIT_LABEL } from '@/lib/wind-units';
 
 interface WindApiResponse {
   hourly: {
@@ -23,6 +24,8 @@ interface WindApiResponse {
   error?: boolean;
   reason?: string;
 }
+
+const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -48,7 +51,7 @@ function aromeToHourlyResponse(wxDetail: WeatherData): WindApiResponse {
   return { hourly: { wind_speed_10m: ws, wind_gusts_10m: wg } };
 }
 
-export function WindCompareChart({ lat, lon, wxDetail }: Props) {
+export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDetail }: Props) {
   const [compareDate, setCompareDate] = useState('');
   const [compareData, setCompareData] = useState<WindApiResponse | null>(null);
   const [todayData, setTodayData] = useState<WindApiResponse | null>(null);
@@ -101,12 +104,10 @@ export function WindCompareChart({ lat, lon, wxDetail }: Props) {
     if (d) loadComparison(d);
   };
 
-  const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+  const unit = useWindUnit();
 
-  const toKn = (arr: number[] | undefined) =>
-    arr ? arr.slice(0, 24).map(v => v != null ? Math.round(kmhToKnots(v) * 10) / 10 : null) : new Array(24).fill(null);
-
-  const baseOpts: ChartOptions<'line'> = {
+  // Stable options: react-chartjs-2 updates the chart whenever they change identity
+  const baseOpts = useMemo<ChartOptions<'line'>>(() => ({
     responsive: true,
     maintainAspectRatio: true,
     plugins: {
@@ -116,18 +117,57 @@ export function WindCompareChart({ lat, lon, wxDetail }: Props) {
     scales: {
       x: { ticks: { color: '#4a6a8a', font: { size: 8 }, maxTicksLimit: 12 }, grid: { color: 'rgba(26,46,72,.4)' } },
       y: {
-        title: { display: true, text: 'Nudos (kn)', color: '#4a6a8a', font: { size: 9 } },
+        title: { display: true, text: WIND_UNIT_LABEL[unit], color: '#4a6a8a', font: { size: 9 } },
         ticks: { color: '#4a6a8a', font: { size: 9 } },
         grid: { color: 'rgba(26,46,72,.4)' },
       },
     },
     interaction: { mode: 'index', intersect: false },
-  };
+  }), [unit]);
 
   const hasData = todayData && compareData;
-  const todayLabel = wxDetail
-    ? `Viento hoy (${humanDate(today)}) · AROME HD`
-    : `Viento hoy (${humanDate(today)})`;
+
+  const chartData = useMemo(() => {
+    if (!todayData || !compareData) return null;
+    const toUnit = (arr: number[] | undefined) =>
+      arr ? arr.slice(0, 24).map(v => v != null ? Math.round(convertKmh(v, unit) * 10) / 10 : null) : new Array(24).fill(null);
+    const todayLabel = wxDetail
+      ? `Viento hoy (${humanDate(today)}) · AROME HD`
+      : `Viento hoy (${humanDate(today)})`;
+    return {
+      labels: HOURS,
+      datasets: [
+        {
+          label: todayLabel,
+          data: toUnit(todayData.hourly.wind_speed_10m),
+          borderColor: '#00d4ff',
+          backgroundColor: 'rgba(0,212,255,.07)',
+          fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
+        },
+        {
+          label: `Viento ${humanDate(compareDate)}`,
+          data: toUnit(compareData.hourly.wind_speed_10m),
+          borderColor: '#ff8c00',
+          backgroundColor: 'rgba(255,140,0,.07)',
+          fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
+        },
+        {
+          label: `Ráfagas hoy`,
+          data: toUnit(todayData.hourly.wind_gusts_10m),
+          borderColor: '#00d4ff',
+          borderDash: [5, 3],
+          fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1.2,
+        },
+        {
+          label: `Ráfagas ${humanDate(compareDate)}`,
+          data: toUnit(compareData.hourly.wind_gusts_10m),
+          borderColor: '#ff8c00',
+          borderDash: [5, 3],
+          fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1.2,
+        },
+      ],
+    };
+  }, [todayData, compareData, compareDate, wxDetail, today, unit]);
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 col-span-full">
@@ -154,44 +194,9 @@ export function WindCompareChart({ lat, lon, wxDetail }: Props) {
         </div>
       )}
 
-      {hasData && (
-        <Line
-          data={{
-            labels: hours,
-            datasets: [
-              {
-                label: todayLabel,
-                data: toKn(todayData.hourly.wind_speed_10m),
-                borderColor: '#00d4ff',
-                backgroundColor: 'rgba(0,212,255,.07)',
-                fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
-              },
-              {
-                label: `Viento ${humanDate(compareDate)}`,
-                data: toKn(compareData.hourly.wind_speed_10m),
-                borderColor: '#ff8c00',
-                backgroundColor: 'rgba(255,140,0,.07)',
-                fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
-              },
-              {
-                label: `Ráfagas hoy`,
-                data: toKn(todayData.hourly.wind_gusts_10m),
-                borderColor: '#00d4ff',
-                borderDash: [5, 3],
-                fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1.2,
-              },
-              {
-                label: `Ráfagas ${humanDate(compareDate)}`,
-                data: toKn(compareData.hourly.wind_gusts_10m),
-                borderColor: '#ff8c00',
-                borderDash: [5, 3],
-                fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1.2,
-              },
-            ],
-          }}
-          options={baseOpts}
-        />
+      {hasData && chartData && (
+        <Line data={chartData} options={baseOpts} />
       )}
     </div>
   );
-}
+});

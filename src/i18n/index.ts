@@ -3,8 +3,10 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import es from './locales/es.json';
 import ca from './locales/ca.json';
-import en from './locales/en.json';
-import fr from './locales/fr.json';
+
+// en.json and fr.json exist but are incomplete: add them here (and in
+// LanguageSelector) when they are ready. Listing them let the browser
+// detector switch to a language the selector cannot show.
 
 i18n
   .use(LanguageDetector)
@@ -13,11 +15,12 @@ i18n
     resources: {
       es: { translation: es },
       ca: { translation: ca },
-      en: { translation: en },
-      fr: { translation: fr },
     },
     fallbackLng: 'es',
-    supportedLngs: ['es', 'ca', 'en', 'fr'],
+    supportedLngs: ['es', 'ca'],
+    // es-ES, ca-ES… resolve to es / ca
+    nonExplicitSupportedLngs: true,
+    load: 'languageOnly',
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

@@ -16,12 +16,16 @@ import SessionStoryShare from '@/components/SessionStoryShare';
 import { SessionsDashboard } from '@/components/SessionsDashboard';
 import type { Session, Snapshot, SessionMaterial } from '@/lib/session-stats';
 import type { Json } from '@/integrations/supabase/types';
+import { useWindUnit, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
 export default function Sessions() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const unit = useWindUnit();
+  // Snapshots are stored in knots
+  const fmtKn = (kn: number) => formatWind(windFromKnots(kn, unit), unit);
 
   const urlSchema = z.string().trim().url(t('sessions.invalidTrackingUrl')).max(500)
     .refine(u => /^https?:\/\//i.test(u), t('sessions.invalidTrackingUrl'))
@@ -306,7 +310,7 @@ export default function Sessions() {
                     {snapshot.map((s) => (
                       <div key={s.hour} className="flex justify-between">
                         <span className="text-muted-foreground">{s.hour}</span>
-                        <span>💨 {s.wind_kn}kn ⚡{s.gust_kn}kn {dirArrow(s.dir_deg)} {s.dir_short} 🌊 {s.wave_m !== null ? s.wave_m.toFixed(1) + 'm' : '—'}</span>
+                        <span>💨 {fmtKn(s.wind_kn)}{WIND_UNIT_LABEL[unit]} ⚡{fmtKn(s.gust_kn)}{WIND_UNIT_LABEL[unit]} {dirArrow(s.dir_deg)} {s.dir_short} 🌊 {s.wave_m !== null ? s.wave_m.toFixed(1) + 'm' : '—'}</span>
                       </div>
                     ))}
                   </div>
@@ -420,7 +424,7 @@ export default function Sessions() {
                         {(s.weather_snapshot as Snapshot[]).map((w) => (
                           <div key={w.hour} className="flex justify-between text-muted-foreground">
                             <span>{w.hour}</span>
-                            <span>💨{w.wind_kn} ⚡{w.gust_kn} {dirArrow(w.dir_deg)}{w.dir_short} 🌊{w.wave_m !== null ? w.wave_m.toFixed(1) + 'm' : '—'}</span>
+                            <span>💨{fmtKn(w.wind_kn)} ⚡{fmtKn(w.gust_kn)} {dirArrow(w.dir_deg)}{w.dir_short} 🌊{w.wave_m !== null ? w.wave_m.toFixed(1) + 'm' : '—'}</span>
                           </div>
                         ))}
                       </div>

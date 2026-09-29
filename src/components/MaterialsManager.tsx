@@ -224,13 +224,13 @@ export default function MaterialsManager() {
                     ) : (
                       <>
                         <span className="flex-1 font-medium">{it.name}</span>
-                        <button onClick={() => startEditItem(it)}
-                          className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary">
-                          <Pencil size={12} />
+                        <button onClick={() => startEditItem(it)} aria-label={`Editar ${it.name}`}
+                          className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary [@media(hover:none)]:opacity-100">
+                          <Pencil size={13} />
                         </button>
-                        <button onClick={() => deleteItem(it.id)}
-                          className="text-muted-foreground hover:text-destructive">
-                          <Trash2 size={12} />
+                        <button onClick={() => deleteItem(it.id)} aria-label={`Eliminar ${it.name}`}
+                          className="rounded p-1.5 text-muted-foreground hover:text-destructive">
+                          <Trash2 size={13} />
                         </button>
                       </>
                     )}

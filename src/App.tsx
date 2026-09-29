@@ -6,6 +6,7 @@ import { ConsentProvider } from "@/hooks/useConsent";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
+import { WindUnitSync } from "@/components/WindUnitSync";
 import { lazy, Suspense } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 import Index from "./pages/Index.tsx";
@@ -38,6 +39,7 @@ const App = () => (
       <BrowserRouter>
         <ConsentProvider>
           <AuthProvider>
+            <WindUnitSync />
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />

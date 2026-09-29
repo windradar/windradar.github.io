@@ -13,6 +13,10 @@
     "close": "Close",
     "error": "Unexpected error"
   },
+  "notFound": {
+    "message": "This page does not exist.",
+    "home": "Back to home"
+  },
   "nav": {
     "profile": "Profile",
     "sessions": "Sessions",
@@ -74,6 +78,7 @@
     "namePlaceholder": "Your name or alias",
     "preferences": "Preferences",
     "windUnits": "Wind units",
+    "windUnitsHint": "The wind threshold and alerts are always set in knots.",
     "dateFormat": "Date format",
     "knots": "Knots (kn)",
     "saveChanges": "Save changes",
