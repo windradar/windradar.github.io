@@ -206,6 +206,8 @@
     "emailNotif": "📧 Automatic email reports",
     "emailNotifDesc": "Set up to 2 daily automatic send times with your preferred range.",
     "emailLabel": "Email",
+    "emailAccountNote": "Emails are sent to your account email.",
+    "testTooSoon": "You just ran a test. Wait 5 minutes to try again.",
     "locationLabel": "Location",
     "sendTime1": "Send time 1",
     "sendTime2": "Send time 2",

@@ -206,6 +206,8 @@
     "emailNotif": "📧 Envoi automatique par e-mail",
     "emailNotifDesc": "Configurez jusqu'à 2 heures d'envoi automatique quotidien avec la plage souhaitée.",
     "emailLabel": "E-mail",
+    "emailAccountNote": "Les e-mails sont envoyés à l’adresse de votre compte.",
+    "testTooSoon": "Vous venez de faire un test. Attendez 5 minutes pour recommencer.",
     "locationLabel": "Lieu",
     "sendTime1": "Heure d'envoi 1",
     "sendTime2": "Heure d'envoi 2",

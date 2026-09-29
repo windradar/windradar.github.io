@@ -42,6 +42,24 @@ function windDir(deg: number) {
   return CARD16[Math.round(((deg % 360) + 360) % 360 / 22.5) % 16];
 }
 
+const TEST_COOLDOWN_SECONDS = 300;
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  });
+}
+
 function padHour(h: string) { return h.length === 4 ? '0' + h : h; }
 
 function madridHour(date: Date): string {
@@ -66,7 +84,6 @@ function madridDateLabel(date: Date): string {
 // ─── email HTML builder ──────────────────────────────────────────────────────
 
 interface ProfileRow {
-  email_notif_address:    string;
   email_notif_location:   string;
   email_notif_lat:        number;
   email_notif_lon:        number;
@@ -84,7 +101,9 @@ interface WxHourly {
 }
 
 function buildHtml(profile: ProfileRow, hourly: WxHourly, dateLabel: string): string {
-  const { email_notif_range_from: from, email_notif_range_to: to, email_notif_min_wind: threshold } = profile;
+  const { email_notif_range_from: from, email_notif_range_to: to } = profile;
+  const threshold = Number(profile.email_notif_min_wind) || 0;
+  const location  = escapeHtml(profile.email_notif_location ?? '');
 
   const rows = hourly.time
     .map((t, i) => ({ hour: t.slice(11, 16), i }))
@@ -115,7 +134,7 @@ function buildHtml(profile: ProfileRow, hourly: WxHourly, dateLabel: string): st
     <tr>
       <td style="background:#0f172a;padding:20px 24px;border-radius:12px 12px 0 0">
         <p style="margin:0;color:#38bdf8;font-size:18px;font-weight:700">💨 WindFlowRadar</p>
-        <p style="margin:4px 0 0;color:#94a3b8;font-size:13px">Previsión de viento · ${profile.email_notif_location}</p>
+        <p style="margin:4px 0 0;color:#94a3b8;font-size:13px">Previsión de viento · ${location}</p>
       </td>
     </tr>
     <tr>
@@ -183,11 +202,21 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  if (testUserId) {
+    const { data: claimed, error: rpcError } = await supabase.rpc('claim_test_slot', {
+      p_user_id: testUserId, p_channel: 'email', p_cooldown_seconds: TEST_COOLDOWN_SECONDS,
+    });
+    if (rpcError) {
+      console.error('claim_test_slot error:', rpcError.message);
+      return jsonResponse({ error: 'internal' }, 500);
+    }
+    if (!claimed) return jsonResponse({ error: 'too_soon', retryAfter: TEST_COOLDOWN_SECONDS }, 429);
+  }
+
   let query = supabase
     .from('profiles')
-    .select('user_id, email_notif_address, email_notif_location, email_notif_lat, email_notif_lon, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, email_notif_min_wind')
+    .select('user_id, email_notif_location, email_notif_lat, email_notif_lon, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, email_notif_min_wind')
     .eq('email_notif_enabled', true)
-    .not('email_notif_address', 'is', null)
     .not('email_notif_lat', 'is', null);
 
   if (testUserId) {
@@ -198,16 +227,16 @@ Deno.serve(async (req) => {
 
   if (error) {
     console.error('DB error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } });
+    return jsonResponse({ error: 'internal' }, 500);
   }
 
   // Time check skipped in test mode
-  const toSend = testUserId
-    ? (profiles ?? [])
-    : (profiles ?? []).filter((p: any) =>
-        p.email_notif_time1 === currentHour ||
-        (p.email_notif_time2 && p.email_notif_time2 === currentHour)
-      );
+  const toSend = (profiles ?? [])
+    .filter((p: any) => HHMM.test(p.email_notif_range_from ?? '') && HHMM.test(p.email_notif_range_to ?? ''))
+    .filter((p: any) => testUserId ||
+      p.email_notif_time1 === currentHour ||
+      (p.email_notif_time2 && p.email_notif_time2 === currentHour)
+    );
 
   if (!toSend.length) {
     return new Response(JSON.stringify({ sent: 0, total: 0, hour: currentHour, testMode: !!testUserId }), {
@@ -217,18 +246,27 @@ Deno.serve(async (req) => {
 
   const results: string[] = [];
   for (const p of toSend as any[]) {
+    // Only the account email, already verified by Supabase Auth: a free-text
+    // address would let anyone send our emails to third parties.
+    const { data: authData } = await supabase.auth.admin.getUserById(p.user_id);
+    const to = authData?.user?.email_confirmed_at ? authData.user.email : null;
+    if (!to) {
+      results.push(`❌ ${p.user_id}: sin email verificado`);
+      continue;
+    }
     try {
       const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.email_notif_lat}&longitude=${p.email_notif_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,weathercode&wind_speed_unit=kmh&timezone=Europe%2FMadrid&forecast_days=1`;
       const wx   = await (await fetch(wxUrl)).json();
       const html = buildHtml(p as ProfileRow, wx.hourly as WxHourly, dateLabel);
-      const subject = `💨 Previsión ${p.email_notif_location} · ${currentHour}`;
+      const location = String(p.email_notif_location ?? '').replace(/\s+/g, ' ').slice(0, 80);
+      const subject = `💨 Previsión ${location} · ${currentHour}`;
 
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
-          to: [{ email: p.email_notif_address }],
+          to: [{ email: to }],
           subject,
           htmlContent: html,
         }),
@@ -236,17 +274,16 @@ Deno.serve(async (req) => {
 
       const body = await res.text();
       if (!res.ok) {
-        console.error(`Brevo error for ${p.email_notif_address}:`, body);
-        results.push(`❌ ${p.email_notif_address}: ${body.slice(0, 120)}`);
+        console.error(`Brevo error for ${p.user_id}:`, body);
+        results.push(`❌ ${to}: error del proveedor de email`);
       } else {
-        results.push(`✅ ${p.email_notif_address}`);
+        results.push(`✅ ${to}`);
       }
     } catch (e) {
-      results.push(`❌ ${p.email_notif_address}: ${(e as Error).message}`);
+      console.error(`Send error for ${p.user_id}:`, (e as Error).message);
+      results.push(`❌ ${to}: error al enviar`);
     }
   }
 
-  return new Response(JSON.stringify({ sent: results.filter(r => r.startsWith('✅')).length, total: toSend.length, results, testMode: !!testUserId }), {
-    status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  });
+  return jsonResponse({ sent: results.filter(r => r.startsWith('✅')).length, total: toSend.length, results, testMode: !!testUserId });
 });

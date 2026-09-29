@@ -25,7 +25,6 @@ export interface AppSettings {
   gridToHour: string;
   spots: SpotConfig[];
   emailEnabled: boolean;
-  emailAddress: string;
   emailLocation: string;
   emailTime1: string;
   emailTime2: string;
@@ -48,7 +47,6 @@ const defaultSettings: AppSettings = {
   gridToHour: '23:00',
   spots: [],
   emailEnabled: false,
-  emailAddress: '',
   emailLocation: '',
   emailTime1: '07:00',
   emailTime2: '',
@@ -188,14 +186,13 @@ export function SettingsPanel({
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('email_notif_enabled, email_notif_address, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, whatsapp_alert_enabled, callmebot_apikey, whatsapp_alert_location, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to')
+          .select('email_notif_enabled, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, whatsapp_alert_enabled, callmebot_apikey, whatsapp_alert_location, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to')
           .eq('user_id', user.id)
           .single();
         if (data) {
           setLocal(prev => ({
             ...prev,
             emailEnabled:          data.email_notif_enabled ?? false,
-            emailAddress:          data.email_notif_address ?? '',
             emailLocation:         data.email_notif_location ?? '',
             emailTime1:            data.email_notif_time1 ?? '07:00',
             emailTime2:            data.email_notif_time2 ?? '',
@@ -250,13 +247,16 @@ export function SettingsPanel({
           body: '{}',
         }
       );
+      if (res.status === 429) { toast.error(t('settings.testTooSoon')); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
         toast.error(t('settings.testEmailNoConfig'));
-      } else {
+      } else if (data?.sent > 0) {
         toast.success(results[0]);
+      } else {
+        toast.error(results[0]);
       }
     } catch {
       toast.error(t('settings.testEmailError'));
@@ -344,7 +344,6 @@ export function SettingsPanel({
         .from('profiles')
         .update({
           email_notif_enabled:       local.emailEnabled,
-          email_notif_address:       local.emailAddress.trim() || null,
           email_notif_location:      local.emailLocation.trim() || null,
           email_notif_lat:           lat,
           email_notif_lon:           lon,
@@ -482,9 +481,10 @@ export function SettingsPanel({
                 <div className={`space-y-3 transition-opacity ${local.emailEnabled ? 'opacity-100' : 'pointer-events-none opacity-40'}`}>
                   <div className="flex flex-col gap-1">
                     <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.emailLabel')}</label>
-                    <input value={local.emailAddress} onChange={e => update({ emailAddress: e.target.value })}
-                      type="email" placeholder="tu@email.com"
-                      className="rounded-md border border-border bg-secondary px-2.5 py-1.5 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary" />
+                    <p className="rounded-md border border-border bg-secondary/50 px-2.5 py-1.5 font-mono text-[0.78rem] text-muted-foreground">
+                      {user?.email ?? '—'}
+                    </p>
+                    <p className="text-[0.65rem] text-muted-foreground">{t('settings.emailAccountNote')}</p>
                   </div>
 
                   <div className="flex flex-col gap-1">
