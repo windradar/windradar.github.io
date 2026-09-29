@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      # vite build does not type-check: without this, type errors reach production
+      - name: Type check
+        run: bun run typecheck
+
       - name: Build
         run: bun run build
         # Public values (URL + anon JWT), kept in Settings > Variables instead of a committed .env
