@@ -146,7 +146,7 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           },
           {
             "heading": "Mapa de viento",
-            "body": "El botón del mapa, en la cabecera, abre un mapa con flechas de viento sobre la zona que ves: indican hacia dónde sopla, con su color y su valor en tu unidad. Con la barra inferior recorres hoy y mañana hora a hora. Donde hay AROME HD se usa ese modelo y, si no, el global. Tus favoritos aparecen con su viento; tócalos para abrir su previsión."
+            "body": "Con el botón del mapa de la cabecera ves el viento de toda la zona con flechas, hora a hora para hoy y mañana. Tienes todos los detalles en la sección «Mapa de viento»."
           },
           {
             "heading": "Unidades",
@@ -280,7 +280,7 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           },
           {
             "heading": "Historial",
-            "body": "Cada tarjeta muestra lugar, deporte, fecha, horario, datos meteo, material, enlace de tracking y notas. Desde sus iconos puedes compartirla, editarla o borrarla.",
+            "body": "Cada tarjeta muestra lugar, deporte, fecha, horario, datos meteo, material, enlace de tracking y notas. Desde sus iconos puedes compartirla, editarla o borrarla. Se muestran 30 sesiones; pulsa «Mostrar más» para ver las siguientes.",
             "tags": [
               "cuenta"
             ]
@@ -392,7 +392,7 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           },
           {
             "heading": "Sin conexión",
-            "body": "La app abre sin conexión y muestra la última previsión consultada durante una hora. Iniciar sesión, las sesiones y el material necesitan conexión."
+            "body": "La app abre sin conexión y muestra la última previsión consultada durante una hora. Iniciar sesión, las sesiones y el material necesitan conexión. Mientras no haya conexión verás arriba el aviso «Sin conexión»."
           }
         ]
       },
@@ -433,6 +433,10 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
             "body": "AROME solo cubre Francia y los países vecinos (no llega, por ejemplo, a Canarias), y solo hoy y mañana. En otras zonas o fechas la app usa el modelo global."
           },
           {
+            "heading": "Me sale un error al cargar la previsión",
+            "body": "Puede ser la conexión o que el servicio meteorológico esté saturado un momento. El aviso te dice cuál es el problema; pulsa «Reintentar» para volver a pedir los datos."
+          },
+          {
             "heading": "Un día pasado sale sin datos",
             "body": "El archivo histórico tarda un poco en publicar los datos de los días más recientes. Vuelve a intentarlo más tarde."
           },
@@ -443,6 +447,36 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           {
             "heading": "¿Qué datos guardáis?",
             "body": "Tu email, tu configuración, tus favoritos y lo que registras (sesiones, material y fotos). Las búsquedas recientes y el tema se quedan en tu navegador. Tienes el detalle en Privacidad y puedes cambiar las cookies en «Configurar cookies», al pie de la página."
+          }
+        ]
+      },
+      "mapa": {
+        "title": "Mapa de viento",
+        "intro": "El viento de toda una zona de un vistazo: botón del mapa en la cabecera.",
+        "items": [
+          {
+            "heading": "Abrir el mapa",
+            "body": "Pulsa el botón del mapa en la cabecera de la pantalla principal. Se abre centrado en el spot que estabas viendo. Muévelo y haz zoom como en cualquier mapa: las flechas se recalculan para la zona visible."
+          },
+          {
+            "heading": "Leer las flechas",
+            "body": "Cada flecha indica hacia dónde sopla el viento en ese punto; su color sigue la leyenda de abajo y el número es la velocidad en tu unidad (nudos, km/h o m/s)."
+          },
+          {
+            "heading": "Hoy y mañana hora a hora",
+            "body": "Arrastra la barra inferior para ver cómo evoluciona el viento durante hoy y mañana. Al abrir el mapa empieza en la hora actual."
+          },
+          {
+            "heading": "AROME HD o modelo global",
+            "body": "En cada punto se usa AROME HD (1,3 km) si cubre esa zona y hora, y si no, el modelo global. La etiqueta junto a la barra indica cuál se está usando en la hora elegida."
+          },
+          {
+            "heading": "Tus favoritos en el mapa",
+            "body": "Tus favoritos aparecen con su nombre y el viento de la hora elegida. Toca uno para ver racha y dirección, y pulsa «Ver previsión» para abrir su previsión completa."
+          },
+          {
+            "heading": "Mi ubicación",
+            "body": "El botón de la diana, arriba a la derecha, centra el mapa donde estás. La primera vez el navegador te pedirá permiso."
           }
         ]
       }
@@ -571,7 +605,7 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           },
           {
             "heading": "Mapa de vent",
-            "body": "El botó del mapa, a la capçalera, obre un mapa amb fletxes de vent sobre la zona que veus: indiquen cap on bufa, amb el seu color i el seu valor en la teva unitat. Amb la barra inferior recorres avui i demà hora a hora. On hi ha AROME HD es fa servir aquest model i, si no, el global. Els teus favorits apareixen amb el seu vent; toca'ls per obrir-ne la previsió."
+            "body": "Amb el botó del mapa de la capçalera veus el vent de tota la zona amb fletxes, hora a hora per a avui i demà. Tens tots els detalls a la secció «Mapa de vent»."
           },
           {
             "heading": "Unitats",
@@ -705,7 +739,7 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           },
           {
             "heading": "Historial",
-            "body": "Cada targeta mostra lloc, esport, data, horari, dades meteo, material, enllaç de seguiment i notes. Des de les seves icones la pots compartir, editar o esborrar.",
+            "body": "Cada targeta mostra lloc, esport, data, horari, dades meteo, material, enllaç de seguiment i notes. Des de les seves icones la pots compartir, editar o esborrar. Es mostren 30 sessions; prem «Mostra'n més» per veure les següents.",
             "tags": [
               "cuenta"
             ]
@@ -817,7 +851,7 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           },
           {
             "heading": "Sense connexió",
-            "body": "L'app s'obre sense connexió i mostra l'última previsió consultada durant una hora. Iniciar sessió, les sessions i el material necessiten connexió."
+            "body": "L'app s'obre sense connexió i mostra l'última previsió consultada durant una hora. Iniciar sessió, les sessions i el material necessiten connexió. Mentre no hi hagi connexió veuràs a dalt l'avís «Sense connexió»."
           }
         ]
       },
@@ -858,6 +892,10 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
             "body": "AROME només cobreix França i els països veïns (no arriba, per exemple, a les Canàries), i només avui i demà. En altres zones o dates l'app fa servir el model global."
           },
           {
+            "heading": "Em surt un error en carregar la previsió",
+            "body": "Pot ser la connexió o que el servei meteorològic estigui saturat un moment. L'avís et diu quin és el problema; prem «Tornar-ho a provar» per tornar a demanar les dades."
+          },
+          {
             "heading": "Un dia passat surt sense dades",
             "body": "L'arxiu històric triga una mica a publicar les dades dels dies més recents. Torna-ho a provar més tard."
           },
@@ -868,6 +906,36 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           {
             "heading": "Quines dades deseu?",
             "body": "El teu correu, la teva configuració, els teus favorits i el que registres (sessions, material i fotos). Les cerques recents i el tema es queden al teu navegador. Tens el detall a Privacitat i pots canviar les galetes a «Configurar galetes», al peu de la pàgina."
+          }
+        ]
+      },
+      "mapa": {
+        "title": "Mapa de vent",
+        "intro": "El vent de tota una zona d'un cop d'ull: botó del mapa a la capçalera.",
+        "items": [
+          {
+            "heading": "Obrir el mapa",
+            "body": "Prem el botó del mapa a la capçalera de la pantalla principal. S'obre centrat en l'spot que estaves veient. Mou-lo i fes zoom com en qualsevol mapa: les fletxes es recalculen per a la zona visible."
+          },
+          {
+            "heading": "Llegir les fletxes",
+            "body": "Cada fletxa indica cap on bufa el vent en aquell punt; el seu color segueix la llegenda de sota i el número és la velocitat en la teva unitat (nusos, km/h o m/s)."
+          },
+          {
+            "heading": "Avui i demà hora a hora",
+            "body": "Arrossega la barra inferior per veure com evoluciona el vent durant avui i demà. En obrir el mapa comença a l'hora actual."
+          },
+          {
+            "heading": "AROME HD o model global",
+            "body": "A cada punt es fa servir AROME HD (1,3 km) si cobreix aquella zona i hora, i si no, el model global. L'etiqueta al costat de la barra indica quin s'està fent servir a l'hora triada."
+          },
+          {
+            "heading": "Els teus favorits al mapa",
+            "body": "Els teus favorits apareixen amb el seu nom i el vent de l'hora triada. Toca'n un per veure'n la ratxa i la direcció, i prem «Veure previsió» per obrir-ne la previsió completa."
+          },
+          {
+            "heading": "La meva ubicació",
+            "body": "El botó de la diana, a dalt a la dreta, centra el mapa on ets. La primera vegada el navegador et demanarà permís."
           }
         ]
       }

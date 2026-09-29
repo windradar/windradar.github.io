@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   type LucideIcon, ArrowLeft, BookOpen, Search, X, ChevronDown, Rocket, MapPin, LineChart, SlidersHorizontal,
-  BellRing, Share2, CalendarDays, Wrench, UserCircle, Smartphone, Palette, HelpCircle,
+  BellRing, Share2, CalendarDays, Wrench, UserCircle, Smartphone, Palette, HelpCircle, Map as MapIcon,
 } from 'lucide-react';
 import { windRowStyle } from '@/lib/wind-row-color';
 import { InstallAppButton } from '@/components/InstallAppButton';
@@ -22,6 +22,7 @@ const SECTION_META: SectionMeta[] = [
   { id: 'inicio', icon: Rocket, color: 'text-sky-500', bg: 'bg-sky-500/10', border: 'border-sky-500/30' },
   { id: 'buscar', icon: MapPin, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/30' },
   { id: 'prevision', icon: LineChart, color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30' },
+  { id: 'mapa', icon: MapIcon, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
   { id: 'configuracion', icon: SlidersHorizontal, color: 'text-indigo-500', bg: 'bg-indigo-500/10', border: 'border-indigo-500/30' },
   { id: 'alertas', icon: BellRing, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/30' },
   { id: 'compartir', icon: Share2, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/30' },
