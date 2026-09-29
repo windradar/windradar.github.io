@@ -71,22 +71,22 @@ export default function Index() {
       setWx(wxRes);
       setMar(marRes);
     } else {
-      // 1. AROME HD 1.3 km, 15 min — fallo silencioso
+      // AROME HD 1.3 km 15 min (fallo silencioso) + seamless 7 días + marine
       const aromeUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&minutely_15=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weather_code&models=meteofrance_arome_france_hd&forecast_days=2&wind_speed_unit=kmh&timezone=auto`;
-      try {
-        const aromeRaw = await fetch(aromeUrl).then(r => r.ok ? r.json() : null).catch(() => null);
-        setWxDetail(aromeRaw && !aromeRaw.error ? normalizeArome(aromeRaw) : null);
-      } catch {
-        setWxDetail(null);
-      }
-
-      // 2. Seamless 7 días + marine en paralelo
       const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,precipitation,weathercode,cloud_cover&wind_speed_unit=kmh&timezone=auto&forecast_days=7`;
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,swell_wave_height,sea_surface_temperature&timezone=auto&forecast_days=7`;
-      const [wxRes, marRes] = await Promise.all([
+      const [aromeRaw, wxRes, marRes] = await Promise.all([
+        fetch(aromeUrl).then(r => r.ok ? r.json() : null).catch(() => null),
         fetch(wxUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
         fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
+      let detail: ReturnType<typeof normalizeArome> | null = null;
+      try {
+        detail = aromeRaw && !aromeRaw.error ? normalizeArome(aromeRaw) : null;
+      } catch {
+        detail = null;
+      }
+      setWxDetail(detail);
       if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
       setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
       setWx(wxRes);

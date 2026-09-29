@@ -34,7 +34,6 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Sin svg: flag-icons trae ~140 banderas y solo usamos 4 (se cachean al usarse)
         globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: "index.html",
@@ -71,6 +70,20 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        // Libraries change less often than app code: separate chunks keep them cached across deploys
+        manualChunks: {
+          react: ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+          charts: ["chart.js", "react-chartjs-2"],
+          motion: ["framer-motion"],
+          i18n: ["i18next", "react-i18next", "i18next-browser-languagedetector"],
+        },
+      },
     },
   },
 });

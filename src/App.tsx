@@ -7,21 +7,29 @@ import { ConsentProvider } from "@/hooks/useConsent";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index.tsx";
-import Auth from "./pages/Auth.tsx";
-import ResetPassword from "./pages/ResetPassword.tsx";
-import Profile from "./pages/Profile.tsx";
-import Sessions from "./pages/Sessions.tsx";
-import Materials from "./pages/Materials.tsx";
-import StoryCardEditor from "./pages/StoryCardEditor.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Notice from "./pages/legal/Notice.tsx";
-import Privacy from "./pages/legal/Privacy.tsx";
-import Cookies from "./pages/legal/Cookies.tsx";
-import Terms from "./pages/legal/Terms.tsx";
-import Help from "./pages/Help.tsx";
+
+const Auth            = lazy(() => import("./pages/Auth.tsx"));
+const ResetPassword   = lazy(() => import("./pages/ResetPassword.tsx"));
+const Profile         = lazy(() => import("./pages/Profile.tsx"));
+const Sessions        = lazy(() => import("./pages/Sessions.tsx"));
+const Materials       = lazy(() => import("./pages/Materials.tsx"));
+const StoryCardEditor = lazy(() => import("./pages/StoryCardEditor.tsx"));
+const NotFound        = lazy(() => import("./pages/NotFound.tsx"));
+const Notice          = lazy(() => import("./pages/legal/Notice.tsx"));
+const Privacy         = lazy(() => import("./pages/legal/Privacy.tsx"));
+const Cookies         = lazy(() => import("./pages/legal/Cookies.tsx"));
+const Terms           = lazy(() => import("./pages/legal/Terms.tsx"));
+const Help            = lazy(() => import("./pages/Help.tsx"));
 
 const queryClient = new QueryClient();
+
+const PageFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,21 +39,23 @@ const App = () => (
       <BrowserRouter>
         <ConsentProvider>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-              <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
-              <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/legal/notice" element={<Notice />} />
-              <Route path="/legal/privacy" element={<Privacy />} />
-              <Route path="/legal/cookies" element={<Cookies />} />
-              <Route path="/legal/terms" element={<Terms />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+                <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
+                <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/legal/notice" element={<Notice />} />
+                <Route path="/legal/privacy" element={<Privacy />} />
+                <Route path="/legal/cookies" element={<Cookies />} />
+                <Route path="/legal/terms" element={<Terms />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
             <CookieBanner />
           </AuthProvider>
         </ConsentProvider>
