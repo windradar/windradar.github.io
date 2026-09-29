@@ -12,8 +12,28 @@ interface Props {
   size?: 'sm' | 'md';
 }
 
-const MAX_BYTES = 3 * 1024 * 1024; // 3 MB
+const MAX_INPUT_BYTES = 20 * 1024 * 1024;
+// Must stay below the bucket's file_size_limit (3 MB)
+const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
+const MAX_SIDE = 1600;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+
+async function resizeToJpeg(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d')!;
+  // JPEG has no alpha: transparent PNGs would otherwise turn black
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+  if (!blob) throw new Error('No se pudo procesar la imagen');
+  return blob;
+}
 
 export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md' }: Props) {
   const { user } = useAuth();
@@ -27,14 +47,15 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
     e.target.value = '';
     if (!file || !user) return;
     if (!ALLOWED.includes(file.type)) { toast.error('Formato no válido (jpg, png, webp)'); return; }
-    if (file.size > MAX_BYTES) { toast.error('Máx 3 MB'); return; }
+    if (file.size > MAX_INPUT_BYTES) { toast.error('Máx 20 MB'); return; }
 
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const path = `${user.id}/${itemId}-${Date.now()}.${ext}`;
+      const blob = await resizeToJpeg(file);
+      if (blob.size > MAX_UPLOAD_BYTES) throw new Error('La imagen es demasiado grande');
+      const path = `${user.id}/${itemId}-${Date.now()}.jpg`;
       const { error: upErr } = await supabase.storage.from('material-photos')
-        .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+        .upload(path, blob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
       if (upErr) throw upErr;
 
       const { data: pub } = supabase.storage.from('material-photos').getPublicUrl(path);

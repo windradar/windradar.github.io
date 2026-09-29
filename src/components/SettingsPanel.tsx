@@ -83,14 +83,15 @@ function saveDisplaySettings(s: AppSettings) {
 
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
-async function geocode(location: string): Promise<{ lat: number; lon: number } | null> {
+async function geocode(location: string): Promise<{ lat: number; lon: number; tz: string | null } | null> {
   try {
     const res = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=es&format=json`
     );
     const data = await res.json();
     if (data.results?.length) {
-      return { lat: data.results[0].latitude, lon: data.results[0].longitude };
+      const r = data.results[0];
+      return { lat: r.latitude, lon: r.longitude, tz: typeof r.timezone === 'string' ? r.timezone : null };
     }
   } catch (_) {
     // network error — caller will handle null
@@ -331,6 +332,7 @@ export function SettingsPanel({
 
       let waLat: number | null = null;
       let waLon: number | null = null;
+      let waTz: string | null = null;
       // Geocoded even with WhatsApp off: push alerts share this location
       if (local.whatsappAlertLocation.trim()) {
         const geo = await geocode(local.whatsappAlertLocation.trim());
@@ -341,6 +343,7 @@ export function SettingsPanel({
         }
         waLat = geo.lat;
         waLon = geo.lon;
+        waTz = geo.tz;
       }
 
       const { error } = await supabase
@@ -360,6 +363,7 @@ export function SettingsPanel({
           whatsapp_alert_location:   local.whatsappAlertLocation.trim() || null,
           whatsapp_alert_lat:        waLat,
           whatsapp_alert_lon:        waLon,
+          whatsapp_alert_tz:         waTz,
           whatsapp_alert_time1:      local.whatsappAlertTime1,
           whatsapp_alert_time2:      local.whatsappAlertTime2 || null,
           whatsapp_alert_range_from: local.whatsappAlertRangeFrom,

@@ -51,6 +51,7 @@ interface Profile {
   whatsapp_alert_time2: string | null
   whatsapp_alert_range_from: string | null
   whatsapp_alert_range_to: string | null
+  whatsapp_alert_tz: string | null
   email_notif_min_wind: number | null
 }
 
@@ -77,6 +78,17 @@ function json(body: unknown, status = 200): Response {
 
 const TEST_COOLDOWN_SECONDS = 300
 
+// null when the timezone is missing or not a valid IANA name
+function localHourIn(tz: string | null, now: Date): string | null {
+  if (!tz) return null
+  try {
+    const h = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(now)
+    return `${h.padStart(2, '0')}:00`
+  } catch {
+    return null
+  }
+}
+
 // The endpoint comes from the browser and is stored by the user, so without
 // this check the function could be made to POST to any URL (SSRF).
 const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'notify.windows.com', 'push.apple.com']
@@ -92,7 +104,9 @@ function isAllowedEndpoint(endpoint: string): boolean {
 }
 
 // Returns null when the alert should not be sent (cron mode only)
-async function buildPayload(p: Profile, testMode: boolean, nowUtc: Date): Promise<Payload | null> {
+async function buildPayload(
+  p: Profile, testMode: boolean, nowUtc: Date, onTimezone: (tz: string) => Promise<unknown>,
+): Promise<Payload | null> {
   if (p.whatsapp_alert_lat === null || p.whatsapp_alert_lon === null) {
     return testMode
       ? { title: 'WindFlowRadar', body: 'Notificaciones activadas. Configura el spot en Ajustes para recibir las alertas de viento.', url: '/', tag: 'wind-alert' }
@@ -101,6 +115,11 @@ async function buildPayload(p: Profile, testMode: boolean, nowUtc: Date): Promis
 
   const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.whatsapp_alert_lat}&longitude=${p.whatsapp_alert_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
   const wx = await fetch(wxUrl).then(r => r.json())
+
+  // Profiles saved before the tz column existed
+  if (!localHourIn(p.whatsapp_alert_tz, nowUtc) && typeof wx.timezone === 'string' && localHourIn(wx.timezone, nowUtc)) {
+    await onTimezone(wx.timezone)
+  }
 
   const offsetSec: number = wx.utc_offset_seconds ?? 0
   const localNow = new Date(nowUtc.getTime() + offsetSec * 1000)
@@ -225,7 +244,7 @@ Deno.serve(async (req) => {
 
   const { data: profiles, error: profError } = await supabase
     .from('profiles')
-    .select('user_id, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, email_notif_min_wind')
+    .select('user_id, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_tz, email_notif_min_wind')
     .in('user_id', [...subsByUser.keys()])
   if (profError) {
     console.error('profiles error:', profError.message)
@@ -237,8 +256,14 @@ Deno.serve(async (req) => {
   let sent = 0
 
   for (const p of (profiles ?? []) as Profile[]) {
+    // Skip before calling Open-Meteo: most users are not due this hour
+    const knownHour = localHourIn(p.whatsapp_alert_tz, nowUtc)
+    if (!testUserId && knownHour && knownHour !== p.whatsapp_alert_time1 && knownHour !== (p.whatsapp_alert_time2 ?? '')) {
+      continue
+    }
     try {
-      const payload = await buildPayload(p, !!testUserId, nowUtc)
+      const payload = await buildPayload(p, !!testUserId, nowUtc, tz =>
+        supabase.from('profiles').update({ whatsapp_alert_tz: tz }).eq('user_id', p.user_id))
       if (!payload) continue
 
       let userSent = 0

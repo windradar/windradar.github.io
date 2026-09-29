@@ -58,6 +58,17 @@ function humanDate(dateStr: string): string {
 
 const TEST_COOLDOWN_SECONDS = 300
 
+// null when the timezone is missing or not a valid IANA name
+function localHourIn(tz: string | null, now: Date): string | null {
+  if (!tz) return null
+  try {
+    const h = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(now)
+    return `${h.padStart(2, '0')}:00`
+  } catch {
+    return null
+  }
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
@@ -115,7 +126,7 @@ Deno.serve(async (req) => {
 
   let query = supabase
     .from('profiles')
-    .select('user_id, whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, email_notif_min_wind')
+    .select('user_id, whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_tz, email_notif_min_wind')
     .eq('whatsapp_alert_enabled', true)
     .not('whatsapp_number', 'is', null)
     .not('callmebot_apikey', 'is', null)
@@ -140,6 +151,11 @@ Deno.serve(async (req) => {
   let sent = 0
 
   for (const u of users) {
+    // Skip before calling Open-Meteo: most users are not due this hour
+    const knownHour = localHourIn(u.whatsapp_alert_tz, nowUtc)
+    if (!testUserId && knownHour && knownHour !== u.whatsapp_alert_time1 && knownHour !== (u.whatsapp_alert_time2 ?? '')) {
+      continue
+    }
     try {
       const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${u.whatsapp_alert_lat}&longitude=${u.whatsapp_alert_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,weathercode&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${u.whatsapp_alert_lat}&longitude=${u.whatsapp_alert_lon}&hourly=wave_height&timezone=auto&forecast_days=1`
@@ -148,6 +164,11 @@ Deno.serve(async (req) => {
         fetch(wxUrl).then(r => r.json()),
         fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
       ])
+
+      // Profiles saved before the tz column existed
+      if (!knownHour && typeof wxRes.timezone === 'string' && localHourIn(wxRes.timezone, nowUtc)) {
+        await supabase.from('profiles').update({ whatsapp_alert_tz: wxRes.timezone }).eq('user_id', u.user_id)
+      }
 
       // Determine local hour using the API's timezone offset
       const offsetSec: number = wxRes.utc_offset_seconds ?? 0
