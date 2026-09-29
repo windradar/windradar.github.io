@@ -27,6 +27,13 @@
     "tomorrow": "Mañana",
     "noWind": "Sin viento"
   },
+  "install": {
+    "button": "Instalar app",
+    "iosTitle": "Instalar en iPhone o iPad",
+    "iosStep1": "En Safari, pulsa el botón Compartir de la barra inferior.",
+    "iosStep2": "Elige «Añadir a pantalla de inicio» y confirma con «Añadir».",
+    "iosNote": "Instalada, la app se abre a pantalla completa y puede recibir notificaciones push (iOS 16.4 o superior)."
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sesiones",
@@ -324,6 +331,12 @@
     "configureCookies": "Configurar cookies"
   },
   "index": {
+    "bestWindow": "Mejor ventana",
+    "bestWindowNone": "Ninguna hora llega a {{kn}} kn",
+    "bestWindowRange": "de {{from}} a {{to}} h",
+    "bestWindowFrom": "del {{dir}}",
+    "bestWindowGust": "rachas hasta {{gust}} {{unit}}",
+    "bestWindowMax": "máx. {{speed}} {{unit}} a las {{hour}} h",
     "dateLabel": "Fecha de la previsión",
     "errors": {
       "offline": "No hay conexión. Comprueba tu red e inténtalo de nuevo.",

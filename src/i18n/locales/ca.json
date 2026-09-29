@@ -27,6 +27,13 @@
     "tomorrow": "Demà",
     "noWind": "Sense vent"
   },
+  "install": {
+    "button": "Instal·lar l'app",
+    "iosTitle": "Instal·lar a iPhone o iPad",
+    "iosStep1": "A Safari, prem el botó Compartir de la barra inferior.",
+    "iosStep2": "Tria «Afegeix a la pantalla d'inici» i confirma amb «Afegeix».",
+    "iosNote": "Instal·lada, l'app s'obre a pantalla completa i pot rebre notificacions push (iOS 16.4 o superior)."
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sessions",
@@ -324,6 +331,12 @@
     "configureCookies": "Configurar cookies"
   },
   "index": {
+    "bestWindow": "Millor finestra",
+    "bestWindowNone": "Cap hora arriba a {{kn}} kn",
+    "bestWindowRange": "de {{from}} a {{to}} h",
+    "bestWindowFrom": "de {{dir}}",
+    "bestWindowGust": "ratxes fins a {{gust}} {{unit}}",
+    "bestWindowMax": "màx. {{speed}} {{unit}} a les {{hour}} h",
     "dateLabel": "Data de la previsió",
     "errors": {
       "offline": "No hi ha connexió. Comprova la xarxa i torna-ho a provar.",

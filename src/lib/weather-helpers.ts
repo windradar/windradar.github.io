@@ -183,6 +183,22 @@ export interface FavoriteSpot {
 
 const FAV_KEY = 'windradar_favorites';
 
+// Emitted on every local add/remove; favorites-sync mirrors it to the account
+export const FAVORITE_OP_EVENT = 'windradar-favorite-op';
+export type FavoriteOp = { op: 'add'; fav: FavoriteSpot } | { op: 'remove'; lat: number; lon: number };
+
+function emitFavoriteOp(detail: FavoriteOp) {
+  window.dispatchEvent(new CustomEvent<FavoriteOp>(FAVORITE_OP_EVENT, { detail }));
+}
+
+export function setFavorites(favs: FavoriteSpot[]) {
+  try {
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 30)));
+  } catch {
+    // localStorage unavailable
+  }
+}
+
 export function getFavorites(): FavoriteSpot[] {
   try {
     return JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
@@ -200,10 +216,13 @@ export function toggleFavorite(item: Omit<FavoriteSpot, 'addedAt'>): boolean {
     if (exists >= 0) {
       favs.splice(exists, 1);
       localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+      emitFavoriteOp({ op: 'remove', lat: item.lat, lon: item.lon });
       return false;
     }
-    favs.unshift({ ...item, addedAt: Date.now() });
+    const fav = { ...item, addedAt: Date.now() };
+    favs.unshift(fav);
     localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 30)));
+    emitFavoriteOp({ op: 'add', fav });
     return true;
   } catch {
     return false;
@@ -214,6 +233,7 @@ export function removeFavorite(lat: number, lon: number) {
   try {
     const favs = getFavorites().filter(f => !(Math.abs(f.lat - lat) < 1e-4 && Math.abs(f.lon - lon) < 1e-4));
     localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+    emitFavoriteOp({ op: 'remove', lat, lon });
   } catch {
     // localStorage unavailable — silently fail
   }

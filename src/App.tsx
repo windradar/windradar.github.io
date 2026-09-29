@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { WindUnitSync } from "@/components/WindUnitSync";
+import { FavoritesSync } from "@/components/FavoritesSync";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { lazy, Suspense } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
@@ -42,6 +43,7 @@ const App = () => (
         <ConsentProvider>
           <AuthProvider>
             <WindUnitSync />
+            <FavoritesSync />
             <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />

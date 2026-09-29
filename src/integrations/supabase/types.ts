@@ -57,24 +57,30 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          last_service_at: string | null
           name: string
           photo_url: string | null
+          service_interval_h: number | null
           user_id: string
         }
         Insert: {
           category_id: string
           created_at?: string
           id?: string
+          last_service_at?: string | null
           name: string
           photo_url?: string | null
+          service_interval_h?: number | null
           user_id: string
         }
         Update: {
           category_id?: string
           created_at?: string
           id?: string
+          last_service_at?: string | null
           name?: string
           photo_url?: string | null
+          service_interval_h?: number | null
           user_id?: string
         }
         Relationships: [
@@ -290,6 +296,33 @@ export type Database = {
           id?: string
           name?: string
           sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          added_at: string
+          id: string
+          lat: number
+          lon: number
+          name: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          lat: number
+          lon: number
+          name: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          lat?: number
+          lon?: number
+          name?: string
           user_id?: string
         }
         Relationships: []

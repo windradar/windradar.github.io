@@ -1,9 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, Wrench } from 'lucide-react';
 import MaterialPhoto from './MaterialPhoto';
+import { localDateStr } from '@/lib/weather-helpers';
+import type { SessionMaterial } from '@/lib/session-stats';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface Sport {
   id: string;
@@ -21,6 +24,59 @@ export interface MaterialItem {
   category_id: string;
   name: string;
   photo_url?: string | null;
+  service_interval_h?: number | null;
+  last_service_at?: string | null;
+}
+
+interface UsageSession {
+  id: string;
+  session_date: string;
+  start_time: string;
+  end_time: string;
+  materials: SessionMaterial[];
+}
+
+// Sessions store the material by slot + name, not by id
+const usageKey = (categoryId: string, name: string) => `${categoryId}::${name.trim().toLowerCase()}`;
+
+function sessionHours(s: UsageSession): number {
+  const [sh, sm] = s.start_time.split(':').map(Number);
+  const [eh, em] = s.end_time.split(':').map(Number);
+  const mins = eh * 60 + em - (sh * 60 + sm);
+  return mins > 0 ? mins / 60 : 0;
+}
+
+const fmtHours = (h: number) => (h < 10 && h % 1 ? h.toFixed(1).replace('.', ',') : String(Math.round(h)));
+
+function ItemUsage({ item, total, since, onServiced }: {
+  item: MaterialItem; total: number; since: number; onServiced: () => void;
+}) {
+  const interval = item.service_interval_h ?? null;
+  const due = interval !== null && since >= interval;
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="truncate font-medium">{item.name}</div>
+      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.65rem] text-muted-foreground">
+        <span>{total > 0 ? `${fmtHours(total)} h de uso` : 'Sin uso registrado'}</span>
+        {interval !== null && (
+          <span className={due ? 'font-bold text-amber-500' : ''}>
+            <Wrench size={10} className="mr-0.5 inline -translate-y-px" />
+            {fmtHours(since)}/{interval} h{item.last_service_at ? ' desde la revisión' : ''}
+          </span>
+        )}
+        {interval !== null && (
+          <button
+            onClick={onServiced}
+            className={due
+              ? 'rounded border border-amber-500/50 bg-amber-500/10 px-2 py-1 font-semibold text-amber-600 hover:bg-amber-500/20'
+              : 'rounded px-1.5 py-1 text-primary underline hover:text-primary/80'}
+          >
+            {due ? 'Revisión pendiente · Revisado hoy' : 'Revisado hoy'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 async function removeItemPhoto(it: MaterialItem) {
@@ -43,20 +99,25 @@ export default function MaterialsManager() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editItemName, setEditItemName] = useState('');
   const [newItem, setNewItem] = useState<Record<number, string>>({});
+  const [editItemInterval, setEditItemInterval] = useState('');
+  const [sessions, setSessions] = useState<UsageSession[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const [c, i, s] = await Promise.all([
+    const [c, i, s, ss] = await Promise.all([
       supabase.from('material_categories').select('*').order('slot'),
       supabase.from('material_items').select('*').order('name'),
       supabase.from('sports').select('*').order('sort_order').order('name'),
+      supabase.from('training_sessions').select('id, session_date, start_time, end_time, materials'),
     ]);
     setLoading(false);
     if (c.error || i.error || s.error) { toast.error((c.error || i.error || s.error)!.message); return; }
     setCats((c.data as MaterialCategory[]) || []);
     setItems((i.data as MaterialItem[]) || []);
     setSports((s.data as Sport[]) || []);
+    // Usage is extra information: the manager still works if sessions fail to load
+    if (!ss.error) setSessions((ss.data as unknown as UsageSession[]) || []);
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
@@ -124,20 +185,71 @@ export default function MaterialsManager() {
     setItems(is => is.filter(x => x.id !== id));
   };
 
+  const usage = useMemo(() => {
+    const map = new Map<string, { date: string; hours: number }[]>();
+    for (const s of sessions) {
+      const hours = sessionHours(s);
+      for (const mat of s.materials ?? []) {
+        if (!mat?.name?.trim()) continue;
+        const k = usageKey(mat.category_id, mat.name);
+        map.set(k, [...(map.get(k) ?? []), { date: s.session_date, hours }]);
+      }
+    }
+    return map;
+  }, [sessions]);
+
+  const usageOf = (it: MaterialItem) => {
+    const list = usage.get(usageKey(it.category_id, it.name)) ?? [];
+    const total = list.reduce((a, u) => a + u.hours, 0);
+    const since = it.last_service_at
+      ? list.filter(u => u.date > it.last_service_at!).reduce((a, u) => a + u.hours, 0)
+      : total;
+    return { total, since };
+  };
+
   const startEditItem = (it: MaterialItem) => {
     setEditingItemId(it.id);
     setEditItemName(it.name);
+    setEditItemInterval(it.service_interval_h ? String(it.service_interval_h) : '');
   };
 
-  const saveItemName = async (id: string) => {
-    const trimmed = editItemName.trim();
-    if (!trimmed) { toast.error('El nombre no puede estar vacío'); return; }
+  const saveItem = async (id: string) => {
+    const it = items.find(x => x.id === id);
+    if (!it) return;
+    const name = editItemName.trim().slice(0, 80);
+    if (!name) { toast.error('El nombre no puede estar vacío'); return; }
+    const intervalNum = Math.round(Number(editItemInterval));
+    const interval = editItemInterval.trim() && intervalNum >= 1 && intervalNum <= 10000 ? intervalNum : null;
     const { error } = await supabase.from('material_items')
-      .update({ name: trimmed.slice(0, 80) }).eq('id', id);
+      .update({ name, service_interval_h: interval }).eq('id', id);
     if (error) { toast.error(error.message); return; }
-    setItems(is => is.map(x => x.id === id ? { ...x, name: trimmed.slice(0, 80) } : x));
+
+    // Keep the usage history: past sessions reference the material by name
+    if (name !== it.name) {
+      const oldKey = usageKey(it.category_id, it.name);
+      const affected = sessions.filter(s => s.materials?.some(m => usageKey(m.category_id, m.name) === oldKey));
+      const updated = affected.map(s => ({
+        ...s,
+        materials: s.materials.map(m => usageKey(m.category_id, m.name) === oldKey ? { ...m, name } : m),
+      }));
+      const results = await Promise.all(updated.map(s =>
+        supabase.from('training_sessions').update({ materials: s.materials as unknown as Json }).eq('id', s.id)));
+      if (results.some(r => r.error)) toast.error('No se pudo renombrar el material en alguna sesión');
+      const byId = new Map(updated.map(s => [s.id, s]));
+      setSessions(ss => ss.map(s => byId.get(s.id) ?? s));
+    }
+
+    setItems(is => is.map(x => x.id === id ? { ...x, name, service_interval_h: interval } : x));
     setEditingItemId(null);
-    toast.success('Nombre actualizado');
+    toast.success('Material actualizado');
+  };
+
+  const markServiced = async (it: MaterialItem) => {
+    const today = localDateStr(new Date());
+    const { error } = await supabase.from('material_items').update({ last_service_at: today }).eq('id', it.id);
+    if (error) { toast.error(error.message); return; }
+    setItems(is => is.map(x => x.id === it.id ? { ...x, last_service_at: today } : x));
+    toast.success(`Revisión de «${it.name}» anotada`);
   };
 
   const updateItemPhoto = (id: string, newUrl: string | null) => {
@@ -202,28 +314,44 @@ export default function MaterialsManager() {
                       size="sm"
                     />
                     {editingItemId === it.id ? (
-                      <div className="flex flex-1 items-center gap-1">
+                      <div className="flex flex-1 flex-wrap items-center gap-1.5">
                         <input
                           autoFocus
                           value={editItemName}
                           onChange={e => setEditItemName(e.target.value)}
                           onKeyDown={e => {
-                            if (e.key === 'Enter') { e.preventDefault(); saveItemName(it.id); }
+                            if (e.key === 'Enter') { e.preventDefault(); saveItem(it.id); }
                             if (e.key === 'Escape') setEditingItemId(null);
                           }}
                           maxLength={80}
-                          className="flex-1 rounded border border-primary/40 bg-background px-2 py-0.5 text-xs outline-none"
+                          aria-label="Nombre del material"
+                          className="min-w-[8rem] flex-1 rounded border border-primary/40 bg-background px-2 py-1.5 text-xs outline-none"
                         />
-                        <button onClick={() => saveItemName(it.id)} className="rounded bg-primary p-1 text-primary-foreground">
-                          <Check size={12} />
+                        <label className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
+                          Revisar cada
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            max={10000}
+                            value={editItemInterval}
+                            onChange={e => setEditItemInterval(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveItem(it.id); } }}
+                            placeholder="—"
+                            className="w-16 rounded border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                          />
+                          h
+                        </label>
+                        <button onClick={() => saveItem(it.id)} aria-label="Guardar" className="rounded bg-primary p-2 text-primary-foreground">
+                          <Check size={13} />
                         </button>
-                        <button onClick={() => setEditingItemId(null)} className="rounded border border-border p-1 text-muted-foreground">
-                          <X size={12} />
+                        <button onClick={() => setEditingItemId(null)} aria-label="Cancelar" className="rounded border border-border p-2 text-muted-foreground">
+                          <X size={13} />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <span className="flex-1 font-medium">{it.name}</span>
+                        <ItemUsage item={it} {...usageOf(it)} onServiced={() => markServiced(it)} />
                         <button onClick={() => startEditItem(it)} aria-label={`Editar ${it.name}`}
                           className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary [@media(hover:none)]:opacity-100">
                           <Pencil size={13} />

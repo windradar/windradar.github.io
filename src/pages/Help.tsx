@@ -5,6 +5,7 @@ import {
   BellRing, Share2, CalendarDays, Wrench, UserCircle, Smartphone, Palette, HelpCircle,
 } from 'lucide-react';
 import { windRowStyle } from '@/lib/wind-row-color';
+import { InstallAppButton } from '@/components/InstallAppButton';
 
 type Tag = 'cuenta' | 'dispositivo';
 
@@ -81,17 +82,20 @@ const SECTIONS: HelpSection[] = [
       {
         heading: 'Guardar y quitar favoritos',
         body: 'Usa la estrella junto al nombre del lugar o, en el desplegable ⭐ de la cabecera, «Guardar spot actual» / «Quitar de favoritos». Se guarda con el nombre de la búsqueda. Puedes tener hasta 30.',
-        tags: ['dispositivo'],
+      },
+      {
+        heading: 'Favoritos en todos tus dispositivos',
+        body: 'Sin cuenta, los favoritos se guardan solo en este navegador. Si inicias sesión, se guardan también en tu cuenta y aparecen en el móvil, la tablet y el ordenador. La primera vez que entras en un dispositivo, sus favoritos se suman a los de la cuenta.',
+        tags: ['cuenta'],
       },
       {
         heading: 'Tus spots de un vistazo',
         body: 'Si tienes favoritos, en la pantalla principal aparece «Tus spots»: una tarjeta por spot con el viento máximo de hoy y mañana, su dirección y las horas en que se alcanza tu umbral. Las tarjetas con viento suficiente hoy se marcan en verde. Toca una para abrir ese spot.',
-        tags: ['dispositivo'],
       },
       {
         heading: 'Abrir o borrar un favorito',
         body: 'En el desplegable ⭐ pulsa un spot para cargarlo o la papelera para borrarlo. El número del botón indica cuántos tienes.',
-        tip: 'Los favoritos viven en el navegador: si cambias de móvil o borras los datos del navegador, tendrás que volver a guardarlos.',
+        tip: 'Sin cuenta, si cambias de móvil o borras los datos del navegador, los favoritos se pierden. Con cuenta los recuperas al iniciar sesión.',
       },
     ],
   },
@@ -117,6 +121,10 @@ const SECTIONS: HelpSection[] = [
       {
         heading: 'Tabla hora a hora',
         body: 'Viento, racha, viento a 100 m, dirección, ola, temperatura, tiempo, lluvia y Beaufort de cada hora. La fila de la hora actual lleva ▶. En el móvil cada hora es una tarjeta. Solo se muestran las horas del rango que elijas en Configuración.',
+      },
+      {
+        heading: 'Mejor ventana',
+        body: 'Encima de la tabla verás la mejor ventana del día elegido: el tramo seguido más largo con viento igual o superior a tu umbral, por ejemplo «de 14 a 18 h · 16–22 kn del SO». Si ninguna hora llega al umbral, se indica el viento máximo del día y a qué hora.',
       },
       {
         heading: 'AROME HD y el intervalo 15 min',
@@ -285,6 +293,12 @@ const SECTIONS: HelpSection[] = [
         tags: ['cuenta'],
       },
       {
+        heading: 'Horas de uso y mantenimiento',
+        body: 'Debajo de cada material verás las horas de uso que suman tus sesiones. Con el lápiz puedes indicar «Revisar cada … h»: la app contará las horas desde la última revisión y te avisará con «Revisión pendiente» cuando toque. Pulsa «Revisado hoy» al hacerla para empezar a contar de nuevo.',
+        tags: ['cuenta'],
+        tip: 'Si cambias el nombre de un material, también se cambia en tus sesiones pasadas para no perder sus horas.',
+      },
+      {
         heading: 'Fotos',
         body: 'Pulsa el recuadro de imagen para subir una foto JPG, PNG o WebP de hasta 20 MB. La app la reduce automáticamente antes de subirla. Pulsa la miniatura para verla en grande.',
         tags: ['cuenta'],
@@ -328,11 +342,11 @@ const SECTIONS: HelpSection[] = [
     items: [
       {
         heading: 'Android y ordenador',
-        body: 'En Chrome o Edge abre el menú del navegador y elige «Instalar aplicación» o «Añadir a pantalla de inicio».',
+        body: 'Pulsa «Instalar app» (aquí abajo o al pie de la pantalla principal). Si no aparece, en Chrome o Edge abre el menú del navegador y elige «Instalar aplicación» o «Añadir a pantalla de inicio».',
       },
       {
         heading: 'iPhone y iPad',
-        body: 'En Safari pulsa Compartir → «Añadir a pantalla de inicio». Instalarla es necesario para recibir notificaciones push en iOS.',
+        body: 'En Safari pulsa Compartir → «Añadir a pantalla de inicio». El botón «Instalar app» te muestra los pasos. Instalarla es necesario para recibir notificaciones push en iOS.',
       },
       {
         heading: 'Actualizaciones',
@@ -392,7 +406,7 @@ const SECTIONS: HelpSection[] = [
       },
       {
         heading: '¿Qué datos guardáis?',
-        body: 'Tu email, tu configuración y lo que registras (sesiones, material y fotos). Los favoritos, las búsquedas y el tema se quedan en tu navegador. Tienes el detalle en Privacidad y puedes cambiar las cookies en «Configurar cookies», al pie de la página.',
+        body: 'Tu email, tu configuración, tus favoritos y lo que registras (sesiones, material y fotos). Las búsquedas recientes y el tema se quedan en tu navegador. Tienes el detalle en Privacidad y puedes cambiar las cookies en «Configurar cookies», al pie de la página.',
       },
     ],
   },
@@ -587,6 +601,7 @@ export default function Help() {
                       ))}
                     </ul>
                     {section.id === 'prevision' && !q && <RowColorLegend />}
+                    {section.id === 'app' && !q && <InstallAppButton />}
                   </div>
                 )}
               </section>

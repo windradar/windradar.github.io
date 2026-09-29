@@ -1,20 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
+import { isIos, isStandalone } from '@/lib/install-prompt';
 
 // Public by design (like the Supabase anon key); the private half lives in the
 // VAPID_KEYS secret of the send-push-alerts Edge Function
 const VAPID_PUBLIC_KEY = 'BLKdWOdnAugXz4mMknOlLuM4rumR1rPAwYhYK465uXXRqrAa3o70b1o3wuwpVb5iHFw_AFTJnxC15d8bb7RX1jM';
 
 export type PushStatus = 'unsupported' | 'ios-install' | 'denied' | 'off' | 'on';
-
-function isIos(): boolean {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-}
-
-function isStandalone(): boolean {
-  return window.matchMedia('(display-mode: standalone)').matches
-    || (navigator as Navigator & { standalone?: boolean }).standalone === true;
-}
 
 function isSupported(): boolean {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;

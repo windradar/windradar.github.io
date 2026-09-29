@@ -14,6 +14,7 @@ import { LegalFooter } from '@/components/LegalFooter';
 import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { FavoritesPanel } from '@/components/FavoritesPanel';
+import { FAVORITES_SYNCED_EVENT } from '@/lib/favorites-sync';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +28,14 @@ import {
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
+import { findBestWindow } from '@/lib/best-window';
 import logoFlow from '@/assets/logo-flow.png';
+
+// "14:00" → "14", "14:30" → "14:30"
+function shortHour(hhmm: string): string {
+  const h = String(Number(hhmm.slice(0, 2)));
+  return hhmm.slice(3) === '00' ? h : `${h}:${hhmm.slice(3)}`;
+}
 
 function isAbortError(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
@@ -164,6 +172,16 @@ export default function Index() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Favourites merged from the account after login
+  useEffect(() => {
+    const onSynced = () => {
+      setFavKey(k => k + 1);
+      if (lat !== null && lon !== null) setIsFav(isFavorite(lat, lon));
+    };
+    window.addEventListener(FAVORITES_SYNCED_EVENT, onSynced);
+    return () => window.removeEventListener(FAVORITES_SYNCED_EVENT, onSynced);
+  }, [lat, lon]);
+
   // Load WhatsApp number from profile
   useEffect(() => {
     if (!user) return;
@@ -240,6 +258,15 @@ export default function Index() {
       return true;
     });
   }, [h, allDayIdxs, settings.gridFromHour, settings.gridToHour, tableResolution]);
+
+  const bestWindow = useMemo(() => {
+    if (!h) return null;
+    const idxs = allDayIdxs.filter(i => {
+      const hr = h.time[i].slice(11, 16);
+      return hr >= settings.gridFromHour && hr <= settings.gridToHour;
+    });
+    return findBestWindow(h, idxs, settings.minWindKn);
+  }, [h, allDayIdxs, settings.gridFromHour, settings.gridToHour, settings.minWindKn]);
 
   let curRow = -1;
   if (h && date === today) {
@@ -544,6 +571,39 @@ export default function Index() {
 
         {/* Table */}
         <SectionTitle>{t('index.hourlyTitle')} — {humanDate(date, langLocale)}</SectionTitle>
+        {bestWindow && (
+          <div
+            className={`mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border px-3.5 py-2.5 text-sm ${
+              bestWindow.kind === 'window' ? 'border-[#44cc88]/50 bg-[#44cc88]/10' : 'border-border bg-card'
+            }`}
+          >
+            <span className="text-[0.62rem] font-bold uppercase tracking-widest text-muted-foreground">
+              {bestWindow.kind === 'window' ? t('index.bestWindow') : t('index.bestWindowNone', { kn: settings.minWindKn })}
+            </span>
+            {bestWindow.kind === 'window' ? (
+              <span className="font-semibold text-foreground">
+                {t('index.bestWindowRange', {
+                  from: shortHour(bestWindow.start),
+                  to: shortHour(bestWindow.end),
+                })}
+                {' · '}
+                <span style={{ color: windColor(bestWindow.maxKmh) }}>
+                  {fmtWind(bestWindow.minKmh) === fmtWind(bestWindow.maxKmh)
+                    ? fmtWind(bestWindow.maxKmh)
+                    : `${fmtWind(bestWindow.minKmh)}–${fmtWind(bestWindow.maxKmh)}`} {unitLabel}
+                </span>
+                {' '}{t('index.bestWindowFrom', { dir: windInfo(bestWindow.dirDeg).short })}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {t('index.bestWindowGust', { gust: fmtWind(bestWindow.gustKmh), unit: unitLabel })}
+                </span>
+              </span>
+            ) : (
+              <span className="text-muted-foreground">
+                {t('index.bestWindowMax', { speed: fmtWind(bestWindow.maxKmh), unit: unitLabel, hour: shortHour(bestWindow.maxAt) })}
+              </span>
+            )}
+          </div>
+        )}
         {wxDetailCoversDate && (
           <div className="mb-2.5 flex items-center gap-1">
             <span className="text-[0.55rem] uppercase tracking-widest text-muted-foreground mr-1">Intervalo:</span>
