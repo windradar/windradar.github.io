@@ -26,7 +26,7 @@ interface Props {
   wxDetail?: WeatherData | null;
 }
 
-const baseOpts: ChartOptions<'line'> = {
+const commonOpts = {
   responsive: true,
   maintainAspectRatio: true,
   plugins: {
@@ -37,6 +37,8 @@ const baseOpts: ChartOptions<'line'> = {
     y: { ticks: { color: '#4a6a8a', font: { size: 9 } }, grid: { color: 'rgba(26,46,72,.4)' } }
   }
 };
+const lineOpts: ChartOptions<'line'> = commonOpts;
+const barOpts: ChartOptions<'bar'> = commonOpts;
 
 // Stable data objects: react-chartjs-2 updates the chart whenever `data` changes identity
 function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string) {
@@ -146,21 +148,21 @@ export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props)
         <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">{windTitle}</div>
         <Line
           data={charts.wind}
-          options={baseOpts}
+          options={lineOpts}
         />
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">🌊 Altura de ola (m)</div>
         <Bar
           data={charts.waves}
-          options={baseOpts}
+          options={barOpts}
         />
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">🌡️ Temperatura aire / agua (°C)</div>
         <Line
           data={charts.temps}
-          options={baseOpts}
+          options={lineOpts}
         />
       </div>
     </>

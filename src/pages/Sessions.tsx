@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import SessionStoryShare from '@/components/SessionStoryShare';
 import { SessionsDashboard } from '@/components/SessionsDashboard';
 import type { Session, Snapshot, SessionMaterial } from '@/lib/session-stats';
+import type { Json } from '@/integrations/supabase/types';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
@@ -60,7 +61,8 @@ export default function Sessions() {
       .select('*').order('session_date', { ascending: false }).order('start_time', { ascending: false });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    setSessions((data as Session[]) || []);
+    // weather_snapshot and materials are JSON columns written by this page with these shapes
+    setSessions((data as unknown as Session[]) || []);
   }, [user]);
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
@@ -202,9 +204,9 @@ export default function Sessions() {
       location_name: locName,
       location_lat: locLat,
       location_lon: locLon,
-      weather_snapshot: snapshot as Snapshot[] | null,
+      weather_snapshot: snapshot as unknown as Json,
       sport_name: sports.find(sp => sp.id === sportId)?.name || null,
-      materials: materialsPayload,
+      materials: materialsPayload as unknown as Json,
       tracking_url: trackingUrl.trim() || null,
       notes: notes.trim() || null,
     };
