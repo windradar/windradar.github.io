@@ -16,7 +16,8 @@
 // so the gateway would reject the cron call before reaching the check below.
 //
 // TEST MODE: POST with a valid user JWT — pushes immediately to that user's
-// devices, ignoring the time schedule and the threshold.
+// devices, ignoring the time schedule and the threshold. One test every 5
+// minutes per user (claim_test_slot, migration 20260929120000).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import * as webpush from 'jsr:@negrel/webpush@0.5.0'
@@ -72,6 +73,22 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   })
+}
+
+const TEST_COOLDOWN_SECONDS = 300
+
+// The endpoint comes from the browser and is stored by the user, so without
+// this check the function could be made to POST to any URL (SSRF).
+const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'notify.windows.com', 'push.apple.com']
+
+function isAllowedEndpoint(endpoint: string): boolean {
+  try {
+    const url = new URL(endpoint)
+    if (url.protocol !== 'https:' || url.port !== '' || url.username || url.password) return false
+    return PUSH_HOSTS.some(h => url.hostname === h || url.hostname.endsWith(`.${h}`))
+  } catch {
+    return false
+  }
 }
 
 // Returns null when the alert should not be sent (cron mode only)
@@ -174,23 +191,46 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
+  if (testUserId) {
+    const { data: claimed, error: rpcError } = await supabase.rpc('claim_test_slot', {
+      p_user_id: testUserId, p_channel: 'push', p_cooldown_seconds: TEST_COOLDOWN_SECONDS,
+    })
+    if (rpcError) {
+      console.error('claim_test_slot error:', rpcError.message)
+      return json({ error: 'internal' }, 500)
+    }
+    if (!claimed) return json({ error: 'too_soon', retryAfter: TEST_COOLDOWN_SECONDS }, 429)
+  }
+
   let subQuery = supabase.from('push_subscriptions').select('id, user_id, endpoint, p256dh, auth')
   if (testUserId) subQuery = subQuery.eq('user_id', testUserId)
   const { data: subs, error: subError } = await subQuery
-  if (subError || !subs?.length) {
-    return json({ processed: 0, results: [], error: subError?.message ?? 'no subscriptions', testMode: !!testUserId })
+  if (subError) {
+    console.error('push_subscriptions error:', subError.message)
+    return json({ error: 'internal' }, 500)
   }
 
   const subsByUser = new Map<string, Subscription[]>()
-  for (const s of subs as Subscription[]) {
+  for (const s of (subs ?? []) as Subscription[]) {
+    if (!isAllowedEndpoint(s.endpoint)) {
+      console.warn(`Rejected push endpoint for ${s.user_id}, deleting subscription ${s.id}`)
+      await supabase.from('push_subscriptions').delete().eq('id', s.id)
+      continue
+    }
     subsByUser.set(s.user_id, [...(subsByUser.get(s.user_id) ?? []), s])
+  }
+  if (!subsByUser.size) {
+    return json({ processed: 0, sent: 0, results: [], testMode: !!testUserId })
   }
 
   const { data: profiles, error: profError } = await supabase
     .from('profiles')
     .select('user_id, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, email_notif_min_wind')
     .in('user_id', [...subsByUser.keys()])
-  if (profError) return json({ processed: 0, error: profError.message }, 500)
+  if (profError) {
+    console.error('profiles error:', profError.message)
+    return json({ error: 'internal' }, 500)
+  }
 
   const nowUtc = new Date()
   const results: string[] = []
@@ -214,14 +254,16 @@ Deno.serve(async (req) => {
             await supabase.from('push_subscriptions').delete().eq('id', s.id)
             results.push('Dispositivo dado de baja, eliminado')
           } else {
-            results.push(`Error push: ${String(e)}`)
+            console.error(`Push error for subscription ${s.id}:`, String(e))
+            results.push('Error al enviar a un dispositivo')
           }
         }
       }
       sent += userSent
       if (userSent > 0) results.unshift(`Notificación enviada a ${userSent} dispositivo(s)`)
     } catch (e: unknown) {
-      results.push(`Error: ${(e as Error).message}`)
+      console.error(`Alert error for ${p.user_id}:`, (e as Error).message)
+      results.push('Error al preparar la alerta')
     }
   }
 

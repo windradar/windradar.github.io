@@ -58,6 +58,7 @@ export function PushAlertSection() {
           body: '{}',
         }
       );
+      if (res.status === 429) { toast.error(t('settings.testTooSoon')); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data?.sent) {
