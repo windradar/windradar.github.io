@@ -1,14 +1,31 @@
-import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
+const LIGHT_THEMES = ["light", "ebook"];
+
+function readAppTheme(): "light" | "dark" {
+  return LIGHT_THEMES.includes(document.documentElement.getAttribute("data-theme") ?? "") ? "light" : "dark";
+}
+
+// The app theme lives in <html data-theme> (ThemeSelector), not in a React context
+function useAppTheme() {
+  const [theme, setTheme] = useState(readAppTheme);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setTheme(readAppTheme()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return theme;
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme}
       className="toaster group"
       toastOptions={{
         classNames: {

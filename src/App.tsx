@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,8 +22,6 @@ const Cookies         = lazy(() => import("./pages/legal/Cookies.tsx"));
 const Terms           = lazy(() => import("./pages/legal/Terms.tsx"));
 const Help            = lazy(() => import("./pages/Help.tsx"));
 
-const queryClient = new QueryClient();
-
 const PageFallback = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -32,36 +29,34 @@ const PageFallback = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <PwaUpdatePrompt />
-      <BrowserRouter>
-        <ConsentProvider>
-          <AuthProvider>
-            <Suspense fallback={<PageFallback />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-                <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
-                <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/legal/notice" element={<Notice />} />
-                <Route path="/legal/privacy" element={<Privacy />} />
-                <Route path="/legal/cookies" element={<Cookies />} />
-                <Route path="/legal/terms" element={<Terms />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            <CookieBanner />
-          </AuthProvider>
-        </ConsentProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <TooltipProvider>
+    <Toaster />
+    <PwaUpdatePrompt />
+    <BrowserRouter>
+      <ConsentProvider>
+        <AuthProvider>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+              <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
+              <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/legal/notice" element={<Notice />} />
+              <Route path="/legal/privacy" element={<Privacy />} />
+              <Route path="/legal/cookies" element={<Cookies />} />
+              <Route path="/legal/terms" element={<Terms />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <CookieBanner />
+        </AuthProvider>
+      </ConsentProvider>
+    </BrowserRouter>
+  </TooltipProvider>
 );
 
 export default App;
