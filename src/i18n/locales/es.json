@@ -20,6 +20,13 @@
   "offline": {
     "message": "Sin conexión: la previsión puede no estar actualizada"
   },
+  "favPanel": {
+    "title": "Tus spots",
+    "subtitle": "viento máx. y horas ≥ {{kn}} kn",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "noWind": "Sin viento"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sesiones",
@@ -218,6 +225,12 @@
     "sportAdded": "Deporte añadido"
   },
   "settings": {
+    "alertDirs": "Direcciones del viento",
+    "alertDirsDesc": "Marca de dónde tiene que soplar el viento para que te avisemos (por ejemplo, SO y OSO para el Garbí). Sin marcar = cualquier dirección.",
+    "alertDirsAny": "Cualquier dirección",
+    "alertDirsCount_one": "{{count}} dirección",
+    "alertDirsCount_other": "{{count}} direcciones",
+    "alertDirsClear": "Quitar todas",
     "title": "⚙️ Configuración",
     "windThreshold": "🌬️ Umbral de viento mínimo",
     "windThresholdDesc": "Las filas con viento ≥ este valor se marcarán con colores progresivos (amarillo → rojo).",
@@ -379,6 +392,11 @@
     "removed": "Eliminado de favoritos"
   },
   "search": {
+    "locate": "Usar mi ubicación",
+    "myLocation": "Mi ubicación",
+    "locateUnsupported": "Este navegador no permite obtener tu ubicación.",
+    "locateDenied": "Permiso de ubicación denegado. Actívalo en los ajustes del navegador.",
+    "locateUnavailable": "No se pudo obtener tu ubicación. Inténtalo de nuevo.",
     "searching": "Buscando...",
     "recentSearches": "Búsquedas recientes",
     "noResults": "No se encontraron resultados para \"{{q}}\"",

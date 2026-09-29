@@ -58,6 +58,13 @@ function humanDate(dateStr: string): string {
 
 const TEST_COOLDOWN_SECONDS = 300
 
+// Sector 0-15 (0 = N) of a direction the wind blows FROM; empty/null list = any
+function directionAllowed(deg: number, dirs: number[] | null): boolean {
+  if (!dirs || dirs.length === 0) return true
+  const sector = Math.round((((deg % 360) + 360) % 360) / 22.5) % 16
+  return dirs.includes(sector)
+}
+
 // null when the timezone is missing or not a valid IANA name
 function localHourIn(tz: string | null, now: Date): string | null {
   if (!tz) return null
@@ -126,7 +133,7 @@ Deno.serve(async (req) => {
 
   let query = supabase
     .from('profiles')
-    .select('user_id, whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_tz, email_notif_min_wind')
+    .select('user_id, whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_tz, whatsapp_alert_dirs, email_notif_min_wind')
     .eq('whatsapp_alert_enabled', true)
     .not('whatsapp_number', 'is', null)
     .not('callmebot_apikey', 'is', null)
@@ -202,7 +209,7 @@ Deno.serve(async (req) => {
         const gustKn  = Math.round(kmhToKn(wg))
         const wh: number | null = marRes?.hourly?.wave_height?.[i] ?? null
 
-        if (kn >= threshold) hasWind = true
+        if (kn >= threshold && directionAllowed(wd, u.whatsapp_alert_dirs)) hasWind = true
 
         msg += `${wmoEmoji(wc)} *${hr}* — 💨 ${kn}kn ⚡raf.${gustKn}kn 🧭${dirShort(wd)} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`
       }

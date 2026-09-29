@@ -70,6 +70,10 @@ const SECTIONS: HelpSection[] = [
         body: 'Las sugerencias aparecen a partir de 2 letras e indican región, país y coordenadas para distinguir lugares con el mismo nombre. Con Enter o «BUSCAR» se carga el primer resultado. La ✕ vacía el campo.',
       },
       {
+        heading: 'Mi ubicación',
+        body: 'El botón de la diana, junto al buscador, carga la previsión del lugar donde estás. La primera vez el navegador te pedirá permiso para usar tu ubicación.',
+      },
+      {
         heading: 'Búsquedas recientes',
         body: 'Al pulsar en el buscador vacío se muestran tus últimas búsquedas para repetirlas sin escribir.',
         tags: ['dispositivo'],
@@ -77,6 +81,11 @@ const SECTIONS: HelpSection[] = [
       {
         heading: 'Guardar y quitar favoritos',
         body: 'Usa la estrella junto al nombre del lugar o, en el desplegable ⭐ de la cabecera, «Guardar spot actual» / «Quitar de favoritos». Se guarda con el nombre de la búsqueda. Puedes tener hasta 30.',
+        tags: ['dispositivo'],
+      },
+      {
+        heading: 'Tus spots de un vistazo',
+        body: 'Si tienes favoritos, en la pantalla principal aparece «Tus spots»: una tarjeta por spot con el viento máximo de hoy y mañana, su dirección y las horas en que se alcanza tu umbral. Las tarjetas con viento suficiente hoy se marcan en verde. Toca una para abrir ese spot.',
         tags: ['dispositivo'],
       },
       {
@@ -172,6 +181,11 @@ const SECTIONS: HelpSection[] = [
       {
         heading: 'Ubicación y horas de las alertas',
         body: 'En «Alertas de viento» eliges el spot, una o dos horas de envío y el rango de horas a revisar. Lo comparten WhatsApp y las notificaciones push. Las horas son las del lugar del spot.',
+        tags: ['cuenta'],
+      },
+      {
+        heading: 'Direcciones del viento',
+        body: 'En «Direcciones del viento» marcas en la rosa de dónde tiene que soplar el viento para que el spot funcione, por ejemplo SO y OSO para el Garbí. Solo te avisaremos si hay viento suficiente desde esas direcciones. Sin ninguna marcada, vale cualquier dirección.',
         tags: ['cuenta'],
       },
       {
@@ -358,7 +372,7 @@ const SECTIONS: HelpSection[] = [
     items: [
       {
         heading: 'No me llega la alerta de WhatsApp',
-        body: 'Comprueba que enviaste el mensaje de activación a CallMeBot, que la API Key y tu número del Perfil son correctos y que pulsaste «Guardar». Recuerda que el aviso automático solo llega si alguna hora del rango alcanza el umbral; usa «Probar alerta ahora» para comprobar la conexión.',
+        body: 'Comprueba que enviaste el mensaje de activación a CallMeBot, que la API Key y tu número del Perfil son correctos y que pulsaste «Guardar». Recuerda que el aviso automático solo llega si alguna hora del rango alcanza el umbral desde una de las direcciones marcadas; usa «Probar alerta ahora» para comprobar la conexión.',
       },
       {
         heading: 'No me llegan las notificaciones push',

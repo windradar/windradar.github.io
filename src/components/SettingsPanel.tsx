@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Send, Plus, Trash2 } from 'lucide-react';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
+import { DirectionPicker } from '@/components/DirectionPicker';
 import { PushAlertSection } from '@/components/PushAlertSection';
 
 export interface SpotConfig {
@@ -37,6 +38,7 @@ export interface AppSettings {
   whatsappAlertTime2: string;
   whatsappAlertRangeFrom: string;
   whatsappAlertRangeTo: string;
+  whatsappAlertDirs: number[];
 }
 
 const STORAGE_KEY = 'windradar-settings';
@@ -59,6 +61,7 @@ const defaultSettings: AppSettings = {
   whatsappAlertTime2: '',
   whatsappAlertRangeFrom: '06:00',
   whatsappAlertRangeTo: '20:00',
+  whatsappAlertDirs: [],
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -187,7 +190,7 @@ export function SettingsPanel({
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('email_notif_enabled, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, whatsapp_alert_enabled, callmebot_apikey, whatsapp_alert_location, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to')
+          .select('email_notif_enabled, email_notif_location, email_notif_time1, email_notif_time2, email_notif_range_from, email_notif_range_to, whatsapp_alert_enabled, callmebot_apikey, whatsapp_alert_location, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_dirs')
           .eq('user_id', user.id)
           .single();
         if (data) {
@@ -206,6 +209,7 @@ export function SettingsPanel({
             whatsappAlertTime2:    data.whatsapp_alert_time2 ?? '',
             whatsappAlertRangeFrom: data.whatsapp_alert_range_from ?? '06:00',
             whatsappAlertRangeTo:   data.whatsapp_alert_range_to ?? '20:00',
+            whatsappAlertDirs:      data.whatsapp_alert_dirs ?? [],
           }));
         }
       } finally {
@@ -368,6 +372,7 @@ export function SettingsPanel({
           whatsapp_alert_time2:      local.whatsappAlertTime2 || null,
           whatsapp_alert_range_from: local.whatsappAlertRangeFrom,
           whatsapp_alert_range_to:   local.whatsappAlertRangeTo,
+          whatsapp_alert_dirs:       local.whatsappAlertDirs.length ? local.whatsappAlertDirs : null,
         })
         .eq('user_id', user.id);
 
@@ -603,6 +608,16 @@ export function SettingsPanel({
                         {ALL_HOURS.map(hr => <option key={hr} value={hr}>{hr}</option>)}
                       </select>
                     </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('settings.alertDirs')}</label>
+                    <p className="text-[0.68rem] text-muted-foreground">{t('settings.alertDirsDesc')}</p>
+                    <DirectionPicker
+                      value={local.whatsappAlertDirs}
+                      onChange={dirs => update({ whatsappAlertDirs: dirs })}
+                      disabled={emailLoading}
+                    />
                   </div>
 
                   <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3">

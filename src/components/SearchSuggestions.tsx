@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
-import { MapPin, Search, Loader2, Clock, X } from 'lucide-react';
+import { MapPin, Search, Loader2, Clock, X, LocateFixed } from 'lucide-react';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { type SearchHistoryItem, getSearchHistory } from '@/lib/weather-helpers';
+import { locateUser, type GeolocateError } from '@/lib/geolocate';
 
 interface GeoResult {
   id: number;
@@ -18,10 +20,19 @@ interface Props {
   initialQuery?: string;
   hideHistory?: boolean;
   compact?: boolean;
+  /** Adds a "my location" button (device GPS) */
+  showLocate?: boolean;
 }
 
-export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, compact }: Props) {
-  const { t } = useTranslation();
+const LOCATE_ERROR_KEY: Record<GeolocateError, string> = {
+  unsupported: 'search.locateUnsupported',
+  denied: 'search.locateDenied',
+  unavailable: 'search.locateUnavailable',
+};
+
+export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, compact, showLocate }: Props) {
+  const { t, i18n } = useTranslation();
+  const [locating, setLocating] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? '');
   const [results, setResults] = useState<GeoResult[]>([]);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
@@ -76,6 +87,18 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
     onSelect(name, lat, lon);
   };
 
+  const handleLocate = async () => {
+    setLocating(true);
+    try {
+      const place = await locateUser(i18n.language, t('search.myLocation'));
+      handleSelect(place.name, place.lat, place.lon);
+    } catch (e) {
+      toast.error(t(LOCATE_ERROR_KEY[e as GeolocateError] ?? 'search.locateUnavailable'));
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const handleSubmit = () => {
     if (results.length > 0) {
       const r = results[0];
@@ -99,6 +122,7 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
           onChange={e => handleChange(e.target.value)}
           onFocus={handleFocus}
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+          enterKeyHint="search"
           className={`w-full rounded-lg border border-border bg-secondary font-mono text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary ${compact ? 'py-1.5 pl-8 pr-9 text-[0.78rem]' : 'py-2.5 pl-9 pr-10 text-sm'}`}
           placeholder={compact ? 'Ciudad, País...' : t('search.placeholder')}
         />
@@ -112,10 +136,22 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
           </button>
         )}
       </div>
+      {showLocate && (
+        <button
+          onClick={handleLocate}
+          disabled={locating}
+          aria-label={t('search.locate')}
+          title={t('search.locate')}
+          className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-border bg-secondary text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-60"
+        >
+          {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+        </button>
+      )}
       <button
         onClick={handleSubmit}
         aria-label={t('search.searchBtn')}
-        className={`flex-shrink-0 whitespace-nowrap rounded-lg bg-primary font-display font-bold tracking-wider text-primary-foreground transition-all hover:brightness-110 ${compact ? 'px-2.5 py-1.5 text-[0.72rem]' : 'px-4 py-2.5 text-[0.78rem] hover:-translate-y-0.5'}`}
+        // On phones the keyboard's search key submits; the space goes to the text field
+        className={`${showLocate ? 'hidden sm:block' : ''} flex-shrink-0 whitespace-nowrap rounded-lg bg-primary font-display font-bold tracking-wider text-primary-foreground transition-all hover:brightness-110 ${compact ? 'px-2.5 py-1.5 text-[0.72rem]' : 'px-4 py-2.5 text-[0.78rem] hover:-translate-y-0.5'}`}
       >
         {compact ? <Search className="h-3.5 w-3.5" /> : (
           <>

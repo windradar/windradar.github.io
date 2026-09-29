@@ -13,6 +13,7 @@ import { WeekForecastChart } from '@/components/WeekForecastChart';
 import { LegalFooter } from '@/components/LegalFooter';
 import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
+import { FavoritesPanel } from '@/components/FavoritesPanel';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,7 +23,7 @@ import {
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, safeNum, localDateStr, humanDate,
   addToSearchHistory, getLastSearch, setLastSearch,
-  isFavorite, toggleFavorite, LANG_LOCALE, normalizeArome, windIndex,
+  isFavorite, toggleFavorite, getFavorites, LANG_LOCALE, normalizeArome, windIndex,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
@@ -66,6 +67,9 @@ export default function Index() {
   const [apiUpdateTime, setApiUpdateTime] = useState<string | null>(null);
   const [favKey, setFavKey] = useState(0);
   const [isFav, setIsFav] = useState(false);
+  // favKey changes whenever a favourite is added or removed (they live in localStorage)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const favorites = useMemo(() => getFavorites(), [favKey]);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [tableResolution, setTableResolution] = useState<'1h' | '30min' | '15min'>('1h');
 
@@ -365,7 +369,7 @@ export default function Index() {
               <span className="hidden md:inline font-display text-base font-extrabold tracking-tight sm:text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">WindFlowRadar</span>
             </div>
             <div className="hidden min-w-0 flex-1 sm:block">
-              <SearchWithSuggestions onSelect={doSearch} />
+              <SearchWithSuggestions onSelect={doSearch} showLocate />
             </div>
             <FavoritesButton
               onSelect={doSearch}
@@ -389,7 +393,7 @@ export default function Index() {
           {/* Mobile: search and date get their own row instead of squeezing into the first one */}
           <div className="mt-2 flex items-center gap-2 sm:hidden">
             <div className="min-w-0 flex-1">
-              <SearchWithSuggestions onSelect={doSearch} />
+              <SearchWithSuggestions onSelect={doSearch} showLocate />
             </div>
             {dateInput}
           </div>
@@ -456,6 +460,16 @@ export default function Index() {
             )}
           </div>
         )}
+
+        <FavoritesPanel
+          favorites={favorites}
+          thresholdKn={settings.minWindKn}
+          fromHour={settings.gridFromHour}
+          toHour={settings.gridToHour}
+          currentLat={lat}
+          currentLon={lon}
+          onSelect={doSearch}
+        />
 
         <SectionTitle>{t('index.conditionsTitle')}</SectionTitle>
 

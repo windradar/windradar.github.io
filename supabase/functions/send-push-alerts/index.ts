@@ -52,6 +52,7 @@ interface Profile {
   whatsapp_alert_range_from: string | null
   whatsapp_alert_range_to: string | null
   whatsapp_alert_tz: string | null
+  whatsapp_alert_dirs: number[] | null
   email_notif_min_wind: number | null
 }
 
@@ -77,6 +78,13 @@ function json(body: unknown, status = 200): Response {
 }
 
 const TEST_COOLDOWN_SECONDS = 300
+
+// Sector 0-15 (0 = N) of a direction the wind blows FROM; empty/null list = any
+function directionAllowed(deg: number, dirs: number[] | null): boolean {
+  if (!dirs || dirs.length === 0) return true
+  const sector = Math.round((((deg % 360) + 360) % 360) / 22.5) % 16
+  return dirs.includes(sector)
+}
 
 // null when the timezone is missing or not a valid IANA name
 function localHourIn(tz: string | null, now: Date): string | null {
@@ -142,7 +150,7 @@ async function buildPayload(
     const hr: string = h.time[i].slice(11, 16)
     if (hr < rangeFrom || hr > rangeTo) continue
     const kn = Math.round(kmhToKn(h.wind_speed_10m[i] ?? 0))
-    if (kn >= threshold) {
+    if (kn >= threshold && directionAllowed(h.wind_direction_10m[i] ?? 0, p.whatsapp_alert_dirs)) {
       firstWindy ??= hr
       lastWindy = hr
     }
@@ -244,7 +252,7 @@ Deno.serve(async (req) => {
 
   const { data: profiles, error: profError } = await supabase
     .from('profiles')
-    .select('user_id, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_tz, email_notif_min_wind')
+    .select('user_id, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_tz, whatsapp_alert_dirs, email_notif_min_wind')
     .in('user_id', [...subsByUser.keys()])
   if (profError) {
     console.error('profiles error:', profError.message)

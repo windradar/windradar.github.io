@@ -115,6 +115,7 @@ export type Database = {
           whatsapp_alert_range_to: string | null
           whatsapp_alert_time1: string | null
           whatsapp_alert_time2: string | null
+          whatsapp_alert_dirs: number[] | null
           whatsapp_alert_tz: string | null
           whatsapp_number: string | null
           wind_units: string
@@ -146,6 +147,7 @@ export type Database = {
           whatsapp_alert_range_to?: string | null
           whatsapp_alert_time1?: string | null
           whatsapp_alert_time2?: string | null
+          whatsapp_alert_dirs?: number[] | null
           whatsapp_alert_tz?: string | null
           whatsapp_number?: string | null
           wind_units?: string
@@ -177,6 +179,7 @@ export type Database = {
           whatsapp_alert_range_to?: string | null
           whatsapp_alert_time1?: string | null
           whatsapp_alert_time2?: string | null
+          whatsapp_alert_dirs?: number[] | null
           whatsapp_alert_tz?: string | null
           whatsapp_number?: string | null
           wind_units?: string

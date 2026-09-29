@@ -20,6 +20,13 @@
   "offline": {
     "message": "Sense connexió: la previsió pot no estar actualitzada"
   },
+  "favPanel": {
+    "title": "Els teus spots",
+    "subtitle": "vent màx. i hores ≥ {{kn}} kn",
+    "today": "Avui",
+    "tomorrow": "Demà",
+    "noWind": "Sense vent"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sessions",
@@ -218,6 +225,12 @@
     "sportAdded": "Esport afegit"
   },
   "settings": {
+    "alertDirs": "Direccions del vent",
+    "alertDirsDesc": "Marca d'on ha de bufar el vent perquè t'avisem (per exemple, SO i OSO per al Garbí). Sense marcar = qualsevol direcció.",
+    "alertDirsAny": "Qualsevol direcció",
+    "alertDirsCount_one": "{{count}} direcció",
+    "alertDirsCount_other": "{{count}} direccions",
+    "alertDirsClear": "Treure-les totes",
     "title": "⚙️ Configuració",
     "windThreshold": "🌬️ Llindar de vent mínim",
     "windThresholdDesc": "Les files amb vent ≥ aquest valor es marcaran amb colors progressius (groc → vermell).",
@@ -379,6 +392,11 @@
     "removed": "Eliminat de favorits"
   },
   "search": {
+    "locate": "Fer servir la meva ubicació",
+    "myLocation": "La meva ubicació",
+    "locateUnsupported": "Aquest navegador no permet obtenir la teva ubicació.",
+    "locateDenied": "Permís d'ubicació denegat. Activa'l a la configuració del navegador.",
+    "locateUnavailable": "No s'ha pogut obtenir la teva ubicació. Torna-ho a provar.",
     "searching": "Cercant...",
     "recentSearches": "Cerques recents",
     "noResults": "No s'han trobat resultats per a \"{{q}}\"",
