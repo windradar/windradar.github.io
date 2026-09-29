@@ -15,6 +15,7 @@
 //
 // TEST MODE: call via supabase.functions.invoke('send-whatsapp-alerts') with a
 // valid user JWT — sends immediately to that user only, ignoring time schedule.
+// One test every 5 minutes per user (claim_test_slot, migration 20260929120000).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -55,6 +56,22 @@ function humanDate(dateStr: string): string {
   return `${days[date.getDay()]} ${d} de ${months[m - 1]}`
 }
 
+const TEST_COOLDOWN_SECONDS = 300
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+  })
+}
+
+// CallMeBot answers with an HTML page that may echo the phone and the API key
+function summarizeCallMeBot(body: string, phone: string, apikey: string): string {
+  let text = body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (apikey) text = text.split(apikey).join('***')
+  if (phone) text = text.split(phone).join('***')
+  return text.slice(0, 100)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS })
@@ -85,6 +102,17 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
+  if (testUserId) {
+    const { data: claimed, error: rpcError } = await supabase.rpc('claim_test_slot', {
+      p_user_id: testUserId, p_channel: 'whatsapp', p_cooldown_seconds: TEST_COOLDOWN_SECONDS,
+    })
+    if (rpcError) {
+      console.error('claim_test_slot error:', rpcError.message)
+      return json({ error: 'internal' }, 500)
+    }
+    if (!claimed) return json({ error: 'too_soon', retryAfter: TEST_COOLDOWN_SECONDS }, 429)
+  }
+
   let query = supabase
     .from('profiles')
     .select('user_id, whatsapp_number, callmebot_apikey, whatsapp_alert_time1, whatsapp_alert_time2, whatsapp_alert_range_from, whatsapp_alert_range_to, whatsapp_alert_location, whatsapp_alert_lat, whatsapp_alert_lon, email_notif_min_wind')
@@ -99,14 +127,17 @@ Deno.serve(async (req) => {
 
   const { data: users, error } = await query
 
-  if (error || !users?.length) {
-    return new Response(JSON.stringify({ processed: 0, error: error?.message ?? 'no users' }), {
-      status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-    })
+  if (error) {
+    console.error('profiles error:', error.message)
+    return json({ error: 'internal' }, 500)
+  }
+  if (!users?.length) {
+    return json({ processed: 0, sent: 0, results: [], testMode: !!testUserId })
   }
 
   const nowUtc = new Date()
   const results: string[] = []
+  let sent = 0
 
   for (const u of users) {
     try {
@@ -164,17 +195,24 @@ Deno.serve(async (req) => {
       }
 
       const phone = (u.whatsapp_number as string).replace(/\D/g, '')
-      const callUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}&apikey=${u.callmebot_apikey}`
+      const apikey = String(u.callmebot_apikey).trim()
+      const callUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}&apikey=${encodeURIComponent(apikey)}`
       const callRes = await fetch(callUrl)
       const callBody = await callRes.text()
-      results.push(`📱${phone} — HTTP ${callRes.status}: ${callBody.slice(0, 100)}`)
+      const summary = summarizeCallMeBot(callBody, phone, apikey)
+      if (callRes.ok) {
+        sent++
+        results.push(`✅ CallMeBot: ${summary || 'mensaje enviado'}`)
+      } else {
+        console.error(`CallMeBot HTTP ${callRes.status} for ${u.user_id}: ${summary}`)
+        results.push(`❌ CallMeBot: ${summary || `HTTP ${callRes.status}`}`)
+      }
 
     } catch (e: unknown) {
-      results.push(`Error: ${(e as Error).message}`)
+      console.error(`Alert error for ${u.user_id}:`, (e as Error).message)
+      results.push('❌ Error al preparar la alerta')
     }
   }
 
-  return new Response(JSON.stringify({ processed: users.length, results, testMode: !!testUserId }), {
-    status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  })
+  return json({ processed: users.length, sent, results, testMode: !!testUserId })
 })

@@ -283,13 +283,16 @@ export function SettingsPanel({
           body: '{}',
         }
       );
+      if (res.status === 429) { toast.error(t('settings.testTooSoon')); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const results: string[] = data?.results ?? [];
       if (results.length === 0) {
         toast.error(t('settings.testWhatsappNoConfig'));
-      } else {
+      } else if (data?.sent > 0) {
         toast.success(results[0]);
+      } else {
+        toast.error(results[0]);
       }
     } catch {
       toast.error(t('settings.testWhatsappError'));
