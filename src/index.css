@@ -224,3 +224,37 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+/* Wind map markers (Leaflet divIcons, rendered outside React) */
+.wm-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+}
+.wm-arrow span {
+  margin-top: -2px;
+  font: 700 11px/1 'JetBrains Mono', monospace;
+  text-shadow: 0 0 3px hsl(var(--background)), 0 0 3px hsl(var(--background));
+}
+.wm-fav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transform: translate(-50%, -130%);
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.95);
+  color: hsl(var(--foreground));
+  font: 600 11px/1.2 system-ui, sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+.wm-fav .wm-star {
+  color: hsl(var(--accent));
+}

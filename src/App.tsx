@@ -25,6 +25,8 @@ const Privacy         = lazy(() => import("./pages/legal/Privacy.tsx"));
 const Cookies         = lazy(() => import("./pages/legal/Cookies.tsx"));
 const Terms           = lazy(() => import("./pages/legal/Terms.tsx"));
 const Help            = lazy(() => import("./pages/Help.tsx"));
+// Leaflet only loads with this page
+const WindMap         = lazy(() => import("./pages/WindMap.tsx"));
 
 const PageFallback = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
@@ -54,6 +56,7 @@ const App = () => (
                 <Route path="/sessions/card" element={<ProtectedRoute><StoryCardEditor /></ProtectedRoute>} />
                 <Route path="/materials" element={<ProtectedRoute><Materials /></ProtectedRoute>} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/map" element={<WindMap />} />
                 <Route path="/legal/notice" element={<Notice />} />
                 <Route path="/legal/privacy" element={<Privacy />} />
                 <Route path="/legal/cookies" element={<Cookies />} />

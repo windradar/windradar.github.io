@@ -136,6 +136,15 @@
     "gustAbbr": "rat.",
     "moreInfo": "Més informació a {{url}}"
   },
+  "map": {
+    "title": "Mapa de vent",
+    "loadError": "No s'ha pogut carregar el vent del mapa. Torna-ho a provar.",
+    "arrowLabel": "{{speed}} {{unit}} de {{dir}}",
+    "openForecast": "Veure previsió",
+    "globalModel": "Model global",
+    "legend": "Vent",
+    "hint": "Les fletxes indiquen cap on bufa. Toca un favorit per veure'n la previsió."
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sessions",

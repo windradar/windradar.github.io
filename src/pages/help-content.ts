@@ -145,6 +145,10 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
             "body": "Debajo de la tabla hay gráficos de viento y rachas, altura de ola y temperatura de aire y agua para los próximos días. En «Comparar viento» eliges otra fecha y se superpone su viento al de hoy."
           },
           {
+            "heading": "Mapa de viento",
+            "body": "El botón del mapa, en la cabecera, abre un mapa con flechas de viento sobre la zona que ves: indican hacia dónde sopla, con su color y su valor en tu unidad. Con la barra inferior recorres hoy y mañana hora a hora. Donde hay AROME HD se usa ese modelo y, si no, el global. Tus favoritos aparecen con su viento; tócalos para abrir su previsión."
+          },
+          {
             "heading": "Unidades",
             "body": "El viento se muestra en nudos (kn) o en la unidad que elijas en tu Perfil (km/h o m/s). La ola va en metros, la temperatura en °C y la lluvia en mm.",
             "tip": "El umbral de viento y las alertas se configuran siempre en nudos."
@@ -564,6 +568,10 @@ export const HELP_CONTENT: Record<HelpLang, HelpContent> = {
           {
             "heading": "Gràfics i comparar vent",
             "body": "Sota la taula hi ha gràfics de vent i ratxes, alçada d'onada i temperatura de l'aire i l'aigua per als propers dies. A «Comparar vent» tries una altra data i se superposa el seu vent al d'avui."
+          },
+          {
+            "heading": "Mapa de vent",
+            "body": "El botó del mapa, a la capçalera, obre un mapa amb fletxes de vent sobre la zona que veus: indiquen cap on bufa, amb el seu color i el seu valor en la teva unitat. Amb la barra inferior recorres avui i demà hora a hora. On hi ha AROME HD es fa servir aquest model i, si no, el global. Els teus favorits apareixen amb el seu vent; toca'ls per obrir-ne la previsió."
           },
           {
             "heading": "Unitats",

@@ -59,6 +59,16 @@ export default defineConfig({
             },
           },
           {
+            // Mosaicos del mapa de viento (CARTO): cambian poco y se piden muchos
+            urlPattern: ({ url }) => url.hostname.endsWith("basemaps.cartocdn.com"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "map-tiles",
+              expiration: { maxEntries: 300, maxAgeSeconds: 14 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             // Supabase: nunca cachear (auth y datos del usuario)
             urlPattern: ({ url }) => url.hostname.endsWith("supabase.co"),
             handler: "NetworkOnly",

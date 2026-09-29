@@ -136,6 +136,15 @@
     "gustAbbr": "raf.",
     "moreInfo": "Más información en {{url}}"
   },
+  "map": {
+    "title": "Mapa de viento",
+    "loadError": "No se pudo cargar el viento del mapa. Inténtalo de nuevo.",
+    "arrowLabel": "{{speed}} {{unit}} del {{dir}}",
+    "openForecast": "Ver previsión",
+    "globalModel": "Modelo global",
+    "legend": "Viento",
+    "hint": "Las flechas indican hacia dónde sopla. Toca un favorito para ver su previsión."
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sesiones",

@@ -15,7 +15,8 @@ import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { FavoritesPanel } from '@/components/FavoritesPanel';
 import { FAVORITES_SYNCED_EVENT } from '@/lib/favorites-sync';
-import { Star } from 'lucide-react';
+import { Star, Map as MapIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -398,6 +399,14 @@ export default function Index() {
             <div className="hidden min-w-0 flex-1 sm:block">
               <SearchWithSuggestions onSelect={doSearch} showLocate />
             </div>
+            <Link
+              to={lat !== null && lon !== null ? `/map?lat=${lat}&lon=${lon}` : '/map'}
+              aria-label={t('map.title')}
+              title={t('map.title')}
+              className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-border bg-secondary text-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <MapIcon className="h-4 w-4" />
+            </Link>
             <FavoritesButton
               onSelect={doSearch}
               refreshKey={favKey}
