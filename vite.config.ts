@@ -59,8 +59,9 @@ export default defineConfig({
             },
           },
           {
-            // Mosaicos del mapa de viento (CARTO): cambian poco y se piden muchos
-            urlPattern: ({ url }) => url.hostname.endsWith("basemaps.cartocdn.com"),
+            // Mosaicos del mapa de viento (OpenStreetMap): cambian poco y se piden muchos;
+            // cachearlos también respeta la política de uso de sus servidores
+            urlPattern: ({ url }) => url.hostname === "tile.openstreetmap.org",
             handler: "CacheFirst",
             options: {
               cacheName: "map-tiles",

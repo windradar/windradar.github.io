@@ -225,6 +225,11 @@
   background: hsl(var(--muted-foreground));
 }
 
+/* Wind map: OpenStreetMap tiles darkened for the dark themes */
+.wm-tiles-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.5);
+}
+
 /* Wind map markers (Leaflet divIcons, rendered outside React) */
 .wm-arrow {
   display: flex;

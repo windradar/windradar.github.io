@@ -13,11 +13,10 @@ import { fetchWindPoints, gridPoints, type Bounds, type WindHour, type WindPoint
 import { locateUser, type GeolocateError } from '@/lib/geolocate';
 
 const DEFAULT_CENTER: [number, number] = [40.2, -3.7];
-const TILE_URL = {
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-};
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> · Open-Meteo';
+// OpenStreetMap needs no API key (CARTO now watermarks keyless tiles on published sites).
+// Dark themes get a CSS filter on the tile pane instead of a separate dark tile set.
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Open-Meteo';
 // windColor() breakpoints in km/h, for the legend
 const LEGEND_KMH = [0, 10, 20, 35, 50, 65];
 const LOCATE_ERROR_KEY: Record<GeolocateError, string> = {
@@ -216,7 +215,7 @@ export default function WindMap() {
           className="h-full w-full"
           style={{ background: mode === 'dark' ? '#0b1220' : '#e8edf2' }}
         >
-          <TileLayer key={mode} url={TILE_URL[mode]} attribution={ATTRIBUTION} subdomains="abcd" />
+          <TileLayer url={TILE_URL} attribution={ATTRIBUTION} className={mode === 'dark' ? 'wm-tiles-dark' : ''} />
           <ViewWatcher onView={onView} />
           <MapHandle onReady={onMapReady} />
           {arrows.map(a => (
