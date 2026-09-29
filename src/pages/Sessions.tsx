@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useId } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ExternalLink, Pencil, X, Share2, LayoutTemplate } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +23,9 @@ const PAGE_SIZE = 30;
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
 export default function Sessions() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language?.startsWith('ca') ? 'ca-ES' : 'es-ES';
+  const fid = useId();
   const { user } = useAuth();
   const unit = useWindUnit();
   // Snapshots are stored in knots
@@ -118,7 +120,7 @@ export default function Sessions() {
         fetch(marUrl).then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
 
-      if (!wxRes.hourly) throw new Error('Sin datos meteo para esa fecha');
+      if (!wxRes.hourly) throw new Error(t('sessions.noDataForDate'));
 
       const snap: Snapshot[] = [];
       for (let i = 0; i < wxRes.hourly.time.length; i++) {
@@ -141,7 +143,7 @@ export default function Sessions() {
       setOrigKey(`${date}|${startH}|${endH}|${locLat}|${locLon}`);
       toast.success(t('sessions.hoursLoaded', { count: snap.length }));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error cargando datos');
+      toast.error(e instanceof Error ? e.message : t('sessions.loadError'));
       setSnapshot(null);
     } finally {
       setLoadingSnap(false);
@@ -199,7 +201,7 @@ export default function Sessions() {
 
     if (trackingUrl) {
       const u = urlSchema.safeParse(trackingUrl);
-      if (!u.success) { toast.error('URL de tracking no válida'); return; }
+      if (!u.success) { toast.error(t('sessions.invalidTrackingUrl')); return; }
     }
 
     const materialsPayload: SessionMaterial[] = Object.entries(materials)
@@ -252,7 +254,7 @@ export default function Sessions() {
         </Link>
 
         <div className="mb-6 flex items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-extrabold">⛵ {t('sessions.title')}</h1>
+          <h1 className="font-display text-2xl font-extrabold"><span aria-hidden="true">⛵</span> {t('sessions.title')}</h1>
           <div className="flex items-center gap-2">
             <Link
               to="/sessions/card"
@@ -262,6 +264,7 @@ export default function Sessions() {
             </Link>
             <button
               onClick={() => showForm ? (resetForm(), setShowForm(false)) : openNewForm()}
+              aria-expanded={showForm}
               className="flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110">
               {showForm ? <><X size={16} /> {t('common.close')}</> : <><Plus size={16} /> {t('sessions.newSession')}</>}
             </button>
@@ -275,28 +278,28 @@ export default function Sessions() {
             </h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.locationLabel')}</label>
+              <div role="group" aria-labelledby={`${fid}-loc`}>
+                <p id={`${fid}-loc`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.locationLabel')}</p>
                 <SearchWithSuggestions onSelect={(name, lat, lon) => { setLocName(name); setLocLat(lat); setLocLon(lon); }} />
-                {locName && <p className="mt-1 text-xs text-primary">📍 {locName}</p>}
+                {locName && <p className="mt-1 text-xs text-primary"><span aria-hidden="true">📍</span> {locName}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.dateLabel')}</label>
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                  <label htmlFor={`${fid}-date`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.dateLabel')}</label>
+                  <input id={`${fid}-date`} type="date" value={date} onChange={e => setDate(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary" />
                 </div>
                 <div>
-                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.startLabel')}</label>
-                  <select value={startH} onChange={e => setStartH(e.target.value)}
+                  <label htmlFor={`${fid}-start`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.startLabel')}</label>
+                  <select id={`${fid}-start`} value={startH} onChange={e => setStartH(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary">
                     {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.endLabel')}</label>
-                  <select value={endH} onChange={e => setEndH(e.target.value)}
+                  <label htmlFor={`${fid}-end`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.endLabel')}</label>
+                  <select id={`${fid}-end`} value={endH} onChange={e => setEndH(e.target.value)}
                     className="w-full rounded-md border border-border bg-secondary px-2 py-2 text-sm font-mono outline-none focus:border-primary">
                     {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
@@ -329,8 +332,8 @@ export default function Sessions() {
                 onCreated={sport => setSports(sp => [...sp, sport])}
               />
 
-              <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-2">{t('sessions.materialLabel')}</label>
+              <div role="group" aria-labelledby={`${fid}-mat`}>
+                <p id={`${fid}-mat`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-2">{t('sessions.materialLabel')}</p>
                 <MaterialSelect
                   sportId={sportId}
                   values={materials}
@@ -339,26 +342,26 @@ export default function Sessions() {
               </div>
 
               <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.trackingLabel')}</label>
-                <input type="url" value={trackingUrl} onChange={e => setTrackingUrl(e.target.value)} placeholder="https://strava.com/activities/..."
+                <label htmlFor={`${fid}-track`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.trackingLabel')}</label>
+                <input id={`${fid}-track`} type="url" value={trackingUrl} onChange={e => setTrackingUrl(e.target.value)} placeholder="https://strava.com/activities/..."
                   className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono outline-none focus:border-primary" />
               </div>
 
               <div>
-                <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.notesLabel')}</label>
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000} rows={2}
+                <label htmlFor={`${fid}-notes`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('sessions.notesLabel')}</label>
+                <textarea id={`${fid}-notes`} value={notes} onChange={e => setNotes(e.target.value)} maxLength={1000} rows={2}
                   className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
               </div>
 
               <div className="flex gap-2">
                 <button onClick={saveSession} disabled={saving}
                   className="flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
-                  {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Guardar sesión'}
+                  {saving ? t('common.saving') : editingId ? t('sessions.saveChanges') : t('sessions.saveSession')}
                 </button>
                 {editingId && (
                   <button onClick={() => { resetForm(); setShowForm(false); }}
                     className="rounded-md border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary">
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                 )}
               </div>
@@ -372,13 +375,13 @@ export default function Sessions() {
 
         {/* List */}
         <section>
-          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">Historial</h2>
+          <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('sessions.history')}</h2>
 
           {loading ? (
-            <p className="text-sm text-muted-foreground">Cargando...</p>
+            <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
           ) : sessions.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              Aún no has registrado ninguna sesión.
+              {t('sessions.noSessions')}
             </div>
           ) : displayedSessions.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
@@ -391,7 +394,7 @@ export default function Sessions() {
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="font-display text-sm font-bold">{s.location_name || 'Sin ubicación'}</h3>
+                        <h3 className="font-display text-sm font-bold">{s.location_name || t('sessions.noLocationLabel')}</h3>
                         {s.sport_name && (
                           <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-primary">
                             {s.sport_name}
@@ -399,26 +402,26 @@ export default function Sessions() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {humanDate(s.session_date)} · {s.start_time}–{s.end_time}
+                        {humanDate(s.session_date, dateLocale)} · {s.start_time}–{s.end_time}
                       </p>
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => setStorySession(s)}
-                        title="Compartir en Instagram"
-                        aria-label="Compartir en Instagram"
+                        title={t('sessions.shareInstagram')}
+                        aria-label={t('sessions.shareInstagram')}
                         className="rounded-md p-2 text-muted-foreground hover:text-pink-500">
                         <Share2 size={15} />
                       </button>
                       <button onClick={() => openEditForm(s)}
-                        title="Editar"
-                        aria-label="Editar sesión"
+                        title={t('sessions.editAria')}
+                        aria-label={t('sessions.editAria')}
                         className="rounded-md p-2 text-muted-foreground hover:text-primary">
                         <Pencil size={15} />
                       </button>
                       <button onClick={() => deleteSession(s.id)}
-                        title="Eliminar"
-                        aria-label="Eliminar sesión"
+                        title={t('sessions.deleteAria')}
+                        aria-label={t('sessions.deleteAria')}
                         className="rounded-md p-2 text-muted-foreground hover:text-destructive">
                         <Trash2 size={16} />
                       </button>
@@ -427,7 +430,7 @@ export default function Sessions() {
 
                   {s.weather_snapshot && Array.isArray(s.weather_snapshot) && s.weather_snapshot.length > 0 && (
                     <details className="mb-2">
-                      <summary className="cursor-pointer text-xs text-primary">Datos meteo ({(s.weather_snapshot as Snapshot[]).length} h)</summary>
+                      <summary className="cursor-pointer text-xs text-primary">{t('sessions.meteoData', { count: (s.weather_snapshot as Snapshot[]).length })}</summary>
                       <div className="mt-2 space-y-0.5 font-mono text-[0.7rem]">
                         {(s.weather_snapshot as Snapshot[]).map((w) => (
                           <div key={w.hour} className="flex justify-between text-muted-foreground">
@@ -441,26 +444,27 @@ export default function Sessions() {
 
                   {s.materials.length > 0 && (
                     <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                      <span className="text-muted-foreground">Material: </span>
+                      <span className="text-muted-foreground">{t('sessions.material')}: </span>
                       {s.materials.map((m, i, arr) => (
                           <span key={m.category_id} className="flex items-center gap-1">
                             {materialPhotos[m.name] && (
                               <button
                                 type="button"
                                 onClick={() => setEnlargedPhoto(materialPhotos[m.name])}
-                                title="Ver foto"
+                                title={t('sessions.viewPhoto', { name: m.name })}
+                                aria-label={t('sessions.viewPhoto', { name: m.name })}
                                 className="shrink-0"
                               >
                                 <img
                                   src={materialPhotos[m.name]}
-                                  alt={m.name}
+                                  alt=""
                                   className="h-5 w-5 cursor-zoom-in rounded border border-border object-cover transition-colors hover:border-primary"
                                   loading="lazy"
                                 />
                               </button>
                             )}
                             {m.name}
-                            {i < arr.length - 1 && <span className="text-muted-foreground/50">·</span>}
+                            {i < arr.length - 1 && <span className="text-muted-foreground/50" aria-hidden="true">·</span>}
                           </span>
                         ))}
                     </div>
@@ -469,7 +473,7 @@ export default function Sessions() {
                   {s.tracking_url && /^https?:\/\//i.test(s.tracking_url) && (
                     <a href={s.tracking_url} target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                      <ExternalLink size={12} /> Tracking
+                      <ExternalLink size={12} aria-hidden="true" /> {t('sessions.trackingLink')}
                     </a>
                   )}
 
@@ -491,11 +495,11 @@ export default function Sessions() {
 
       <Dialog open={!!enlargedPhoto} onOpenChange={(open) => { if (!open) setEnlargedPhoto(null); }}>
         <DialogContent className="max-w-2xl border-border bg-card p-2">
-          <DialogTitle className="sr-only">Foto del material</DialogTitle>
+          <DialogTitle className="sr-only">{t('sessions.materialPhoto')}</DialogTitle>
           {enlargedPhoto && (
             <img
               src={enlargedPhoto}
-              alt="material"
+              alt={t('sessions.materialPhoto')}
               className="max-h-[85vh] w-full rounded object-contain"
             />
           )}

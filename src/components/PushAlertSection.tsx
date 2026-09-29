@@ -81,7 +81,7 @@ export function PushAlertSection() {
       <div className="flex items-center justify-between gap-2">
         <h5 className="text-[0.8rem] font-bold text-foreground">{t('settings.pushAlert')}</h5>
         {status === 'on' && (
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.55rem] uppercase tracking-widest text-primary">
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.62rem] uppercase tracking-widest text-primary">
             {t('settings.pushOnBadge')}
           </span>
         )}
@@ -107,7 +107,7 @@ export function PushAlertSection() {
             disabled={busy}
             className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[0.75rem] font-semibold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
           >
-            {status === 'on' ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+            {status === 'on' ? <BellOff className="h-3.5 w-3.5" aria-hidden="true" /> : <Bell className="h-3.5 w-3.5" aria-hidden="true" />}
             {busy ? t('settings.saving') : status === 'on' ? t('settings.pushDisable') : t('settings.pushEnable')}
           </button>
           {status === 'on' && (
@@ -116,7 +116,7 @@ export function PushAlertSection() {
               disabled={testing}
               className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[0.75rem] font-semibold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
             >
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-3.5 w-3.5" aria-hidden="true" />
               {testing ? t('settings.testWhatsappSending') : t('settings.testPush')}
             </button>
           )}

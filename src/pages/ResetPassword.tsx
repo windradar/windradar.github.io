@@ -15,7 +15,7 @@ export default function ResetPassword() {
 
   const passwordSchema = z.string()
     .min(10, t('auth.passwordMin'))
-    .max(72)
+    .max(72, t('auth.passwordMax'))
     .regex(/[a-z]/, t('auth.passwordLower'))
     .regex(/[A-Z]/, t('auth.passwordUpper'))
     .regex(/[0-9]/, t('auth.passwordNumber'))
@@ -55,9 +55,9 @@ export default function ResetPassword() {
           <p className="text-sm text-muted-foreground">{t('resetPassword.validating')}</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input type="password" placeholder={t('resetPassword.newPassword')} value={password} onChange={e => setPassword(e.target.value)} required minLength={10}
+            <input type="password" autoComplete="new-password" aria-label={t('resetPassword.newPassword')} placeholder={t('resetPassword.newPassword')} value={password} onChange={e => setPassword(e.target.value)} required minLength={10}
               className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-            <input type="password" placeholder={t('resetPassword.confirmPassword')} value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={10}
+            <input type="password" autoComplete="new-password" aria-label={t('resetPassword.confirmPassword')} placeholder={t('resetPassword.confirmPassword')} value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={10}
               className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
             <button type="submit" disabled={submitting}
               className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,10 +12,11 @@ export default function Profile() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const uid = useId();
 
   const passwordSchema = z.string()
     .min(10, t('auth.passwordMin'))
-    .max(72)
+    .max(72, t('auth.passwordMax'))
     .regex(/[a-z]/, t('auth.passwordLower'))
     .regex(/[A-Z]/, t('auth.passwordUpper'))
     .regex(/[0-9]/, t('auth.passwordNumber'))
@@ -125,35 +126,35 @@ export default function Profile() {
     <div className="min-h-screen bg-background px-4 py-6">
       <div className="mx-auto max-w-2xl">
         <Link to="/" className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
-          <ArrowLeft size={14} /> {t('common.back')}
+          <ArrowLeft size={14} aria-hidden="true" /> {t('common.back')}
         </Link>
 
         <h1 className="mb-6 font-display text-2xl font-extrabold">👤 {t('profile.title')}</h1>
 
-        {/* Datos de cuenta */}
+        {/* Account */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">{t('profile.accountData')}</h2>
           <div className="space-y-3">
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.emailLabel')}</label>
-              <input value={user?.email || ''} disabled className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm text-muted-foreground" />
+              <label htmlFor={`${uid}-email`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.emailLabel')}</label>
+              <input id={`${uid}-email`} value={user?.email || ''} disabled className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm text-muted-foreground" />
             </div>
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.nameLabel')}</label>
-              <input value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60}
+              <label htmlFor={`${uid}-name`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.nameLabel')}</label>
+              <input id={`${uid}-name`} value={displayName} onChange={e => setDisplayName(e.target.value)} maxLength={60}
                 placeholder={t('profile.namePlaceholder')}
                 className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
             </div>
           </div>
         </section>
 
-        {/* Preferencias */}
+        {/* Preferences */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">{t('profile.preferences')}</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.windUnits')}</label>
-              <div className="flex gap-2">
+              <p id={`${uid}-units`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.windUnits')}</p>
+              <div className="flex gap-2" role="group" aria-labelledby={`${uid}-units`}>
                 {(['kn', 'kmh', 'ms'] as const).map(u => (
                   <button
                     key={u}
@@ -182,13 +183,14 @@ export default function Profile() {
         {/* WhatsApp */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
           <h2 className="mb-1 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider">
-            <MessageCircle size={15} className="text-green-500" /> {t('profile.whatsappTitle')}
+            <MessageCircle size={15} className="text-green-500" aria-hidden="true" /> {t('profile.whatsappTitle')}
           </h2>
           <p className="mb-3 text-[0.68rem] text-muted-foreground">{t('profile.whatsappDesc')}</p>
           <div className="space-y-3">
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.whatsappNumber')}</label>
+              <label htmlFor={`${uid}-wa`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.whatsappNumber')}</label>
               <input
+                id={`${uid}-wa`}
                 value={whatsappNumber}
                 onChange={e => setWhatsappNumber(e.target.value)}
                 placeholder="34612345678"
@@ -198,8 +200,9 @@ export default function Profile() {
               />
             </div>
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.callmebotApiKey')}</label>
+              <label htmlFor={`${uid}-cmb`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.callmebotApiKey')}</label>
               <input
+                id={`${uid}-cmb`}
                 value={callmebotApiKey}
                 onChange={e => setCallmebotApiKey(e.target.value)}
                 placeholder="1234567"
@@ -215,13 +218,13 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Cambiar contraseña */}
+        {/* Change password */}
         <section className="mb-6 rounded-xl border border-border bg-card p-5">
           <h2 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">{t('profile.changePassword')}</h2>
           <div className="space-y-3">
-            <input type="password" placeholder={t('profile.newPassword')} value={newPass} onChange={e => setNewPass(e.target.value)}
+            <input type="password" autoComplete="new-password" aria-label={t('profile.newPassword')} placeholder={t('profile.newPassword')} value={newPass} onChange={e => setNewPass(e.target.value)}
               className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
-            <input type="password" placeholder={t('profile.confirmPassword')} value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
+            <input type="password" autoComplete="new-password" aria-label={t('profile.confirmPassword')} placeholder={t('profile.confirmPassword')} value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
               className="w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
             <p className="text-[0.65rem] text-muted-foreground">{t('profile.passwordHint')}</p>
             <div className="flex flex-wrap gap-2">
@@ -237,10 +240,10 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Eliminar cuenta */}
+        {/* Delete account */}
         <section className="mb-6 rounded-xl border border-destructive/40 bg-destructive/5 p-5">
           <h2 className="mb-1 flex items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-destructive">
-            <TriangleAlert size={15} /> {t('profile.deleteAccount')}
+            <TriangleAlert size={15} aria-hidden="true" /> {t('profile.deleteAccount')}
           </h2>
           <p className="mb-4 text-[0.68rem] text-muted-foreground">
             {t('profile.deleteWarning')} <strong>{t('profile.deleteWarningBold')}</strong>

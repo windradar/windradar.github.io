@@ -34,6 +34,108 @@
     "iosStep2": "Elige «Añadir a pantalla de inicio» y confirma con «Añadir».",
     "iosNote": "Instalada, la app se abre a pantalla completa y puede recibir notificaciones push (iOS 16.4 o superior)."
   },
+  "dashboard": {
+    "months": [
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic"
+    ],
+    "noSport": "Sin deporte",
+    "year": "Año",
+    "month": "Mes",
+    "rangeFrom": "Desde",
+    "rangeTo": "Hasta",
+    "chartLabel": "Gráfica de sesiones por deporte en el periodo"
+  },
+  "story": {
+    "dialogTitle": "Compartir historia",
+    "previewAlt": "Vista previa de la tarjeta de la sesión",
+    "removeBg": "Quitar foto de fondo",
+    "bgPhoto": "Foto de fondo",
+    "uploadBg": "Subir foto (cámara o galería)",
+    "useMaterialPhoto": "O usa una foto de tu material:",
+    "generating": "Generando imagen…",
+    "mobileHint": "En el móvil se abre directamente el menú de compartir.",
+    "desktopHint": "En el ordenador se descarga la imagen para compartirla desde la app.",
+    "imageTooLarge": "Imagen demasiado grande (máx. {{mb}} MB)",
+    "materialPhotoError": "No se pudo cargar la foto del material",
+    "generateError": "Error al generar la imagen",
+    "shareTitle": "Mi sesión – {{place}}",
+    "downloaded": "Imagen descargada. Ábrela desde tu galería y compártela como historia en Instagram.",
+    "shareError": "Error al compartir",
+    "sampleNotes": "Levante entrando fuerte desde las 14 h. Planeo constante en el pico.",
+    "qrLabel": "tracking",
+    "windDuringSession": "Viento durante la sesión",
+    "windKnots": "Viento · nudos",
+    "gustMax": "Racha máx.",
+    "short": {
+      "gust": "ráf.",
+      "dir": "dir.",
+      "wave": "olas",
+      "temp": "temp.",
+      "dur": "tiempo"
+    },
+    "dur": {
+      "min": "{{m}} min",
+      "h": "{{h}} h",
+      "hMin": "{{h}} h {{m}} min"
+    }
+  },
+  "sports": {
+    "title": "Deportes",
+    "description": "Crea tus disciplinas y asocia cada slot de material a una de ellas para poder desglosar tus sesiones por deporte.",
+    "loading": "Cargando deportes...",
+    "empty": "Aún no has creado ningún deporte. Añade uno (Windsurf, Kite, Wing Foil, SUP...) y luego asocia tus slots de material a él en la lista de abajo.",
+    "confirmDelete": "¿Eliminar el deporte «{{name}}»? Los slots asociados quedarán sin deporte.",
+    "nameLabel": "Nombre del deporte",
+    "edit": "Editar {{name}}",
+    "delete": "Eliminar {{name}}",
+    "placeholder": "Ej: Windsurf",
+    "add": "Añadir deporte"
+  },
+  "materialSelect": {
+    "newItem": "Nuevo {{slot}}",
+    "nameLabel": "Nombre del material",
+    "placeholder": "Ej: Gastra 4.5",
+    "addAndSelect": "Añadir y seleccionar",
+    "added": "Material añadido",
+    "noSlots": "No hay slots de material configurados. Configúralos en Materiales.",
+    "noSlotsForSport": "No hay slots de material configurados para este deporte. Configúralos en Materiales.",
+    "none": "— ninguno —",
+    "addToSlot": "Añadir nuevo material a {{slot}}"
+  },
+  "materialPhoto": {
+    "invalidFormat": "Formato no válido (jpg, png, webp)",
+    "tooLargeInput": "Máx. 20 MB",
+    "processError": "No se pudo procesar la imagen",
+    "tooLarge": "La imagen es demasiado grande",
+    "uploaded": "Foto subida",
+    "uploadError": "Error subiendo la foto",
+    "confirmDelete": "¿Eliminar la foto?",
+    "view": "Ver foto",
+    "delete": "Eliminar foto",
+    "change": "Cambiar foto",
+    "upload": "Subir foto",
+    "title": "Foto del material",
+    "titleNamed": "Foto de {{name}}",
+    "alt": "Foto del material"
+  },
+  "language": {
+    "buttonLabel": "Idioma: {{current}}. Cambiar a {{next}}"
+  },
+  "share": {
+    "gustAbbr": "raf.",
+    "moreInfo": "Más información en {{url}}"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sesiones",
@@ -45,6 +147,9 @@
     "shareWhatsapp": "Compartir previsión"
   },
   "theme": {
+    "ebook": "Ebook",
+    "toEbook": "Cambiar a modo ebook",
+    "buttonLabel": "Tema: {{theme}}. {{action}}",
     "dark": "Oscuro",
     "light": "Claro",
     "toDark": "Cambiar a modo oscuro",
@@ -122,6 +227,37 @@
     "callmebotHint": "Envía «I allow callmebot to send me messages» al +34 644 91 96 80 por WhatsApp para obtener tu API Key."
   },
   "materials": {
+    "loading": "Cargando materiales...",
+    "newSlotName": "Nuevo slot",
+    "confirmDeleteSlot": "¿Eliminar el slot «{{name}}» y todos sus materiales?",
+    "slotDeleted": "Slot eliminado",
+    "nameRequired": "Pon un nombre",
+    "slotSaved": "Categoría guardada",
+    "itemNameEmpty": "El nombre no puede estar vacío",
+    "renameSessionsError": "No se pudo renombrar el material en alguna sesión",
+    "itemUpdated": "Material actualizado",
+    "serviceLogged": "Revisión de «{{name}}» anotada",
+    "slotNumber": "Slot {{n}}",
+    "slotNameLabel": "Nombre del slot",
+    "renameSlot": "Renombrar el slot {{name}}",
+    "deleteSlot": "Eliminar el slot {{name}}",
+    "slotSportTitle": "Deporte al que pertenece este slot",
+    "allSports": "— Todos los deportes —",
+    "serviceEvery": "Revisar cada",
+    "editItem": "Editar {{name}}",
+    "deleteItem": "Eliminar {{name}}",
+    "addItemPlaceholder": "Añadir {{name}}...",
+    "addItemLabel": "Añadir material a {{name}}",
+    "add": "Añadir",
+    "addSlot": "Añadir slot",
+    "usage": {
+      "hoursUsed": "{{hours}} h de uso",
+      "noUsage": "Sin uso registrado",
+      "hoursOfInterval": "{{since}}/{{interval}} h",
+      "sinceLastService": "{{since}}/{{interval}} h desde la revisión",
+      "markServicedToday": "Revisado hoy",
+      "serviceDueMarkToday": "Revisión pendiente · Revisado hoy"
+    },
     "title": "Materiales",
     "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión."
   },
@@ -182,6 +318,13 @@
     "savedHint": "Los cambios se guardan automáticamente en este dispositivo."
   },
   "sessions": {
+    "showMore": "Mostrar más ({{count}})",
+    "loadError": "Error al cargar los datos",
+    "editAria": "Editar sesión",
+    "deleteAria": "Eliminar sesión",
+    "viewPhoto": "Ver foto de {{name}}",
+    "trackingLink": "Tracking",
+    "materialPhoto": "Foto del material",
     "title": "Sesiones",
     "newSession": "Nueva",
     "editSession": "✏️ Editar sesión",
@@ -232,6 +375,16 @@
     "sportAdded": "Deporte añadido"
   },
   "settings": {
+    "spotsTitle": "Mis spots",
+    "addSpot": "Añadir spot",
+    "spotsDesc": "Configura tus spots favoritos para detectar días con viento suficiente.",
+    "noSpots": "Sin spots configurados",
+    "spotName": "Nombre del spot",
+    "deleteSpot": "Eliminar spot",
+    "spotMinWind": "Viento mín.",
+    "spotMinWindAria": "Viento mínimo para {{name}}",
+    "windThresholdAria": "Umbral de viento mínimo en nudos",
+    "locationPlaceholder": "Ej.: Gavà, España",
     "alertDirs": "Direcciones del viento",
     "alertDirsDesc": "Marca de dónde tiene que soplar el viento para que te avisemos (por ejemplo, SO y OSO para el Garbí). Sin marcar = cualquier dirección.",
     "alertDirsAny": "Cualquier dirección",
@@ -300,12 +453,39 @@
     "testPushError": "Error al enviar la notificación de prueba."
   },
   "chart": {
+    "windSeries": "Viento ({{unit}})",
+    "gustSeries": "Ráfagas ({{unit}})",
+    "waveSeries": "Ola (m)",
+    "airSeries": "Aire °C",
+    "waterSeries": "Agua °C",
+    "windTitleArome": "💨 Viento y ráfagas ({{unit}}) · AROME HD días 1-2 · Seamless días 3-4",
+    "windTitle4Days": "💨 Viento y ráfagas ({{unit}}) · 4 días",
+    "waveTitle": "🌊 Altura de ola (m)",
+    "tempTitle": "🌡️ Temperatura aire / agua (°C)",
+    "aromeDays12": "AROME HD · días 1-2",
+    "compareTitle": "📊 Comparar viento",
+    "compareDateLabel": "Fecha a comparar:",
+    "compareWindToday": "Viento hoy ({{date}})",
+    "compareWindTodayArome": "Viento hoy ({{date}}) · AROME HD",
+    "compareWindDate": "Viento {{date}}",
+    "compareGustToday": "Ráfagas hoy",
+    "compareGustDate": "Ráfagas {{date}}",
+    "comparePrompt": "Selecciona una fecha para comparar con hoy ({{date}})",
+    "compareError": "No se pudieron cargar los datos de esa fecha. Inténtalo de nuevo.",
     "forecast7days": "🌬️ Previsión 7 días · cada 2h",
     "wind": "Viento (kn)",
     "gust": "Ráfaga",
     "direction": "🧭 Dirección"
   },
   "cookies": {
+    "bannerLabel": "Aviso de cookies",
+    "and": "y",
+    "region": {
+      "eu": "UE / RGPD",
+      "uk": "Reino Unido / UK GDPR",
+      "california": "California / CCPA",
+      "intl": "Internacional"
+    },
     "title": "Privacidad y cookies",
     "necessary": "Necesarias",
     "necessaryDesc": "siempre activas (autenticación, preferencias).",
@@ -331,6 +511,12 @@
     "configureCookies": "Configurar cookies"
   },
   "index": {
+    "bigDay": "Big Day",
+    "bigDayAt": "Big Day en {{name}}",
+    "air": "Aire",
+    "water": "Agua",
+    "swell": "Swell: {{value}}",
+    "interval": "Intervalo:",
     "bestWindow": "Mejor ventana",
     "bestWindowNone": "Ninguna hora llega a {{kn}} kn",
     "bestWindowRange": "de {{from}} a {{to}} h",
@@ -395,6 +581,8 @@
     "copiedMsg": "Mensaje copiado. Pégalo en WhatsApp Web (Ctrl+V)."
   },
   "favorites": {
+    "add": "Añadir a favoritos",
+    "removeSpot": "Eliminar {{name}}",
     "title": "Spots favoritos",
     "remove": "Quitar de favoritos",
     "save": "Guardar spot actual",
@@ -405,6 +593,9 @@
     "removed": "Eliminado de favoritos"
   },
   "search": {
+    "placeholderCity": "Ciudad, país...",
+    "inputLabel": "Buscar ubicación",
+    "clear": "Borrar búsqueda",
     "locate": "Usar mi ubicación",
     "myLocation": "Mi ubicación",
     "locateUnsupported": "Este navegador no permite obtener tu ubicación.",

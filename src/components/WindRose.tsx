@@ -38,9 +38,9 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
       className="relative overflow-hidden rounded-lg border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50"
     >
       <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
-      <div className="mb-2 text-[0.6rem] uppercase tracking-widest text-muted-foreground">🧭 Dirección</div>
+      <div className="mb-2 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('chart.direction')}</div>
       <div className="flex flex-col items-center gap-2">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-lg">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-lg" role="img" aria-label={`${info.short} ${Math.round(degrees)}°`}>
           {/* Outer circle */}
           <circle cx={cx} cy={cy} r={outerR} fill="none" className="stroke-border" strokeWidth="1.5" />
           <circle cx={cx} cy={cy} r={outerR - 15} fill="none" className="stroke-border/30" strokeWidth="0.5" />
@@ -77,9 +77,9 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
                 y={cy + r * Math.sin(a)}
                 textAnchor="middle"
                 dominantBaseline="central"
-                className={`font-display text-[0.55rem] font-bold ${isActive ? '' : ''}`}
+                className={`font-display text-[0.62rem] font-bold ${isActive ? '' : ''}`}
                 fill={isActive ? color : 'hsl(var(--muted-foreground))'}
-                style={{ fontSize: c.label === 'N' ? '0.7rem' : '0.55rem' }}
+                style={{ fontSize: c.label === 'N' ? '0.7rem' : '0.62rem' }}
               >
                 {c.label}
               </text>
@@ -121,7 +121,7 @@ export function WindRose({ degrees, speed, gustSpeed }: Props) {
           <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" fill={color} className="font-display text-sm font-bold">
             {info.short}
           </text>
-          <text x={cx} y={cy + 8} textAnchor="middle" dominantBaseline="central" className="fill-muted-foreground text-[0.45rem]">
+          <text x={cx} y={cy + 8} textAnchor="middle" dominantBaseline="central" className="fill-muted-foreground text-[0.62rem]">
             {Math.round(degrees)}°
           </text>
         </svg>

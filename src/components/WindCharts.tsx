@@ -12,6 +12,8 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useChartTheme, type ChartTheme } from '@/hooks/useChartTheme';
 import { Line, Bar } from 'react-chartjs-2';
 import type { WeatherData, MarineData } from '@/lib/weather-helpers';
@@ -43,7 +45,7 @@ function buildOpts({ text, grid }: ChartTheme) {
 }
 
 // Stable data objects: react-chartjs-2 updates the chart whenever `data` changes identity
-function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string, unit: WindUnit) {
+function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: WeatherData | null | undefined, today: string, unit: WindUnit, t: TFunction) {
   // Find start of today in seamless data (used as backbone for chart times)
   let seamlessStart = -1;
   for (let i = 0; i < wx.hourly.time.length; i++) {
@@ -111,14 +113,14 @@ function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: Weath
     wind: {
       labels: labs,
       datasets: [
-        { label: `Viento (${WIND_UNIT_LABEL[unit]})`, data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
-        { label: `Ráfagas (${WIND_UNIT_LABEL[unit]})`, data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
+        { label: t('chart.windSeries', { unit: WIND_UNIT_LABEL[unit] }), data: wsKn, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+        { label: t('chart.gustSeries', { unit: WIND_UNIT_LABEL[unit] }), data: wgKn, borderColor: '#ff8c00', backgroundColor: 'rgba(255,140,0,.04)', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 3] }
       ]
     },
     waves: {
       labels: labs,
       datasets: [{
-        label: 'Ola (m)',
+        label: t('chart.waveSeries'),
         data: wv,
         backgroundColor: wv.map(v => waveColor(v || 0) + '99'),
         borderColor: wv.map(v => waveColor(v || 0)),
@@ -128,14 +130,15 @@ function buildChartData(wx: WeatherData, mar: MarineData | null, wxDetail: Weath
     temps: {
       labels: labs,
       datasets: [
-        { label: 'Aire °C', data: temp, borderColor: '#ffcc44', backgroundColor: 'rgba(255,204,68,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
-        { label: 'Agua °C', data: sst, borderColor: '#4dd9ff', backgroundColor: 'rgba(77,217,255,.06)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }
+        { label: t('chart.airSeries'), data: temp, borderColor: '#ffcc44', backgroundColor: 'rgba(255,204,68,.07)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+        { label: t('chart.waterSeries'), data: sst, borderColor: '#4dd9ff', backgroundColor: 'rgba(77,217,255,.06)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }
       ]
     },
   };
 }
 
 export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props) {
+  const { t, i18n } = useTranslation();
   const today = localDateStr(new Date());
   const unit = useWindUnit();
   const chartTheme = useChartTheme();
@@ -143,12 +146,15 @@ export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props)
     const opts = buildOpts(chartTheme);
     return { lineOpts: opts as ChartOptions<'line'>, barOpts: opts as ChartOptions<'bar'> };
   }, [chartTheme]);
-  const charts = useMemo(() => buildChartData(wx, mar, wxDetail, today, unit), [wx, mar, wxDetail, today, unit]);
+  const charts = useMemo(() => buildChartData(wx, mar, wxDetail, today, unit, t),
+    // i18n.language: dataset labels are baked into the memoised data
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wx, mar, wxDetail, today, unit, t, i18n.language]);
   if (!charts) return null;
 
   const windTitle = charts.hasArome
-    ? `💨 Viento y ráfagas (${WIND_UNIT_LABEL[unit]}) · AROME HD días 1-2 · Seamless días 3-4`
-    : `💨 Viento y ráfagas (${WIND_UNIT_LABEL[unit]}) · 4 días`;
+    ? t('chart.windTitleArome', { unit: WIND_UNIT_LABEL[unit] })
+    : t('chart.windTitle4Days', { unit: WIND_UNIT_LABEL[unit] });
 
   return (
     <>
@@ -160,14 +166,14 @@ export const WindCharts = memo(function WindCharts({ wx, mar, wxDetail }: Props)
         />
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
-        <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">🌊 Altura de ola (m)</div>
+        <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">{t('chart.waveTitle')}</div>
         <Bar
           data={charts.waves}
           options={barOpts}
         />
       </div>
       <div className="rounded-lg border border-border bg-card p-4">
-        <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">🌡️ Temperatura aire / agua (°C)</div>
+        <div className="mb-3 text-[0.62rem] uppercase tracking-widest text-muted-foreground">{t('chart.tempTitle')}</div>
         <Line
           data={charts.temps}
           options={lineOpts}

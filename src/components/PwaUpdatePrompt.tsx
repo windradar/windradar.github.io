@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 
-// Avisa cuando hay una versión nueva del service worker y recarga al pulsar
 export function PwaUpdatePrompt() {
   const { t } = useTranslation();
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW();

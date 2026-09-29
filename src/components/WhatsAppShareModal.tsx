@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -24,6 +24,8 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
   const hours = dayIdxs.map(i => h.time[i].slice(11, 16));
   const [fromH, setFromH] = useState(hours[0] || '00:00');
   const [toH, setToH] = useState(hours[hours.length - 1] || '23:00');
+  const fromId = useId();
+  const toId = useId();
 
   const wmoEmoji = (code: number) => {
     if (code === 0) return '☀️';
@@ -56,9 +58,9 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
       const wh = mar?.hourly?.wave_height?.[idx] ?? null;
       const wc = h.weathercode?.[idx] ?? 0;
       const hr = h.time[idx].slice(11, 16);
-      msg += `${wmoEmoji(wc)} *${hr}* — 💨 ${formatWind(windFromKmh(ws, unit), unit)}${WIND_UNIT_LABEL[unit]} ⚡raf.${formatWind(windFromKmh(wg, unit), unit)}${WIND_UNIT_LABEL[unit]} 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
+      msg += `${wmoEmoji(wc)} *${hr}* — 💨 ${formatWind(windFromKmh(ws, unit), unit)}${WIND_UNIT_LABEL[unit]} ⚡${t('share.gustAbbr')}${formatWind(windFromKmh(wg, unit), unit)}${WIND_UNIT_LABEL[unit]} 🧭${wi.short} 🌊${wh !== null ? wh.toFixed(1) + 'm' : '-'}\n`;
     }
-    msg += `\n_WindFlowRadar · Open-Meteo_\n\nMás información en https://windradar.github.io/`;
+    msg += `\n_WindFlowRadar · Open-Meteo_\n\n${t('share.moreInfo', { url: 'https://windradar.github.io/' })}`;
 
     if (navigator.share) {
       navigator.share({ text: msg }).catch(() => {});
@@ -87,10 +89,11 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
 
         <div className="flex gap-3">
           <div className="flex flex-1 flex-col gap-1">
-            <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
+            <label htmlFor={fromId} className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
               {t('index.shareFrom')}
             </label>
             <select
+              id={fromId}
               value={fromH}
               onChange={e => setFromH(e.target.value)}
               className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary"
@@ -99,10 +102,11 @@ export function WhatsAppShareModal({ open, onOpenChange, wx, mar, name, date, da
             </select>
           </div>
           <div className="flex flex-1 flex-col gap-1">
-            <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
+            <label htmlFor={toId} className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">
               {t('index.shareTo')}
             </label>
             <select
+              id={toId}
               value={toH}
               onChange={e => setToH(e.target.value)}
               className="rounded-md border border-border bg-secondary px-2 py-1.5 font-mono text-xs text-foreground outline-none focus:border-primary"

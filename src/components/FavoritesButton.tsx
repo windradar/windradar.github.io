@@ -45,6 +45,7 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={t('favorites.title')}
+        aria-expanded={open}
         title={t('favorites.title')}
         className="flex h-[42px] items-center gap-1 rounded-lg border border-border bg-secondary px-2.5 text-foreground transition-colors hover:border-primary hover:text-primary"
       >
@@ -61,6 +62,8 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
+            role="region"
+            aria-label={t('favorites.title')}
             className="absolute right-0 top-full z-50 mt-1 w-[280px] max-h-[400px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl"
           >
             <div className="px-3 py-2 text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground border-b border-border">
@@ -107,7 +110,8 @@ export function FavoritesButton({ onSelect, refreshKey, currentSpot, onFavChange
                 <button
                   onClick={() => { removeFavorite(f.lat, f.lon); reload(); onFavChanged?.(); }}
                   className="rounded-md p-2 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
-                  aria-label={`Eliminar ${f.name}`}
+                  aria-label={t('favorites.removeSpot', { name: f.name })}
+                  title={t('favorites.removeSpot', { name: f.name })}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 export interface Snapshot {
   hour: string;
   wind_kn: number;
@@ -38,12 +40,17 @@ export interface PeriodFilter {
   rangeTo: string; // YYYY-MM-DD
 }
 
-export const MONTH_LABELS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+// Read at call time so the labels follow the current UI language
+export function monthLabels(): string[] {
+  return i18n.t('dashboard.months', { returnObjects: true }) as string[];
+}
 
-export const NO_SPORT_LABEL = 'Sin deporte';
+export function noSportLabel(): string {
+  return i18n.t('dashboard.noSport');
+}
 
 function sportLabelOf(s: Session): string {
-  return s.sport_name?.trim() || NO_SPORT_LABEL;
+  return s.sport_name?.trim() || noSportLabel();
 }
 
 // Fixed, light/bright palette — colors read well on the app's dark background
@@ -60,7 +67,7 @@ function hashString(str: string): number {
 // Deterministic: the same sport name always maps to the same color,
 // regardless of which other sports are visible in the current period.
 export function sportColor(label: string): string {
-  if (label === NO_SPORT_LABEL) return NO_SPORT_COLOR;
+  if (label === noSportLabel()) return NO_SPORT_COLOR;
   return SPORT_CHART_PALETTE[hashString(label) % SPORT_CHART_PALETTE.length];
 }
 
@@ -149,7 +156,7 @@ export interface ChartBucket {
 
 function ymLabel(ym: string): string {
   const [y, m] = ym.split('-');
-  return `${MONTH_LABELS_ES[parseInt(m, 10) - 1]} ${y.slice(2)}`;
+  return `${monthLabels()[parseInt(m, 10) - 1]} ${y.slice(2)}`;
 }
 
 function addToBucket(bucket: Record<string, number>, sportLabel: string) {
@@ -163,7 +170,7 @@ export function buildChartBuckets(sessions: Session[], f: PeriodFilter): ChartBu
       const m = parseInt(s.session_date.slice(5, 7), 10) - 1;
       if (m >= 0 && m < 12) addToBucket(buckets[m], sportLabelOf(s));
     }
-    return MONTH_LABELS_ES.map((label, i) => ({ label, bySport: buckets[i] }));
+    return monthLabels().map((label, i) => ({ label, bySport: buckets[i] }));
   }
 
   if (f.mode === 'month') {

@@ -11,8 +11,8 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import {
-  availableYears, filterSessions, computeStats, buildChartBuckets, sportColor, NO_SPORT_LABEL,
-  MONTH_LABELS_ES, type Session, type PeriodMode, type PeriodFilter, type BreakdownRow,
+  availableYears, filterSessions, computeStats, buildChartBuckets, sportColor, noSportLabel,
+  monthLabels, type Session, type PeriodMode, type PeriodFilter, type BreakdownRow,
 } from '@/lib/session-stats';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -32,9 +32,10 @@ const chartOpts: ChartOptions<'bar'> = {
 };
 
 function sortSportLabels(labels: string[]): string[] {
+  const none = noSportLabel();
   return [...labels].sort((a, b) => {
-    if (a === NO_SPORT_LABEL) return 1;
-    if (b === NO_SPORT_LABEL) return -1;
+    if (a === none) return 1;
+    if (b === none) return -1;
     return a.localeCompare(b);
   });
 }
@@ -44,7 +45,7 @@ function BreakdownTile({ label, rows, unit, format, emptyLabel }: {
 }) {
   return (
     <div className="rounded-lg border border-border bg-card p-3">
-      <div className="mb-2 truncate text-[0.58rem] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mb-2 truncate text-[0.62rem] uppercase tracking-widest text-muted-foreground">{label}</div>
       {rows.length === 0 ? (
         <div className="text-xs text-muted-foreground">{emptyLabel}</div>
       ) : (
@@ -67,7 +68,8 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
   sessions: Session[];
   onFilteredChange: (filtered: Session[]) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const now = new Date();
   const [mode, setMode] = useState<PeriodMode>('year');
   const [year, setYear] = useState(now.getFullYear());
@@ -84,10 +86,13 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
 
   useEffect(() => { onFilteredChange(filtered); }, [filtered, onFilteredChange]);
 
-  const stats = useMemo(() => computeStats(filtered), [filtered]);
+  // lang: the "no sport" and month labels are translated inside these helpers
+  const stats = useMemo(() => computeStats(filtered),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filtered, lang]);
   const buckets = useMemo(() => buildChartBuckets(filtered, filter),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filtered, mode, year, month, rangeFrom, rangeTo]);
+    [filtered, mode, year, month, rangeFrom, rangeTo, lang]);
 
   const chartSportLabels = useMemo(() => {
     const set = new Set<string>();
@@ -108,6 +113,7 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
             <button
               key={m}
               onClick={() => setMode(m)}
+              aria-pressed={mode === m}
               className={`rounded-md px-2.5 py-1 text-[0.7rem] font-semibold transition-colors ${
                 mode === m
                   ? 'bg-primary text-primary-foreground'
@@ -123,20 +129,20 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
       {mode !== 'all' && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {(mode === 'year' || mode === 'month') && (
-            <select value={year} onChange={e => setYear(Number(e.target.value))} className={selectCls}>
+            <select value={year} onChange={e => setYear(Number(e.target.value))} aria-label={t('dashboard.year')} className={selectCls}>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           )}
           {mode === 'month' && (
-            <select value={month} onChange={e => setMonth(Number(e.target.value))} className={selectCls}>
-              {MONTH_LABELS_ES.map((lbl, i) => <option key={lbl} value={i}>{lbl}</option>)}
+            <select value={month} onChange={e => setMonth(Number(e.target.value))} aria-label={t('dashboard.month')} className={selectCls}>
+              {monthLabels().map((lbl, i) => <option key={lbl} value={i}>{lbl}</option>)}
             </select>
           )}
           {mode === 'range' && (
             <>
-              <input type="date" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} className={selectCls} />
-              <span className="text-xs text-muted-foreground">–</span>
-              <input type="date" value={rangeTo} onChange={e => setRangeTo(e.target.value)} className={selectCls} />
+              <input type="date" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} aria-label={t('dashboard.rangeFrom')} className={selectCls} />
+              <span className="text-xs text-muted-foreground" aria-hidden="true">–</span>
+              <input type="date" value={rangeTo} onChange={e => setRangeTo(e.target.value)} aria-label={t('dashboard.rangeTo')} className={selectCls} />
             </>
           )}
         </div>
@@ -180,6 +186,8 @@ export function SessionsDashboard({ sessions, onFilteredChange }: {
             }}
             options={chartOpts}
             height={90}
+            role="img"
+            aria-label={t('dashboard.chartLabel')}
           />
         </div>
       ) : (

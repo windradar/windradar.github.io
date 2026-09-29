@@ -16,10 +16,8 @@ export default function Materials() {
         <h1 className="mb-6 font-display text-2xl font-extrabold">🛠️ {t('materials.title')}</h1>
 
         <section className="mb-5 rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-1 font-display text-sm font-bold uppercase tracking-wider">🏄 Deportes</h2>
-          <p className="mb-4 text-xs text-muted-foreground">
-            Crea tus disciplinas y asocia cada slot de material a una de ellas para poder desglosar tus sesiones por deporte.
-          </p>
+          <h2 className="mb-1 font-display text-sm font-bold uppercase tracking-wider">🏄 {t('sports.title')}</h2>
+          <p className="mb-4 text-xs text-muted-foreground">{t('sports.description')}</p>
           <SportsManager />
         </section>
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useId } from 'react';
 import { X, ImagePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -16,7 +16,9 @@ interface Props {
 }
 
 export default function SessionStoryShare({ session, materialPhotos, onClose }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
+  const matHintId = useId();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [bgImg, setBgImg] = useState<HTMLImageElement | null>(null);
   const [bgBlobUrl, setBgBlobUrl] = useState<string | null>(null);
@@ -48,7 +50,8 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
   useEffect(() => {
     if (!session || !canvasRef.current) return;
     drawStory(canvasRef.current, session, { ...prefs, template }, bgImg, matImgs);
-  }, [session, prefs, template, bgImg, matImgs]);
+    // lang: the card's labels are translated while drawing
+  }, [session, prefs, template, bgImg, matImgs, lang]);
 
   // revoke blob url on unmount or change
   useEffect(() => {
@@ -63,30 +66,30 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
         const img = await loadImage(url);
         setBgImg(img);
       } catch {
-        toast.error('No se pudo cargar la imagen');
+        toast.error(t('storyCard.photoError'));
         URL.revokeObjectURL(url);
         setBgBlobUrl(null);
       }
     },
-    [bgBlobUrl],
+    [bgBlobUrl, t],
   );
 
   const handleFileUpload = useCallback(
     (file: File) => {
       if (!file.type.startsWith('image/')) return;
-      if (file.size > 20 * 1024 * 1024) { toast.error('Imagen demasiado grande (máx 20 MB)'); return; }
+      if (file.size > 20 * 1024 * 1024) { toast.error(t('story.imageTooLarge', { mb: 20 })); return; }
       applyBlobUrl(URL.createObjectURL(file));
     },
-    [applyBlobUrl],
+    [applyBlobUrl, t],
   );
 
   const handleMatPhoto = useCallback(
     async (photoUrl: string) => {
       const url = await fetchAsBlobUrl(photoUrl);
-      if (!url) { toast.error('No se pudo cargar la foto del material'); return; }
+      if (!url) { toast.error(t('story.materialPhotoError')); return; }
       applyBlobUrl(url);
     },
-    [applyBlobUrl],
+    [applyBlobUrl, t],
   );
 
   const clearBg = useCallback(() => {
@@ -101,12 +104,12 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
     setSharing(true);
     try {
       const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/jpeg', 0.95));
-      if (!blob) { toast.error('Error generando la imagen'); return; }
+      if (!blob) { toast.error(t('story.generateError')); return; }
       const fileName = `sesion-windradar-${session.session_date}.jpg`;
       const file = new File([blob], fileName, { type: 'image/jpeg' });
 
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: `Mi sesión – ${session.location_name ?? 'WindFlowRadar'}` });
+        await navigator.share({ files: [file], title: t('story.shareTitle', { place: session.location_name ?? 'WindFlowRadar' }) });
       } else {
         // desktop fallback: download
         const url = URL.createObjectURL(blob);
@@ -117,23 +120,23 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        toast.success('Imagen descargada. Ábrela desde tu galería y compártela como historia en Instagram.');
+        toast.success(t('story.downloaded'));
       }
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== 'AbortError') {
-        toast.error('Error al compartir');
+        toast.error(t('story.shareError'));
       }
     } finally {
       setSharing(false);
     }
-  }, [session]);
+  }, [session, t]);
 
   if (!session) return null;
 
   return (
     <Dialog open={!!session} onOpenChange={open => { if (!open) { clearBg(); onClose(); } }}>
       <DialogContent className="max-h-[95dvh] w-full max-w-sm overflow-y-auto border-border bg-card p-4">
-        <DialogTitle className="text-sm font-bold">Compartir historia</DialogTitle>
+        <DialogTitle className="text-sm font-bold">{t('story.dialogTitle')}</DialogTitle>
 
         {/* Story preview */}
         <div className="relative mx-auto" style={{ width: '100%', maxWidth: 270 }}>
@@ -143,11 +146,14 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
             height={CH}
             className="w-full rounded-xl shadow-lg"
             style={{ display: 'block', height: 'auto' }}
+            role="img"
+            aria-label={t('story.previewAlt')}
           />
           {bgImg && (
             <button
               onClick={clearBg}
-              title="Quitar foto de fondo"
+              title={t('story.removeBg')}
+              aria-label={t('story.removeBg')}
               className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
             >
               <X size={13} />
@@ -181,12 +187,12 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
         {/* Background photo controls */}
         <div className="space-y-2.5">
           <p className="text-[0.63rem] font-semibold uppercase tracking-widest text-muted-foreground">
-            Foto de fondo
+            {t('story.bgPhoto')}
           </p>
 
           <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2.5 text-sm hover:bg-secondary/70">
-            <ImagePlus size={15} />
-            <span>Subir foto (cámara o galería)</span>
+            <ImagePlus size={15} aria-hidden="true" />
+            <span>{t('story.uploadBg')}</span>
             <input
               type="file"
               accept="image/*"
@@ -197,10 +203,10 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
 
           {matEntries.length > 0 && (
             <div>
-              <p className="mb-1.5 text-[0.6rem] text-muted-foreground">
-                O usa una foto de tu material:
+              <p id={matHintId} className="mb-1.5 text-[0.6rem] text-muted-foreground">
+                {t('story.useMaterialPhoto')}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" role="group" aria-labelledby={matHintId}>
                 {matEntries.map(([name, url]) => (
                   <button
                     key={name}
@@ -228,19 +234,19 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 px-4 py-3 text-sm font-bold text-white shadow-lg hover:brightness-110 disabled:opacity-50"
         >
           {sharing ? (
-            <span>Generando imagen…</span>
+            <span>{t('story.generating')}</span>
           ) : (
             <>
               <InstagramIcon />
-              Compartir en Instagram
+              {t('sessions.shareInstagram')}
             </>
           )}
         </button>
 
         <p className="text-center text-[0.6rem] text-muted-foreground">
-          En móvil se abre el menú de compartir directamente.
+          {t('story.mobileHint')}
           <br />
-          En escritorio se descarga la imagen para compartir desde la app.
+          {t('story.desktopHint')}
         </p>
       </DialogContent>
     </Dialog>
@@ -258,6 +264,7 @@ function InstagramIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />

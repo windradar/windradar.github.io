@@ -1,6 +1,7 @@
 // Tarjeta de historia (1080×1920) para compartir una sesión.
 // Tres plantillas (franja, foto, ficha) que comparten campos, posición y alineación.
 import QRCode from 'qrcode';
+import i18n from '@/i18n';
 import { humanDate, dirArrow, windInfo } from '@/lib/weather-helpers';
 import type { Session, Snapshot } from '@/lib/session-stats';
 import { getWindUnit, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
@@ -86,9 +87,12 @@ function durationLabel(start: string, end: string): string | null {
   if (!(mins > 0)) return null;
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  if (!h) return `${m} min`;
-  return m ? `${h} h ${m} min` : `${h} h`;
+  if (!h) return i18n.t('story.dur.min', { m });
+  return m ? i18n.t('story.dur.hMin', { h, m }) : i18n.t('story.dur.h', { h });
 }
+
+const dateLocale = () => (i18n.language?.startsWith('ca') ? 'ca-ES' : 'es-ES');
+const upper = (key: string) => i18n.t(key).toLocaleUpperCase(dateLocale());
 
 const fmt1 = (v: number) => v.toFixed(1).replace('.', ',');
 
@@ -119,9 +123,9 @@ function buildData(session: Session, f: Record<StoryField, boolean>): CardData {
   const d = new Date(session.session_date + 'T12:00:00');
   const mats = session.materials.map(m => m.name).filter(Boolean);
   return {
-    loc: f.loc ? (session.location_name || 'Sin ubicación') : null,
-    date: f.date ? humanDate(session.session_date) : null,
-    dateShort: f.date ? d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }) : null,
+    loc: f.loc ? (session.location_name || i18n.t('sessions.noLocationLabel')) : null,
+    date: f.date ? humanDate(session.session_date, dateLocale()) : null,
+    dateShort: f.date ? d.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' }) : null,
     time: f.time ? `${session.start_time} – ${session.end_time}` : null,
     sport: f.sport ? session.sport_name : null,
     wind: f.wind && st ? formatWind(windFromKnots(st.windAvg, unit), unit) : null,
@@ -352,7 +356,7 @@ function drawQr(ctx: CanvasRenderingContext2D, url: string, x: number, y: number
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText('tracking', x + size / 2, y + size + 32);
+    ctx.fillText(i18n.t('story.qrLabel'), x + size / 2, y + size + 32);
   } catch { /* URL no codificable: sin QR */ }
 }
 
@@ -543,7 +547,7 @@ function drawFranja(c: Ctx, hasPhoto: boolean) {
   // Filas de datos: con 5 o más se reparten en dos columnas para no encoger tanto
   const rows: [string, string][] = [];
   if (d.wind !== null) rows.push(['💨', `${d.wind} ${d.unit}`]);
-  if (d.gust !== null) rows.push(['⚡', `ráf. ${d.gust} ${d.unit}`]);
+  if (d.gust !== null) rows.push(['⚡', `${i18n.t('story.short.gust')} ${d.gust} ${d.unit}`]);
   if (d.dir) rows.push([d.dir.arrow, d.dir.short]);
   if (d.wave !== null) rows.push(['🌊', `${fmt1(d.wave)} m`]);
   if (d.temp !== null) rows.push(['🌡️', `${d.temp} °C`]);
@@ -587,15 +591,15 @@ function drawFranja(c: Ctx, hasPhoto: boolean) {
     });
   }
   if (d.chart) {
-    items.push(labelItem(c, 'VIENTO DURANTE LA SESIÓN', MX, MW));
+    items.push(labelItem(c, upper('story.windDuringSession'), MX, MW));
     items.push(chartItem(c, MX, MW, 200, false));
   }
   if (d.mats.length) {
-    items.push(labelItem(c, 'EQUIPO', MX, MW));
+    items.push(labelItem(c, upper('storyCard.fieldNames.mats'), MX, MW));
     items.push(materialsItem(c, MX, MW, 46, 96));
   }
   if (d.notes) {
-    items.push(labelItem(c, 'NOTAS', MX, MW));
+    items.push(labelItem(c, upper('storyCard.fieldNames.notes'), MX, MW));
     items.push(textItem(c, d.notes, MX, MW, 42, 56, 'rgba(255,255,255,0.58)', 'italic', 'Georgia,serif'));
   }
   placeStack(items, zoneTop, zoneBottom, prefs.pos, 30);
@@ -673,11 +677,11 @@ function drawFoto(c: Ctx, hasPhoto: boolean) {
 
   // Datos secundarios en línea, con etiqueta tenue
   const facts: [string, string][] = [];
-  if (d.gust !== null) facts.push(['ráf.', `${d.gust} ${d.unit}`]);
-  if (d.dir) facts.push(['dir.', `${d.dir.arrow} ${d.dir.short}`]);
-  if (d.wave !== null) facts.push(['olas', `${fmt1(d.wave)} m`]);
-  if (d.temp !== null) facts.push(['temp.', `${d.temp} °C`]);
-  if (d.dur) facts.push(['tiempo', d.dur]);
+  if (d.gust !== null) facts.push([i18n.t('story.short.gust'), `${d.gust} ${d.unit}`]);
+  if (d.dir) facts.push([i18n.t('story.short.dir'), `${d.dir.arrow} ${d.dir.short}`]);
+  if (d.wave !== null) facts.push([i18n.t('story.short.wave'), `${fmt1(d.wave)} m`]);
+  if (d.temp !== null) facts.push([i18n.t('story.short.temp'), `${d.temp} °C`]);
+  if (d.dur) facts.push([i18n.t('story.short.dur'), d.dur]);
   if (facts.length) {
     const layout = (s: number) => {
       const lines: { k: string; v: string; w: number }[][] = [[]];
@@ -795,12 +799,12 @@ function drawFicha(c: Ctx, hasPhoto: boolean) {
 
   // Cuadrícula de datos, dos columnas
   const cells: [string, string, string][] = [];
-  if (d.wind !== null) cells.push(['VIENTO MEDIO', d.wind, d.unit]);
-  if (d.gust !== null) cells.push(['RACHA MÁX.', d.gust, d.unit]);
-  if (d.dir) cells.push(['DIRECCIÓN', `${d.dir.arrow} ${d.dir.short}`, '']);
-  if (d.wave !== null) cells.push(['OLAS', fmt1(d.wave), 'm']);
-  if (d.temp !== null) cells.push(['TEMPERATURA', String(d.temp), '°C']);
-  if (d.dur) cells.push(['DURACIÓN', d.dur, '']);
+  if (d.wind !== null) cells.push([upper('storyCard.fieldNames.wind'), d.wind, d.unit]);
+  if (d.gust !== null) cells.push([upper('story.gustMax'), d.gust, d.unit]);
+  if (d.dir) cells.push([upper('storyCard.fieldNames.dir'), `${d.dir.arrow} ${d.dir.short}`, '']);
+  if (d.wave !== null) cells.push([upper('storyCard.fieldNames.wave'), fmt1(d.wave), 'm']);
+  if (d.temp !== null) cells.push([upper('storyCard.fieldNames.temp'), String(d.temp), '°C']);
+  if (d.dur) cells.push([upper('storyCard.fieldNames.dur'), d.dur, '']);
   if (cells.length) {
     const CELL_H = 150;
     const GAP = 22;
@@ -842,7 +846,7 @@ function drawFicha(c: Ctx, hasPhoto: boolean) {
   }
 
   if (d.chart) {
-    inner.push(labelItem(c, 'VIENTO · NUDOS', IX, IW, 28));
+    inner.push(labelItem(c, upper('story.windKnots'), IX, IW, 28));
     inner.push(chartItem(c, IX, IW, 250, true));
   }
 
@@ -851,7 +855,7 @@ function drawFicha(c: Ctx, hasPhoto: boolean) {
   const leftW = d.qr ? IW - QR - 40 : IW;
   const foot: Item[] = [];
   if (d.mats.length) {
-    foot.push(labelItem(c, 'EQUIPO', IX, leftW, 28));
+    foot.push(labelItem(c, upper('storyCard.fieldNames.mats'), IX, leftW, 28));
     foot.push(materialsItem(c, IX, leftW, 40, 84));
   }
   if (d.notes) foot.push(textItem(c, d.notes, IX, leftW, 36, 50, 'rgba(255,255,255,0.68)', 'italic', 'Georgia,serif'));

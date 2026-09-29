@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +16,7 @@ interface Props {
 export default function SportSelect({ sports, value, onChange, onCreated }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const fieldId = useId();
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -40,12 +41,13 @@ export default function SportSelect({ sports, value, onChange, onCreated }: Prop
 
   return (
     <div>
-      <label className="mb-1 block text-[0.65rem] uppercase tracking-widest text-muted-foreground">
+      <label htmlFor={fieldId} className="mb-1 block text-[0.65rem] uppercase tracking-widest text-muted-foreground">
         {t('sessions.sportLabel')}
       </label>
       {adding ? (
         <div className="flex items-center gap-1">
           <input
+            id={fieldId}
             autoFocus
             value={newName}
             onChange={e => setNewName(e.target.value)}
@@ -58,17 +60,20 @@ export default function SportSelect({ sports, value, onChange, onCreated }: Prop
             className="flex-1 rounded-md border border-primary/40 bg-secondary px-2 py-2 text-sm outline-none"
           />
           <button onClick={addSport} disabled={saving || !newName.trim()}
+            aria-label={t('common.save')}
             className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">
-            ✓
+            <span aria-hidden="true">✓</span>
           </button>
           <button onClick={() => setAdding(false)}
+            aria-label={t('common.cancel')}
             className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       ) : (
         <div className="flex items-center gap-1">
           <select
+            id={fieldId}
             value={value ?? ''}
             onChange={e => onChange(e.target.value || null)}
             className="flex-1 rounded-md border border-border bg-secondary px-2 py-2 text-sm outline-none focus:border-primary"
@@ -80,6 +85,7 @@ export default function SportSelect({ sports, value, onChange, onCreated }: Prop
             type="button"
             onClick={() => { setAdding(true); setNewName(''); }}
             title={t('sessions.sportNewPlaceholder')}
+            aria-label={t('sessions.sportNewPlaceholder')}
             className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-2 text-xs font-bold text-primary hover:bg-primary/20"
           >
             <Plus size={14} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import logoFlow from '@/assets/logo-flow.png';
 export default function Auth() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const uid = useId();
   const { user, loading: authLoading } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
@@ -113,8 +114,9 @@ export default function Auth() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('auth.emailLabel')}</label>
+            <label htmlFor={`${uid}-email`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('auth.emailLabel')}</label>
             <input
+              id={`${uid}-email`}
               type="email"
               autoComplete="email"
               value={email}
@@ -126,8 +128,9 @@ export default function Auth() {
 
           {mode !== 'forgot' && (
             <div>
-              <label className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('auth.passwordLabel')}</label>
+              <label htmlFor={`${uid}-password`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('auth.passwordLabel')}</label>
               <input
+                id={`${uid}-password`}
                 type="password"
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 value={password}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +16,7 @@ interface Props {
 export default function MaterialSelect({ sportId, values, onChange }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const fieldIdBase = useId();
   const [cats, setCats] = useState<MaterialCategory[]>([]);
   const [items, setItems] = useState<MaterialItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,7 @@ export default function MaterialSelect({ sportId, values, onChange }: Props) {
   const addItemQuick = async () => {
     if (!user || dialogCatId === null) return;
     const text = newItemName.trim();
-    if (!text) { toast.error('Pon un nombre'); return; }
+    if (!text) { toast.error(t('materials.nameRequired')); return; }
 
     setSavingNew(true);
     const { data: item, error } = await supabase.from('material_items')
@@ -53,17 +54,17 @@ export default function MaterialSelect({ sportId, values, onChange }: Props) {
     if (error) { toast.error(error.message); return; }
     setItems(is => [...is, item as MaterialItem]);
     onChange(dialogCatId, (item as MaterialItem).name);
-    toast.success('Material añadido');
+    toast.success(t('materialSelect.added'));
     setNewItemName('');
     setDialogCatId(null);
   };
 
-  if (loading) return <p className="text-xs text-muted-foreground">Cargando materiales...</p>;
+  if (loading) return <p className="text-xs text-muted-foreground">{t('materials.loading')}</p>;
 
   if (visibleCats.length === 0) {
     return (
       <p className="text-xs text-muted-foreground">
-        No hay slots de material configurados{sportId ? ' para este deporte' : ''}. Configúralos en Materiales.
+        {sportId ? t('materialSelect.noSlotsForSport') : t('materialSelect.noSlots')}
       </p>
     );
   }
@@ -76,7 +77,7 @@ export default function MaterialSelect({ sportId, values, onChange }: Props) {
           const selectedItem = catItems.find(it => it.name === values[cat.id]);
           return (
             <div key={cat.id}>
-              <label className="mb-1 flex items-center gap-2">
+              <label htmlFor={`${fieldIdBase}-${cat.id}`} className="mb-1 flex items-center gap-2">
                 <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-primary">
                   {cat.name}
                 </span>
@@ -90,9 +91,9 @@ export default function MaterialSelect({ sportId, values, onChange }: Props) {
                     loading="lazy"
                   />
                 )}
-                <select value={values[cat.id] || ''} onChange={e => onChange(cat.id, e.target.value)}
+                <select id={`${fieldIdBase}-${cat.id}`} value={values[cat.id] || ''} onChange={e => onChange(cat.id, e.target.value)}
                   className="flex-1 rounded-md border border-border bg-secondary px-2 py-2 text-sm outline-none focus:border-primary">
-                  <option value="">— ninguno —</option>
+                  <option value="">{t('materialSelect.none')}</option>
                   {catItems.map(it => (
                     <option key={it.id} value={it.name}>
                       {it.photo_url ? '🖼️ ' : ''}{it.name}
@@ -100,7 +101,8 @@ export default function MaterialSelect({ sportId, values, onChange }: Props) {
                   ))}
                 </select>
                 <button type="button" onClick={() => { setDialogCatId(cat.id); setNewItemName(''); }}
-                  title="Añadir nuevo material a esta categoría"
+                  title={t('materialSelect.addToSlot', { slot: cat.name })}
+                  aria-label={t('materialSelect.addToSlot', { slot: cat.name })}
                   className="flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 text-xs font-bold text-primary hover:bg-primary/20">
                   <Plus size={14} />
                 </button>

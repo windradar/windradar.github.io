@@ -34,6 +34,108 @@
     "iosStep2": "Tria «Afegeix a la pantalla d'inici» i confirma amb «Afegeix».",
     "iosNote": "Instal·lada, l'app s'obre a pantalla completa i pot rebre notificacions push (iOS 16.4 o superior)."
   },
+  "dashboard": {
+    "months": [
+      "Gen",
+      "Feb",
+      "Març",
+      "Abr",
+      "Maig",
+      "Juny",
+      "Jul",
+      "Ag",
+      "Set",
+      "Oct",
+      "Nov",
+      "Des"
+    ],
+    "noSport": "Sense esport",
+    "year": "Any",
+    "month": "Mes",
+    "rangeFrom": "Des de",
+    "rangeTo": "Fins a",
+    "chartLabel": "Gràfica de sessions per esport en el període"
+  },
+  "story": {
+    "dialogTitle": "Compartir història",
+    "previewAlt": "Previsualització de la targeta de la sessió",
+    "removeBg": "Treure la foto de fons",
+    "bgPhoto": "Foto de fons",
+    "uploadBg": "Pujar foto (càmera o galeria)",
+    "useMaterialPhoto": "O fes servir una foto del teu material:",
+    "generating": "Generant imatge…",
+    "mobileHint": "Al mòbil s'obre directament el menú de compartir.",
+    "desktopHint": "A l'ordinador es descarrega la imatge per compartir-la des de l'app.",
+    "imageTooLarge": "Imatge massa gran (màx. {{mb}} MB)",
+    "materialPhotoError": "No s'ha pogut carregar la foto del material",
+    "generateError": "Error en generar la imatge",
+    "shareTitle": "La meva sessió – {{place}}",
+    "downloaded": "Imatge descarregada. Obre-la des de la galeria i comparteix-la com a història a Instagram.",
+    "shareError": "Error en compartir",
+    "sampleNotes": "Llevant entrant fort des de les 14 h. Planeig constant al pic.",
+    "qrLabel": "seguiment",
+    "windDuringSession": "Vent durant la sessió",
+    "windKnots": "Vent · nusos",
+    "gustMax": "Ratxa màx.",
+    "short": {
+      "gust": "ratxa",
+      "dir": "dir.",
+      "wave": "onades",
+      "temp": "temp.",
+      "dur": "temps"
+    },
+    "dur": {
+      "min": "{{m}} min",
+      "h": "{{h}} h",
+      "hMin": "{{h}} h {{m}} min"
+    }
+  },
+  "sports": {
+    "title": "Esports",
+    "description": "Crea les teves disciplines i associa cada slot de material a una d'elles per poder desglossar les teves sessions per esport.",
+    "loading": "Carregant esports...",
+    "empty": "Encara no has creat cap esport. Afegeix-ne un (Windsurf, Kite, Wing Foil, SUP...) i després associa-hi els teus slots de material a la llista de sota.",
+    "confirmDelete": "Vols eliminar l'esport «{{name}}»? Els slots associats es quedaran sense esport.",
+    "nameLabel": "Nom de l'esport",
+    "edit": "Edita {{name}}",
+    "delete": "Elimina {{name}}",
+    "placeholder": "Ex.: Windsurf",
+    "add": "Afegeix esport"
+  },
+  "materialSelect": {
+    "newItem": "Nou {{slot}}",
+    "nameLabel": "Nom del material",
+    "placeholder": "Ex.: Gastra 4.5",
+    "addAndSelect": "Afegeix i selecciona",
+    "added": "Material afegit",
+    "noSlots": "No hi ha slots de material configurats. Configura'ls a Materials.",
+    "noSlotsForSport": "No hi ha slots de material configurats per a aquest esport. Configura'ls a Materials.",
+    "none": "— cap —",
+    "addToSlot": "Afegeix material nou a {{slot}}"
+  },
+  "materialPhoto": {
+    "invalidFormat": "Format no vàlid (jpg, png, webp)",
+    "tooLargeInput": "Màx. 20 MB",
+    "processError": "No s'ha pogut processar la imatge",
+    "tooLarge": "La imatge és massa gran",
+    "uploaded": "Foto pujada",
+    "uploadError": "Error en pujar la foto",
+    "confirmDelete": "Vols eliminar la foto?",
+    "view": "Mostra la foto",
+    "delete": "Elimina la foto",
+    "change": "Canvia la foto",
+    "upload": "Puja una foto",
+    "title": "Foto del material",
+    "titleNamed": "Foto de {{name}}",
+    "alt": "Foto del material"
+  },
+  "language": {
+    "buttonLabel": "Idioma: {{current}}. Canviar a {{next}}"
+  },
+  "share": {
+    "gustAbbr": "rat.",
+    "moreInfo": "Més informació a {{url}}"
+  },
   "nav": {
     "profile": "Perfil",
     "sessions": "Sessions",
@@ -45,6 +147,9 @@
     "shareWhatsapp": "Compartir previsió"
   },
   "theme": {
+    "ebook": "Ebook",
+    "toEbook": "Canviar a mode ebook",
+    "buttonLabel": "Tema: {{theme}}. {{action}}",
     "dark": "Fosc",
     "light": "Clar",
     "toDark": "Canviar a mode fosc",
@@ -122,6 +227,37 @@
     "callmebotHint": "Envia «I allow callmebot to send me messages» al +34 644 91 96 80 per WhatsApp per obtenir la teva API Key."
   },
   "materials": {
+    "loading": "Carregant materials...",
+    "newSlotName": "Nou slot",
+    "confirmDeleteSlot": "Vols eliminar el slot «{{name}}» i tots els seus materials?",
+    "slotDeleted": "Slot eliminat",
+    "nameRequired": "Posa-hi un nom",
+    "slotSaved": "Categoria desada",
+    "itemNameEmpty": "El nom no pot estar buit",
+    "renameSessionsError": "No s'ha pogut canviar el nom del material en alguna sessió",
+    "itemUpdated": "Material actualitzat",
+    "serviceLogged": "Revisió de «{{name}}» anotada",
+    "slotNumber": "Slot {{n}}",
+    "slotNameLabel": "Nom del slot",
+    "renameSlot": "Canvia el nom del slot {{name}}",
+    "deleteSlot": "Elimina el slot {{name}}",
+    "slotSportTitle": "Esport al qual pertany aquest slot",
+    "allSports": "— Tots els esports —",
+    "serviceEvery": "Revisar cada",
+    "editItem": "Edita {{name}}",
+    "deleteItem": "Elimina {{name}}",
+    "addItemPlaceholder": "Afegeix {{name}}...",
+    "addItemLabel": "Afegeix material a {{name}}",
+    "add": "Afegeix",
+    "addSlot": "Afegeix slot",
+    "usage": {
+      "hoursUsed": "{{hours}} h d'ús",
+      "noUsage": "Sense ús registrat",
+      "hoursOfInterval": "{{since}}/{{interval}} h",
+      "sinceLastService": "{{since}}/{{interval}} h des de la revisió",
+      "markServicedToday": "Revisat avui",
+      "serviceDueMarkToday": "Revisió pendent · Revisat avui"
+    },
     "title": "Materials",
     "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió."
   },
@@ -182,6 +318,13 @@
     "savedHint": "Els canvis es desen automàticament en aquest dispositiu."
   },
   "sessions": {
+    "showMore": "Mostra'n més ({{count}})",
+    "loadError": "Error en carregar les dades",
+    "editAria": "Editar sessió",
+    "deleteAria": "Eliminar sessió",
+    "viewPhoto": "Veure la foto de {{name}}",
+    "trackingLink": "Seguiment",
+    "materialPhoto": "Foto del material",
     "title": "Sessions",
     "newSession": "Nova",
     "editSession": "✏️ Editar sessió",
@@ -232,6 +375,16 @@
     "sportAdded": "Esport afegit"
   },
   "settings": {
+    "spotsTitle": "Els meus spots",
+    "addSpot": "Afegir spot",
+    "spotsDesc": "Configura els teus spots preferits per detectar dies amb prou vent.",
+    "noSpots": "Cap spot configurat",
+    "spotName": "Nom de l'spot",
+    "deleteSpot": "Eliminar l'spot",
+    "spotMinWind": "Vent mín.",
+    "spotMinWindAria": "Vent mínim per a {{name}}",
+    "windThresholdAria": "Llindar de vent mínim en nusos",
+    "locationPlaceholder": "Ex.: Gavà, Espanya",
     "alertDirs": "Direccions del vent",
     "alertDirsDesc": "Marca d'on ha de bufar el vent perquè t'avisem (per exemple, SO i OSO per al Garbí). Sense marcar = qualsevol direcció.",
     "alertDirsAny": "Qualsevol direcció",
@@ -300,12 +453,39 @@
     "testPushError": "Error en enviar la notificació de prova."
   },
   "chart": {
+    "windSeries": "Vent ({{unit}})",
+    "gustSeries": "Ratxes ({{unit}})",
+    "waveSeries": "Onada (m)",
+    "airSeries": "Aire °C",
+    "waterSeries": "Aigua °C",
+    "windTitleArome": "💨 Vent i ratxes ({{unit}}) · AROME HD dies 1-2 · Seamless dies 3-4",
+    "windTitle4Days": "💨 Vent i ratxes ({{unit}}) · 4 dies",
+    "waveTitle": "🌊 Alçada d'onada (m)",
+    "tempTitle": "🌡️ Temperatura aire / aigua (°C)",
+    "aromeDays12": "AROME HD · dies 1-2",
+    "compareTitle": "📊 Comparar vent",
+    "compareDateLabel": "Data a comparar:",
+    "compareWindToday": "Vent avui ({{date}})",
+    "compareWindTodayArome": "Vent avui ({{date}}) · AROME HD",
+    "compareWindDate": "Vent {{date}}",
+    "compareGustToday": "Ratxes avui",
+    "compareGustDate": "Ratxes {{date}}",
+    "comparePrompt": "Selecciona una data per comparar-la amb avui ({{date}})",
+    "compareError": "No s'han pogut carregar les dades d'aquesta data. Torna-ho a provar.",
     "forecast7days": "🌬️ Previsió 7 dies · cada 2h",
     "wind": "Vent (kn)",
     "gust": "Ratxa",
     "direction": "🧭 Direcció"
   },
   "cookies": {
+    "bannerLabel": "Avís de cookies",
+    "and": "i",
+    "region": {
+      "eu": "UE / RGPD",
+      "uk": "Regne Unit / UK GDPR",
+      "california": "Califòrnia / CCPA",
+      "intl": "Internacional"
+    },
     "title": "Privacitat i cookies",
     "necessary": "Necessàries",
     "necessaryDesc": "sempre actives (autenticació, preferències).",
@@ -331,6 +511,12 @@
     "configureCookies": "Configurar cookies"
   },
   "index": {
+    "bigDay": "Big Day",
+    "bigDayAt": "Big Day a {{name}}",
+    "air": "Aire",
+    "water": "Aigua",
+    "swell": "Mar de fons: {{value}}",
+    "interval": "Interval:",
     "bestWindow": "Millor finestra",
     "bestWindowNone": "Cap hora arriba a {{kn}} kn",
     "bestWindowRange": "de {{from}} a {{to}} h",
@@ -395,6 +581,8 @@
     "copiedMsg": "Missatge copiat. Enganxa'l al WhatsApp Web (Ctrl+V)."
   },
   "favorites": {
+    "add": "Afegir a favorits",
+    "removeSpot": "Eliminar {{name}}",
     "title": "Spots favorits",
     "remove": "Treure de favorits",
     "save": "Desar spot actual",
@@ -405,6 +593,9 @@
     "removed": "Eliminat de favorits"
   },
   "search": {
+    "placeholderCity": "Ciutat, país...",
+    "inputLabel": "Cercar ubicació",
+    "clear": "Esborrar la cerca",
     "locate": "Fer servir la meva ubicació",
     "myLocation": "La meva ubicació",
     "locateUnsupported": "Aquest navegador no permet obtenir la teva ubicació.",

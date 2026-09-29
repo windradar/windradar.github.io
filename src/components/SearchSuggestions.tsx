@@ -51,6 +51,8 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const geoLang = i18n.resolvedLanguage === 'ca' ? 'ca' : 'es';
+
   const search = useCallback(async (q: string) => {
     if (q.length < 2) {
       setResults([]);
@@ -58,7 +60,7 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
     }
     setLoading(true);
     try {
-      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=es&format=json`;
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=${geoLang}&format=json`;
       const res = await fetch(url);
       const data = await res.json();
       setResults(data.results || []);
@@ -66,7 +68,7 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
       setResults([]);
     }
     setLoading(false);
-  }, []);
+  }, [geoLang]);
 
   const handleChange = (value: string) => {
     setQuery(value);
@@ -124,12 +126,13 @@ export function SearchWithSuggestions({ onSelect, initialQuery, hideHistory, com
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
           enterKeyHint="search"
           className={`w-full rounded-lg border border-border bg-secondary font-mono text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary ${compact ? 'py-1.5 pl-8 pr-9 text-[0.78rem]' : 'py-2.5 pl-9 pr-10 text-sm'}`}
-          placeholder={compact ? 'Ciudad, País...' : t('search.placeholder')}
+          placeholder={compact ? t('search.placeholderCity') : t('search.placeholder')}
+          aria-label={t('search.inputLabel')}
         />
         {query && (
           <button
             onClick={() => { setQuery(''); setResults([]); }}
-            aria-label="Borrar búsqueda"
+            aria-label={t('search.clear')}
             className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />

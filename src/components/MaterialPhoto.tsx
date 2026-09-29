@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface Props {
   itemId: string;
+  itemName?: string;
   photoUrl: string | null;
   onUpdated: (newUrl: string | null) => void;
   size?: 'sm' | 'md';
@@ -18,7 +20,7 @@ const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 const MAX_SIDE = 1600;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
 
-async function resizeToJpeg(file: File): Promise<Blob> {
+async function resizeToJpeg(file: File, errorMessage: string): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
@@ -31,11 +33,12 @@ async function resizeToJpeg(file: File): Promise<Blob> {
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-  if (!blob) throw new Error('No se pudo procesar la imagen');
+  if (!blob) throw new Error(errorMessage);
   return blob;
 }
 
-export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md' }: Props) {
+export default function MaterialPhoto({ itemId, itemName, photoUrl, onUpdated, size = 'md' }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -46,13 +49,13 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file || !user) return;
-    if (!ALLOWED.includes(file.type)) { toast.error('Formato no válido (jpg, png, webp)'); return; }
-    if (file.size > MAX_INPUT_BYTES) { toast.error('Máx 20 MB'); return; }
+    if (!ALLOWED.includes(file.type)) { toast.error(t('materialPhoto.invalidFormat')); return; }
+    if (file.size > MAX_INPUT_BYTES) { toast.error(t('materialPhoto.tooLargeInput')); return; }
 
     setUploading(true);
     try {
-      const blob = await resizeToJpeg(file);
-      if (blob.size > MAX_UPLOAD_BYTES) throw new Error('La imagen es demasiado grande');
+      const blob = await resizeToJpeg(file, t('materialPhoto.processError'));
+      if (blob.size > MAX_UPLOAD_BYTES) throw new Error(t('materialPhoto.tooLarge'));
       const path = `${user.id}/${itemId}-${Date.now()}.jpg`;
       const { error: upErr } = await supabase.storage.from('material-photos')
         .upload(path, blob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
@@ -71,9 +74,9 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
       if (dbErr) throw dbErr;
 
       onUpdated(newUrl);
-      toast.success('Foto subida');
+      toast.success(t('materialPhoto.uploaded'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error subiendo foto');
+      toast.error(err instanceof Error ? err.message : t('materialPhoto.uploadError'));
     } finally {
       setUploading(false);
     }
@@ -81,7 +84,7 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
 
   const removePhoto = async () => {
     if (!photoUrl || !user) return;
-    if (!confirm('¿Eliminar la foto?')) return;
+    if (!confirm(t('materialPhoto.confirmDelete'))) return;
     const path = extractPath(photoUrl);
     if (path) await supabase.storage.from('material-photos').remove([path]);
     const { error } = await supabase.from('material_items').update({ photo_url: null }).eq('id', itemId);
@@ -92,7 +95,7 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
   return (
     <>
       <div className={`group relative ${dim} shrink-0 overflow-hidden rounded-md border border-border bg-secondary/40`}>
-        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFile} className="hidden" />
+        <input ref={inputRef} type="file" aria-label={t('materialPhoto.upload')} tabIndex={-1} accept="image/jpeg,image/png,image/webp" onChange={onFile} className="hidden" />
         {photoUrl ? (
           <>
             {/* Click anywhere on the photo to enlarge */}
@@ -100,17 +103,18 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
               type="button"
               onClick={() => setEnlarged(true)}
               className="h-full w-full cursor-zoom-in"
-              title="Ver foto"
+              title={t('materialPhoto.view')}
+              aria-label={t('materialPhoto.view')}
             >
-              <img src={photoUrl} alt="material" className="h-full w-full object-cover" loading="lazy" />
+              <img src={photoUrl} alt={itemName || t('materialPhoto.alt')} className="h-full w-full object-cover" loading="lazy" />
             </button>
             {/* Delete – top-right corner, on hover (always visible on touch screens) */}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); removePhoto(); }}
               className="absolute right-0 top-0 rounded-bl bg-background/80 p-1 text-destructive opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
-              title="Eliminar foto"
-              aria-label="Eliminar foto"
+              title={t('materialPhoto.delete')}
+              aria-label={t('materialPhoto.delete')}
             >
               <X size={12} />
             </button>
@@ -120,8 +124,8 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
                 type="button"
                 onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
                 className="absolute bottom-0 right-0 rounded-tl bg-background/80 p-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary [@media(hover:none)]:opacity-100"
-                title="Cambiar foto"
-                aria-label="Cambiar foto"
+                title={t('materialPhoto.change')}
+                aria-label={t('materialPhoto.change')}
               >
                 <ImagePlus size={12} />
               </button>
@@ -133,7 +137,8 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
             className="flex h-full w-full items-center justify-center text-muted-foreground hover:text-primary"
-            title="Subir foto"
+            title={t('materialPhoto.upload')}
+            aria-label={t('materialPhoto.upload')}
           >
             {uploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
           </button>
@@ -143,10 +148,10 @@ export default function MaterialPhoto({ itemId, photoUrl, onUpdated, size = 'md'
       {photoUrl && (
         <Dialog open={enlarged} onOpenChange={setEnlarged}>
           <DialogContent className="max-w-2xl border-border bg-card p-2">
-            <DialogTitle className="sr-only">Foto del material</DialogTitle>
+            <DialogTitle className="sr-only">{itemName ? t('materialPhoto.titleNamed', { name: itemName }) : t('materialPhoto.title')}</DialogTitle>
             <img
               src={photoUrl}
-              alt="material"
+              alt={itemName || t('materialPhoto.alt')}
               className="max-h-[85vh] w-full rounded object-contain"
             />
           </DialogContent>

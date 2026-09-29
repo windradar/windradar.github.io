@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useId } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -51,17 +52,20 @@ const fmtHours = (h: number) => (h < 10 && h % 1 ? h.toFixed(1).replace('.', ','
 function ItemUsage({ item, total, since, onServiced }: {
   item: MaterialItem; total: number; since: number; onServiced: () => void;
 }) {
+  const { t } = useTranslation();
   const interval = item.service_interval_h ?? null;
   const due = interval !== null && since >= interval;
   return (
     <div className="min-w-0 flex-1">
       <div className="truncate font-medium">{item.name}</div>
       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.65rem] text-muted-foreground">
-        <span>{total > 0 ? `${fmtHours(total)} h de uso` : 'Sin uso registrado'}</span>
+        <span>{total > 0 ? t('materials.usage.hoursUsed', { hours: fmtHours(total) }) : t('materials.usage.noUsage')}</span>
         {interval !== null && (
           <span className={due ? 'font-bold text-amber-500' : ''}>
             <Wrench size={10} className="mr-0.5 inline -translate-y-px" />
-            {fmtHours(since)}/{interval} h{item.last_service_at ? ' desde la revisión' : ''}
+            {item.last_service_at
+              ? t('materials.usage.sinceLastService', { since: fmtHours(since), interval })
+              : t('materials.usage.hoursOfInterval', { since: fmtHours(since), interval })}
           </span>
         )}
         {interval !== null && (
@@ -71,7 +75,7 @@ function ItemUsage({ item, total, since, onServiced }: {
               ? 'rounded border border-amber-500/50 bg-amber-500/10 px-2 py-1 font-semibold text-amber-600 hover:bg-amber-500/20'
               : 'rounded px-1.5 py-1 text-primary underline hover:text-primary/80'}
           >
-            {due ? 'Revisión pendiente · Revisado hoy' : 'Revisado hoy'}
+            {due ? t('materials.usage.serviceDueMarkToday') : t('materials.usage.markServicedToday')}
           </button>
         )}
       </div>
@@ -89,7 +93,9 @@ async function removeItemPhoto(it: MaterialItem) {
 }
 
 export default function MaterialsManager() {
+  const { t } = useTranslation();
   const { user } = useAuth();
+  const intervalIdBase = useId();
   const [cats, setCats] = useState<MaterialCategory[]>([]);
   const [items, setItems] = useState<MaterialItem[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
@@ -126,7 +132,7 @@ export default function MaterialsManager() {
     if (!user) return;
     const nextSlot = cats.length ? Math.max(...cats.map(c => c.slot)) + 1 : 1;
     const { data, error } = await supabase.from('material_categories')
-      .insert({ user_id: user.id, slot: nextSlot, name: 'Nuevo slot' })
+      .insert({ user_id: user.id, slot: nextSlot, name: t('materials.newSlotName') })
       .select().single();
     if (error) { toast.error(error.message); return; }
     const created = data as MaterialCategory;
@@ -136,25 +142,25 @@ export default function MaterialsManager() {
   };
 
   const deleteSlot = async (cat: MaterialCategory) => {
-    if (!confirm(`¿Eliminar el slot "${cat.name}" y todos sus materiales?`)) return;
+    if (!confirm(t('materials.confirmDeleteSlot', { name: cat.name }))) return;
     const catItems = items.filter(i => i.category_id === cat.id);
     await Promise.all(catItems.map(removeItemPhoto));
     const { error } = await supabase.from('material_categories').delete().eq('id', cat.id);
     if (error) { toast.error(error.message); return; }
     setCats(cs => cs.filter(c => c.id !== cat.id));
     setItems(is => is.filter(i => i.category_id !== cat.id));
-    toast.success('Slot eliminado');
+    toast.success(t('materials.slotDeleted'));
   };
 
   const saveName = async (cat: MaterialCategory) => {
     const trimmed = editName.trim();
-    if (!trimmed) { toast.error('Pon un nombre'); return; }
+    if (!trimmed) { toast.error(t('materials.nameRequired')); return; }
     const { error } = await supabase.from('material_categories')
       .update({ name: trimmed.slice(0, 40) }).eq('id', cat.id);
     if (error) { toast.error(error.message); return; }
     setCats(cs => cs.map(c => c.id === cat.id ? { ...c, name: trimmed.slice(0, 40) } : c));
     setEditingSlot(null);
-    toast.success('Categoría guardada');
+    toast.success(t('materials.slotSaved'));
   };
 
   const updateSlotSport = async (cat: MaterialCategory, sportId: string) => {
@@ -217,7 +223,7 @@ export default function MaterialsManager() {
     const it = items.find(x => x.id === id);
     if (!it) return;
     const name = editItemName.trim().slice(0, 80);
-    if (!name) { toast.error('El nombre no puede estar vacío'); return; }
+    if (!name) { toast.error(t('materials.itemNameEmpty')); return; }
     const intervalNum = Math.round(Number(editItemInterval));
     const interval = editItemInterval.trim() && intervalNum >= 1 && intervalNum <= 10000 ? intervalNum : null;
     const { error } = await supabase.from('material_items')
@@ -234,14 +240,14 @@ export default function MaterialsManager() {
       }));
       const results = await Promise.all(updated.map(s =>
         supabase.from('training_sessions').update({ materials: s.materials as unknown as Json }).eq('id', s.id)));
-      if (results.some(r => r.error)) toast.error('No se pudo renombrar el material en alguna sesión');
+      if (results.some(r => r.error)) toast.error(t('materials.renameSessionsError'));
       const byId = new Map(updated.map(s => [s.id, s]));
       setSessions(ss => ss.map(s => byId.get(s.id) ?? s));
     }
 
     setItems(is => is.map(x => x.id === id ? { ...x, name, service_interval_h: interval } : x));
     setEditingItemId(null);
-    toast.success('Material actualizado');
+    toast.success(t('materials.itemUpdated'));
   };
 
   const markServiced = async (it: MaterialItem) => {
@@ -249,14 +255,14 @@ export default function MaterialsManager() {
     const { error } = await supabase.from('material_items').update({ last_service_at: today }).eq('id', it.id);
     if (error) { toast.error(error.message); return; }
     setItems(is => is.map(x => x.id === it.id ? { ...x, last_service_at: today } : x));
-    toast.success(`Revisión de «${it.name}» anotada`);
+    toast.success(t('materials.serviceLogged', { name: it.name }));
   };
 
   const updateItemPhoto = (id: string, newUrl: string | null) => {
     setItems(is => is.map(x => x.id === id ? { ...x, photo_url: newUrl } : x));
   };
 
-  if (loading) return <p className="text-sm text-muted-foreground">Cargando materiales...</p>;
+  if (loading) return <p className="text-sm text-muted-foreground">{t('materials.loading')}</p>;
 
   return (
     <div className="space-y-4">
@@ -267,16 +273,17 @@ export default function MaterialsManager() {
           <div key={cat.id} className="rounded-lg border border-border bg-secondary/30 p-3">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="rounded bg-primary/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-primary">
-                Slot {cat.slot}
+                {t('materials.slotNumber', { n: cat.slot })}
               </span>
               {isEditing ? (
                 <div className="flex flex-1 items-center gap-1">
                   <input autoFocus value={editName} onChange={e => setEditName(e.target.value)} maxLength={40}
+                    aria-label={t('materials.slotNameLabel')}
                     className="flex-1 rounded border border-primary/40 bg-background px-2 py-1 text-sm outline-none" />
-                  <button onClick={() => saveName(cat)} className="rounded bg-primary p-1 text-primary-foreground">
+                  <button onClick={() => saveName(cat)} aria-label={t('common.save')} className="rounded bg-primary p-1 text-primary-foreground">
                     <Check size={14} />
                   </button>
-                  <button onClick={() => setEditingSlot(null)} className="rounded border border-border p-1 text-muted-foreground">
+                  <button onClick={() => setEditingSlot(null)} aria-label={t('common.cancel')} className="rounded border border-border p-1 text-muted-foreground">
                     <X size={14} />
                   </button>
                 </div>
@@ -284,6 +291,7 @@ export default function MaterialsManager() {
                 <>
                   <span className="font-display text-sm font-bold">{cat.name}</span>
                   <button onClick={() => { setEditingSlot(cat.slot); setEditName(cat.name); }}
+                    aria-label={t('materials.renameSlot', { name: cat.name })}
                     className="text-muted-foreground hover:text-primary">
                     <Pencil size={13} />
                   </button>
@@ -291,12 +299,13 @@ export default function MaterialsManager() {
                     value={cat.sport_id ?? ''}
                     onChange={e => updateSlotSport(cat, e.target.value)}
                     className="ml-auto rounded border border-border bg-background px-1.5 py-1 text-[0.65rem] text-muted-foreground outline-none focus:border-primary"
-                    title="Deporte al que pertenece este slot"
+                    title={t('materials.slotSportTitle')}
+                    aria-label={t('materials.slotSportTitle')}
                   >
-                    <option value="">— Todos los deportes —</option>
+                    <option value="">{t('materials.allSports')}</option>
                     {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
-                  <button onClick={() => deleteSlot(cat)} className="text-muted-foreground hover:text-destructive">
+                  <button onClick={() => deleteSlot(cat)} aria-label={t('materials.deleteSlot', { name: cat.name })} className="text-muted-foreground hover:text-destructive">
                     <Trash2 size={14} />
                   </button>
                 </>
@@ -309,6 +318,7 @@ export default function MaterialsManager() {
                   <li key={it.id} className="group flex items-center gap-2 rounded-md border border-border bg-background p-2 text-xs">
                     <MaterialPhoto
                       itemId={it.id}
+                      itemName={it.name}
                       photoUrl={it.photo_url || null}
                       onUpdated={(url) => updateItemPhoto(it.id, url)}
                       size="sm"
@@ -324,12 +334,13 @@ export default function MaterialsManager() {
                             if (e.key === 'Escape') setEditingItemId(null);
                           }}
                           maxLength={80}
-                          aria-label="Nombre del material"
+                          aria-label={t('materialSelect.nameLabel')}
                           className="min-w-[8rem] flex-1 rounded border border-primary/40 bg-background px-2 py-1.5 text-xs outline-none"
                         />
-                        <label className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
-                          Revisar cada
+                        <label htmlFor={`${intervalIdBase}-${it.id}`} className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
+                          {t('materials.serviceEvery')}
                           <input
+                            id={`${intervalIdBase}-${it.id}`}
                             type="number"
                             inputMode="numeric"
                             min={1}
@@ -342,21 +353,21 @@ export default function MaterialsManager() {
                           />
                           h
                         </label>
-                        <button onClick={() => saveItem(it.id)} aria-label="Guardar" className="rounded bg-primary p-2 text-primary-foreground">
+                        <button onClick={() => saveItem(it.id)} aria-label={t('common.save')} className="rounded bg-primary p-2 text-primary-foreground">
                           <Check size={13} />
                         </button>
-                        <button onClick={() => setEditingItemId(null)} aria-label="Cancelar" className="rounded border border-border p-2 text-muted-foreground">
+                        <button onClick={() => setEditingItemId(null)} aria-label={t('common.cancel')} className="rounded border border-border p-2 text-muted-foreground">
                           <X size={13} />
                         </button>
                       </div>
                     ) : (
                       <>
                         <ItemUsage item={it} {...usageOf(it)} onServiced={() => markServiced(it)} />
-                        <button onClick={() => startEditItem(it)} aria-label={`Editar ${it.name}`}
+                        <button onClick={() => startEditItem(it)} aria-label={t('materials.editItem', { name: it.name })}
                           className="rounded p-1.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:text-primary [@media(hover:none)]:opacity-100">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => deleteItem(it.id)} aria-label={`Eliminar ${it.name}`}
+                        <button onClick={() => deleteItem(it.id)} aria-label={t('materials.deleteItem', { name: it.name })}
                           className="rounded p-1.5 text-muted-foreground hover:text-destructive">
                           <Trash2 size={13} />
                         </button>
@@ -370,11 +381,12 @@ export default function MaterialsManager() {
             <div className="flex gap-1">
               <input value={newItem[cat.slot] || ''} onChange={e => setNewItem(n => ({ ...n, [cat.slot]: e.target.value }))}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(cat); } }}
-                placeholder={`Añadir ${cat.name.toLowerCase()}...`} maxLength={80}
+                placeholder={t('materials.addItemPlaceholder', { name: cat.name.toLowerCase() })} maxLength={80}
+                aria-label={t('materials.addItemLabel', { name: cat.name })}
                 className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary" />
               <button onClick={() => addItem(cat)}
                 className="flex items-center gap-1 rounded-md bg-primary px-2 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110">
-                <Plus size={12} /> Añadir
+                <Plus size={12} /> {t('materials.add')}
               </button>
             </div>
           </div>
@@ -385,7 +397,7 @@ export default function MaterialsManager() {
         onClick={addSlot}
         className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10"
       >
-        <Plus size={15} /> Añadir slot
+        <Plus size={15} /> {t('materials.addSlot')}
       </button>
     </div>
   );

@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, useMemo, memo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useId, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +14,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { WeatherData } from '@/lib/weather-helpers';
-import { localDateStr, humanDate } from '@/lib/weather-helpers';
+import { localDateStr, humanDate, LANG_LOCALE } from '@/lib/weather-helpers';
 import { useWindUnit, convertKmh, WIND_UNIT_LABEL } from '@/lib/wind-units';
 import { useChartTheme } from '@/hooks/useChartTheme';
 
@@ -53,6 +54,9 @@ function aromeToHourlyResponse(wxDetail: WeatherData): WindApiResponse {
 }
 
 export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDetail }: Props) {
+  const { t, i18n } = useTranslation();
+  const locale = LANG_LOCALE[i18n.language] || 'es-ES';
+  const dateInputId = useId();
   const [compareDate, setCompareDate] = useState('');
   const [compareData, setCompareData] = useState<WindApiResponse | null>(null);
   const [todayData, setTodayData] = useState<WindApiResponse | null>(null);
@@ -80,8 +84,8 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
         ? `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`
         : `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`;
 
-      const cRes = await fetch(compareUrl).then(r => r.json());
-      if (cRes.error) throw new Error(cRes.reason || 'Error');
+      const cRes = await fetch(compareUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+      if (cRes.error) throw new Error(cRes.reason || 'API error');
       setCompareData(cRes);
 
       // Today's line: prefer AROME HD if available
@@ -93,11 +97,12 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
         setTodayData(tRes);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
+      console.error('Compare chart error:', e);
+      setError(!navigator.onLine || e instanceof TypeError ? t('index.errors.offline') : t('chart.compareError'));
     } finally {
       setLoading(false);
     }
-  }, [lat, lon, today, wxDetail]);
+  }, [lat, lon, today, wxDetail, t]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const d = e.target.value;
@@ -133,9 +138,11 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
     if (!todayData || !compareData) return null;
     const toUnit = (arr: number[] | undefined) =>
       arr ? arr.slice(0, 24).map(v => v != null ? Math.round(convertKmh(v, unit) * 10) / 10 : null) : new Array(24).fill(null);
+    const todayStr = humanDate(today, locale);
+    const compareStr = humanDate(compareDate, locale);
     const todayLabel = wxDetail
-      ? `Viento hoy (${humanDate(today)}) · AROME HD`
-      : `Viento hoy (${humanDate(today)})`;
+      ? t('chart.compareWindTodayArome', { date: todayStr })
+      : t('chart.compareWindToday', { date: todayStr });
     return {
       labels: HOURS,
       datasets: [
@@ -147,21 +154,21 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
           fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
         },
         {
-          label: `Viento ${humanDate(compareDate)}`,
+          label: t('chart.compareWindDate', { date: compareStr }),
           data: toUnit(compareData.hourly.wind_speed_10m),
           borderColor: '#ff8c00',
           backgroundColor: 'rgba(255,140,0,.07)',
           fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2,
         },
         {
-          label: `Ráfagas hoy`,
+          label: t('chart.compareGustToday'),
           data: toUnit(todayData.hourly.wind_gusts_10m),
           borderColor: '#00d4ff',
           borderDash: [5, 3],
           fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1.2,
         },
         {
-          label: `Ráfagas ${humanDate(compareDate)}`,
+          label: t('chart.compareGustDate', { date: compareStr }),
           data: toUnit(compareData.hourly.wind_gusts_10m),
           borderColor: '#ff8c00',
           borderDash: [5, 3],
@@ -169,15 +176,16 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
         },
       ],
     };
-  }, [todayData, compareData, compareDate, wxDetail, today, unit]);
+  }, [todayData, compareData, compareDate, wxDetail, today, unit, t, locale]);
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 col-span-full">
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <div className="text-[0.62rem] uppercase tracking-widest text-muted-foreground">📊 Comparar viento</div>
+        <div className="text-[0.62rem] uppercase tracking-widest text-muted-foreground">{t('chart.compareTitle')}</div>
         <div className="flex items-center gap-2">
-          <label className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Fecha a comparar:</label>
+          <label htmlFor={dateInputId} className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('chart.compareDateLabel')}</label>
           <input
+            id={dateInputId}
             type="date"
             value={compareDate}
             onChange={handleDateChange}
@@ -187,12 +195,12 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
           />
         </div>
         {loading && <div className="h-4 w-4 rounded-full border-2 border-border border-t-primary animate-spin" />}
-        {error && <span className="text-[0.6rem] text-destructive">{error}</span>}
+        {error && <span role="alert" className="text-[0.6rem] text-destructive">{error}</span>}
       </div>
 
       {!hasData && !loading && (
         <div className="flex h-32 items-center justify-center text-xs text-muted-foreground">
-          Selecciona una fecha para comparar con hoy ({humanDate(today)})
+          {t('chart.comparePrompt', { date: humanDate(today, locale) })}
         </div>
       )}
 

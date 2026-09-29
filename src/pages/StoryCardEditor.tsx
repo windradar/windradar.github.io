@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, ImagePlus, RotateCcw, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,8 @@ const POSITIONS: StoryPos[] = ['top', 'mid', 'bottom'];
 const ALIGNS: StoryAlign[] = ['left', 'center'];
 
 export default function StoryCardEditor() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const { user } = useAuth();
   const [prefs, setPrefs] = useState<StoryPrefs>(loadStoryPrefs);
   const [session, setSession] = useState<Session>(SAMPLE_SESSION);
@@ -25,6 +26,11 @@ export default function StoryCardEditor() {
   const [matPhotos, setMatPhotos] = useState<Record<string, string>>({});
   const [bgImg, setBgImg] = useState<HTMLImageElement | null>(null);
   const [bgUrl, setBgUrl] = useState<string | null>(null);
+  // The sample's notes are UI text, so they follow the current language
+  const previewSession = useMemo(
+    () => (isSample ? { ...session, notes: t('story.sampleNotes') } : session),
+    [isSample, session, t],
+  );
   const canvasRefs = useRef<Record<StoryTemplate, HTMLCanvasElement | null>>({ franja: null, foto: null, ficha: null });
 
   // Vista previa con la última sesión que tenga datos de viento
@@ -49,23 +55,24 @@ export default function StoryCardEditor() {
 
   // Only the photos of the preview session's material
   useEffect(() => {
-    const photos = sessionMaterialPhotos(matPhotos, session);
+    const photos = sessionMaterialPhotos(matPhotos, previewSession);
     if (!Object.keys(photos).length) { setMatImgs({}); return; }
     let cancelled = false;
     loadMaterialImages(photos).then(loaded => { if (!cancelled) setMatImgs(loaded); });
     return () => { cancelled = true; };
-  }, [matPhotos, session]);
+  }, [matPhotos, previewSession]);
 
   // Three 1080×1920 canvases: redraw once the user stops toggling options
   useEffect(() => {
     const id = window.setTimeout(() => {
       for (const tpl of STORY_TEMPLATES) {
         const cv = canvasRefs.current[tpl];
-        if (cv) drawStory(cv, session, { ...prefs, template: tpl }, bgImg, matImgs);
+        if (cv) drawStory(cv, previewSession, { ...prefs, template: tpl }, bgImg, matImgs);
       }
     }, 120);
     return () => window.clearTimeout(id);
-  }, [prefs, session, bgImg, matImgs]);
+    // lang: the card's labels are translated while drawing
+  }, [prefs, previewSession, bgImg, matImgs, lang]);
 
   useEffect(() => () => { if (bgUrl) URL.revokeObjectURL(bgUrl); }, [bgUrl]);
 
@@ -117,7 +124,7 @@ export default function StoryCardEditor() {
         </Link>
 
         <div className="mb-2 flex items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-extrabold">🖼️ {t('storyCard.title')}</h1>
+          <h1 className="font-display text-2xl font-extrabold"><span aria-hidden="true">🖼️</span> {t('storyCard.title')}</h1>
           <button
             onClick={reset}
             className="flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
@@ -146,6 +153,7 @@ export default function StoryCardEditor() {
                       width={CW}
                       height={CH}
                       className="block h-auto w-full rounded-lg shadow-lg"
+                      aria-hidden="true"
                     />
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -221,6 +229,7 @@ export default function StoryCardEditor() {
                   <button
                     onClick={() => { setBgImg(null); setBgUrl(null); }}
                     title={t('storyCard.removePhoto')}
+                    aria-label={t('storyCard.removePhoto')}
                     className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground">
                     <X size={14} />
                   </button>

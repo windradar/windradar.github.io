@@ -110,7 +110,7 @@ export default function Index() {
         fetch(marUrl, { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
       if (signal.aborted) return;
-      if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
+      if (wxRes.error) throw new Error(wxRes.reason || 'Forecast API error');
       setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
       setWx(wxRes);
       setMar(marRes);
@@ -132,7 +132,7 @@ export default function Index() {
         detail = null;
       }
       setWxDetail(detail);
-      if (wxRes.error) throw new Error(wxRes.reason || 'Error en previsión');
+      if (wxRes.error) throw new Error(wxRes.reason || 'Forecast API error');
       setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
       setWx(wxRes);
       setMar(marRes);
@@ -438,8 +438,9 @@ export default function Index() {
           {lat !== null && (
             <button
               onClick={handleToggleFav}
-              aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-              title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              aria-label={isFav ? t('favorites.remove') : t('favorites.add')}
+              aria-pressed={isFav}
+              title={isFav ? t('favorites.remove') : t('favorites.add')}
               className={`self-center inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[0.7rem] font-medium transition-colors ${isFav ? 'border-accent/40 bg-accent/10 text-accent hover:bg-accent/20' : 'border-border bg-secondary text-muted-foreground hover:border-accent/40 hover:text-accent'}`}
             >
               <Star className="h-3.5 w-3.5" fill={isFav ? 'currentColor' : 'none'} />
@@ -467,7 +468,7 @@ export default function Index() {
                   transition={{ duration: 1, repeat: Infinity, times: [0, 0.88, 0.9, 1], ease: 'linear' }}
                   className="font-bold tracking-wide text-[#ffcc44]"
                 >
-                  Big Day{matchedSpot?.name ? ` en ${matchedSpot.name}` : ''}
+                  {matchedSpot?.name ? t('index.bigDayAt', { name: matchedSpot.name }) : t('index.bigDay')}
                 </m.span>
               </m.div>
             )}
@@ -541,7 +542,7 @@ export default function Index() {
               <div className="mb-1.5 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.tempCard')}</div>
               <div className="flex items-end gap-3">
                 <div>
-                  <div className="mb-0.5 text-[0.55rem] uppercase tracking-wide text-muted-foreground/60">Aire</div>
+                  <div className="mb-0.5 text-[0.62rem] uppercase tracking-wide text-muted-foreground/60">{t('index.air')}</div>
                   <div className="font-display text-xl font-bold leading-none">
                     {safeNum(cardData.temp, 1)}<span className="ml-0.5 text-[0.65rem] font-normal text-muted-foreground"> °C</span>
                   </div>
@@ -550,7 +551,7 @@ export default function Index() {
                   <>
                     <span className="mb-1 text-muted-foreground/40">·</span>
                     <div>
-                      <div className="mb-0.5 text-[0.55rem] uppercase tracking-wide text-muted-foreground/60">Agua</div>
+                      <div className="mb-0.5 text-[0.62rem] uppercase tracking-wide text-muted-foreground/60">{t('index.water')}</div>
                       <div className="font-display text-xl font-bold leading-none" style={{ color: '#4dd9ff' }}>
                         {safeNum(cardData.sst, 1)}<span className="ml-0.5 text-[0.65rem] font-normal text-muted-foreground"> °C</span>
                       </div>
@@ -559,7 +560,7 @@ export default function Index() {
                 )}
               </div>
             </m.div>
-            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={`Swell: ${cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—'}`} color={waveColor(cardData.wh)} />
+            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={t('index.swell', { value: cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—' })} color={waveColor(cardData.wh)} />
             <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
               <WeekForecastChart wx={wx} mar={mar} wxDetail={wxDetail} />
@@ -605,8 +606,8 @@ export default function Index() {
           </div>
         )}
         {wxDetailCoversDate && (
-          <div className="mb-2.5 flex items-center gap-1">
-            <span className="text-[0.55rem] uppercase tracking-widest text-muted-foreground mr-1">Intervalo:</span>
+          <div role="group" aria-labelledby="table-resolution-label" className="mb-2.5 flex items-center gap-1">
+            <span id="table-resolution-label" className="text-[0.62rem] uppercase tracking-widest text-muted-foreground mr-1">{t('index.interval')}</span>
             {(['1h', '30min', '15min'] as const).map(r => (
               <button
                 key={r}
@@ -617,7 +618,7 @@ export default function Index() {
                 {r}
               </button>
             ))}
-            <span className="ml-1.5 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.55rem] uppercase tracking-widest text-primary">AROME HD</span>
+            <span className="ml-1.5 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[0.62rem] uppercase tracking-widest text-primary">AROME HD</span>
           </div>
         )}
 
@@ -849,7 +850,7 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
       <div className={`font-display font-bold leading-none ${isEmoji ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`} style={color ? { color } : undefined}>
         {value}{unit && <span className="text-[0.65rem] font-normal text-muted-foreground sm:text-xs"> {unit}</span>}
       </div>
-      {sub && <div className="mt-1 text-[0.58rem] text-muted-foreground sm:text-[0.62rem]">{sub}</div>}
+      {sub && <div className="mt-1 text-[0.62rem] text-muted-foreground sm:text-[0.62rem]">{sub}</div>}
     </m.div>
   );
 }
