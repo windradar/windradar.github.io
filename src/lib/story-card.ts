@@ -161,6 +161,12 @@ export async function fetchAsBlobUrl(url: string): Promise<string | null> {
 }
 
 /** Carga las fotos del material (nombre → URL) como imágenes listas para el canvas. */
+/** Only the photos of the material used in the session: the card never draws the others */
+export function sessionMaterialPhotos(photos: Record<string, string>, session: Session): Record<string, string> {
+  const used = new Set(session.materials.map(m => m.name).filter(Boolean));
+  return Object.fromEntries(Object.entries(photos).filter(([name]) => used.has(name)));
+}
+
 export async function loadMaterialImages(photos: Record<string, string>): Promise<Record<string, HTMLImageElement>> {
   const loaded: Record<string, HTMLImageElement> = {};
   await Promise.all(

@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Session } from '@/lib/session-stats';
 import {
   CW, CH, STORY_TEMPLATES, STORY_FIELDS, DEFAULT_STORY_PREFS, SAMPLE_SESSION,
-  drawStory, loadStoryPrefs, saveStoryPrefs, loadImage, loadMaterialImages,
+  drawStory, loadStoryPrefs, saveStoryPrefs, loadImage, loadMaterialImages, sessionMaterialPhotos,
   type StoryPrefs, type StoryTemplate, type StoryPos, type StoryAlign,
 } from '@/lib/story-card';
 
@@ -22,6 +22,7 @@ export default function StoryCardEditor() {
   const [session, setSession] = useState<Session>(SAMPLE_SESSION);
   const [isSample, setIsSample] = useState(true);
   const [matImgs, setMatImgs] = useState<Record<string, HTMLImageElement>>({});
+  const [matPhotos, setMatPhotos] = useState<Record<string, string>>({});
   const [bgImg, setBgImg] = useState<HTMLImageElement | null>(null);
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const canvasRefs = useRef<Record<StoryTemplate, HTMLCanvasElement | null>>({ franja: null, foto: null, ficha: null });
@@ -38,19 +39,32 @@ export default function StoryCardEditor() {
         if (s) { setSession(s); setIsSample(false); }
       });
     supabase.from('material_items').select('name, photo_url').not('photo_url', 'is', null)
-      .then(async ({ data }) => {
+      .then(({ data }) => {
         if (!data?.length) return;
         const map: Record<string, string> = {};
         for (const it of data) { if (it.photo_url) map[it.name] = it.photo_url; }
-        setMatImgs(await loadMaterialImages(map));
+        setMatPhotos(map);
       });
   }, [user]);
 
+  // Only the photos of the preview session's material
   useEffect(() => {
-    for (const tpl of STORY_TEMPLATES) {
-      const cv = canvasRefs.current[tpl];
-      if (cv) drawStory(cv, session, { ...prefs, template: tpl }, bgImg, matImgs);
-    }
+    const photos = sessionMaterialPhotos(matPhotos, session);
+    if (!Object.keys(photos).length) { setMatImgs({}); return; }
+    let cancelled = false;
+    loadMaterialImages(photos).then(loaded => { if (!cancelled) setMatImgs(loaded); });
+    return () => { cancelled = true; };
+  }, [matPhotos, session]);
+
+  // Three 1080×1920 canvases: redraw once the user stops toggling options
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      for (const tpl of STORY_TEMPLATES) {
+        const cv = canvasRefs.current[tpl];
+        if (cv) drawStory(cv, session, { ...prefs, template: tpl }, bgImg, matImgs);
+      }
+    }, 120);
+    return () => window.clearTimeout(id);
   }, [prefs, session, bgImg, matImgs]);
 
   useEffect(() => () => { if (bgUrl) URL.revokeObjectURL(bgUrl); }, [bgUrl]);

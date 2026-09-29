@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { Session } from '@/lib/session-stats';
 import {
-  CW, CH, STORY_TEMPLATES, drawStory, loadStoryPrefs, loadImage, fetchAsBlobUrl, loadMaterialImages,
+  CW, CH, STORY_TEMPLATES, drawStory, loadStoryPrefs, loadImage, fetchAsBlobUrl, loadMaterialImages, sessionMaterialPhotos,
   type StoryTemplate,
 } from '@/lib/story-card';
 
@@ -35,12 +35,15 @@ export default function SessionStoryShare({ session, materialPhotos, onClose }: 
     setTemplate(p.template);
   }, [session]);
 
+  // Only while the modal is open, and only the photos this session's card can draw
   useEffect(() => {
-    if (!Object.keys(materialPhotos).length) return;
+    if (!session) return;
+    const photos = sessionMaterialPhotos(materialPhotos, session);
+    if (!Object.keys(photos).length) { setMatImgs({}); return; }
     let cancelled = false;
-    loadMaterialImages(materialPhotos).then(loaded => { if (!cancelled) setMatImgs(loaded); });
+    loadMaterialImages(photos).then(loaded => { if (!cancelled) setMatImgs(loaded); });
     return () => { cancelled = true; };
-  }, [materialPhotos]);
+  }, [session, materialPhotos]);
 
   useEffect(() => {
     if (!session || !canvasRef.current) return;

@@ -18,6 +18,8 @@ import type { Session, Snapshot, SessionMaterial } from '@/lib/session-stats';
 import type { Json } from '@/integrations/supabase/types';
 import { useWindUnit, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 
+const PAGE_SIZE = 30;
+
 const HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
 
 export default function Sessions() {
@@ -32,6 +34,9 @@ export default function Sessions() {
     .optional().or(z.literal(''));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [displayedSessions, setDisplayedSessions] = useState<Session[]>([]);
+  // The dashboard needs every session; the list only renders a page at a time
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [displayedSessions]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null); // null = nueva, id = editando
@@ -381,7 +386,7 @@ export default function Sessions() {
             </div>
           ) : (
             <div className="space-y-3">
-              {displayedSessions.map(s => (
+              {displayedSessions.slice(0, visibleCount).map(s => (
                 <div key={s.id} className={`rounded-lg border bg-card p-4 ${editingId === s.id ? 'border-primary' : 'border-border'}`}>
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <div>
@@ -471,6 +476,14 @@ export default function Sessions() {
                   {s.notes && <p className="mt-2 text-xs text-muted-foreground italic">"{s.notes}"</p>}
                 </div>
               ))}
+              {displayedSessions.length > visibleCount && (
+                <button
+                  onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                  className="w-full rounded-lg border border-dashed border-border py-3 text-sm font-semibold text-primary hover:bg-primary/5"
+                >
+                  {t('sessions.showMore', { count: displayedSessions.length - visibleCount })}
+                </button>
+              )}
             </div>
           )}
         </section>

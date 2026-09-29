@@ -320,35 +320,23 @@ export function SettingsPanel({
     }
 
     if (user) {
-      let lat: number | null = null;
-      let lon: number | null = null;
-
-      if (local.emailEnabled && local.emailLocation.trim()) {
-        const geo = await geocode(local.emailLocation.trim());
-        if (!geo) {
-          toast.error(t('settings.geoError'));
-          setSaving(false);
-          return;
-        }
-        lat = geo.lat;
-        lon = geo.lon;
-      }
-
-      let waLat: number | null = null;
-      let waLon: number | null = null;
-      let waTz: string | null = null;
+      const emailQuery = local.emailEnabled ? local.emailLocation.trim() : '';
       // Geocoded even with WhatsApp off: push alerts share this location
-      if (local.whatsappAlertLocation.trim()) {
-        const geo = await geocode(local.whatsappAlertLocation.trim());
-        if (!geo) {
-          toast.error(t('settings.geoError'));
-          setSaving(false);
-          return;
-        }
-        waLat = geo.lat;
-        waLon = geo.lon;
-        waTz = geo.tz;
+      const alertQuery = local.whatsappAlertLocation.trim();
+      const [emailGeo, alertGeo] = await Promise.all([
+        emailQuery ? geocode(emailQuery) : Promise.resolve(null),
+        alertQuery ? geocode(alertQuery) : Promise.resolve(null),
+      ]);
+      if ((emailQuery && !emailGeo) || (alertQuery && !alertGeo)) {
+        toast.error(t('settings.geoError'));
+        setSaving(false);
+        return;
       }
+      const lat = emailGeo?.lat ?? null;
+      const lon = emailGeo?.lon ?? null;
+      const waLat = alertGeo?.lat ?? null;
+      const waLon = alertGeo?.lon ?? null;
+      const waTz = alertGeo?.tz ?? null;
 
       const { error } = await supabase
         .from('profiles')

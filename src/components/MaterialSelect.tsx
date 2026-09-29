@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { MaterialCategory, MaterialItem } from './MaterialsManager';
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
 }
 
 export default function MaterialSelect({ sportId, values, onChange }: Props) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [cats, setCats] = useState<MaterialCategory[]>([]);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -107,36 +110,28 @@ export default function MaterialSelect({ sportId, values, onChange }: Props) {
         })}
       </div>
 
-      {dialogCatId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
-             onClick={() => setDialogCatId(null)}>
-          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 shadow-2xl"
-               onClick={e => e.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-sm font-bold uppercase tracking-wider">
-                Nuevo {cats.find(c => c.id === dialogCatId)?.name}
-              </h3>
-              <button onClick={() => setDialogCatId(null)} className="text-muted-foreground hover:text-foreground">
-                <X size={16} />
-              </button>
-            </div>
-            <input autoFocus value={newItemName} onChange={e => setNewItemName(e.target.value)}
+      {/* Radix dialog: focus trap, Esc to close and aria wiring */}
+      <Dialog open={dialogCatId !== null} onOpenChange={open => { if (!open) setDialogCatId(null); }}>
+        <DialogContent className="max-w-sm border-border bg-card p-5">
+            <DialogTitle className="mb-1 font-display text-sm font-bold uppercase tracking-wider">
+              {t('materialSelect.newItem', { slot: cats.find(c => c.id === dialogCatId)?.name ?? '' })}
+            </DialogTitle>
+            <input autoFocus aria-label={t('materialSelect.nameLabel')} value={newItemName} onChange={e => setNewItemName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItemQuick(); } }}
-              placeholder="Ej: Gastra 4.5" maxLength={80}
+              placeholder={t('materialSelect.placeholder')} maxLength={80}
               className="mb-3 w-full rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary" />
             <div className="flex justify-end gap-2">
               <button onClick={() => setDialogCatId(null)}
                 className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary">
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button onClick={addItemQuick} disabled={savingNew || !newItemName.trim()}
                 className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 disabled:opacity-50">
-                {savingNew ? '...' : 'Añadir y seleccionar'}
+                {savingNew ? '...' : t('materialSelect.addAndSelect')}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
