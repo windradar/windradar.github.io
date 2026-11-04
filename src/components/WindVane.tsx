@@ -5,6 +5,7 @@ interface Props {
   seaBearing?: number;
   topLabel?: string;
   bottomLabel?: string;
+  color?: string;
 }
 
 // Ordered N, NE, E, SE, S, SW, W, NW — each covers a 45° sector centred on its bearing.
@@ -22,8 +23,6 @@ const LOCAL_WIND_NAMES = [
 const POINTS_16 = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
 const POINTS_8 = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
-const ORANGE = '#f26b2a';
-const BG = '#0b1a33';
 const W = 260;
 const H = 316;
 const CX = W / 2;
@@ -48,7 +47,7 @@ const ROSE_POINTS = Array.from({ length: 16 }, (_, i) => {
   return `${x.toFixed(2)},${y.toFixed(2)}`;
 }).join(' ');
 
-export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottomLabel = '' }: Props) {
+export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottomLabel = '', color = 'hsl(var(--primary))' }: Props) {
   const dir = mod360(direction);
   const target = direction - seaBearing;
 
@@ -66,7 +65,8 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
   const localName = LOCAL_WIND_NAMES[Math.round(dir / 45) % 8];
 
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-lg bg-[#0b1a33] p-3">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50">
+      <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="h-auto w-full max-w-[260px]"
@@ -74,13 +74,13 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
         aria-label={`${point} ${degrees}° · ${localName}`}
       >
         <text x={CX} y={36} textAnchor="middle" className="font-display">
-          <tspan fill="#ffffff" fontSize="28" fontWeight="700">{point}</tspan>
-          <tspan fill="#8a9bb4" fontSize="16" dx="8">{degrees}°</tspan>
+          <tspan className="fill-foreground" fontSize="28" fontWeight="700">{point}</tspan>
+          <tspan className="fill-muted-foreground" fontSize="16" dx="8">{degrees}°</tspan>
         </text>
 
-        <circle cx={CX} cy={CY} r={R} fill="#112748" />
-        <path d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 0 ${CX + R} ${CY} Z`} fill="#081629" fillOpacity="0.6" />
-        <circle cx={CX} cy={CY} r={R} fill="none" stroke="#4a5f7f" strokeWidth="1" />
+        <circle cx={CX} cy={CY} r={R} className="fill-secondary" />
+        <path d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 0 ${CX + R} ${CY} Z`} fill="#000" fillOpacity="0.18" />
+        <circle cx={CX} cy={CY} r={R} fill="none" className="stroke-border" strokeWidth="1.5" />
 
         {TICK_BEARINGS.map(b => {
           const long = b % 45 === 0;
@@ -91,9 +91,9 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
             <line
               key={b}
               x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-              stroke="#6b81a3"
+              className="stroke-muted-foreground"
               strokeWidth={long ? 1.4 : 0.8}
-              strokeOpacity={long ? 0.95 : 0.6}
+              strokeOpacity={long ? 0.9 : 0.5}
             />
           );
         })}
@@ -106,7 +106,8 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
               x={x} y={y}
               textAnchor="middle"
               dominantBaseline="central"
-              fill="#b9c6d8"
+              className="fill-foreground"
+              fillOpacity="0.75"
               fontSize="10"
               fontWeight="600"
             >
@@ -115,7 +116,13 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
           );
         })}
 
-        <g transform={`rotate(${-seaBearing} ${CX} ${CY})`} stroke="#9fb1cc" strokeOpacity="0.22" strokeWidth="0.8" fill="none">
+        <g
+          transform={`rotate(${-seaBearing} ${CX} ${CY})`}
+          className="stroke-muted-foreground"
+          strokeOpacity="0.3"
+          strokeWidth="0.8"
+          fill="none"
+        >
           <polygon points={ROSE_POINTS} />
           {Array.from({ length: 8 }, (_, i) => {
             const { x, y } = polar(i * 45, i % 2 === 0 ? 54 : 34);
@@ -125,16 +132,17 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
 
         <line
           x1={CX - R} y1={CY} x2={CX + R} y2={CY}
-          stroke="#7a8fae" strokeOpacity="0.7" strokeWidth="1" strokeDasharray="4 4"
+          className="stroke-muted-foreground"
+          strokeOpacity="0.7" strokeWidth="1" strokeDasharray="4 4"
         />
 
         {topLabel && (
-          <text x={CX} y={CY - 38} textAnchor="middle" fill="#6f84a3" fontSize="9" letterSpacing="3">
+          <text x={CX} y={CY - 38} textAnchor="middle" className="fill-muted-foreground" fillOpacity="0.8" fontSize="9" letterSpacing="3">
             {topLabel}
           </text>
         )}
         {bottomLabel && (
-          <text x={CX} y={CY + 46} textAnchor="middle" fill="#6f84a3" fontSize="9" letterSpacing="3">
+          <text x={CX} y={CY + 46} textAnchor="middle" className="fill-muted-foreground" fillOpacity="0.8" fontSize="9" letterSpacing="3">
             {bottomLabel}
           </text>
         )}
@@ -147,17 +155,17 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
               transition: 'transform 0.6s ease',
             }}
           >
-            <line x1={0} y1={-54} x2={0} y2={58} stroke={ORANGE} strokeWidth="3" strokeLinecap="round" />
-            <polygon points="0,-72 -9,-50 0,-55 9,-50" fill={ORANGE} />
-            <circle cx={0} cy={64} r={5} fill={BG} stroke={ORANGE} strokeWidth="2" />
+            <line x1={0} y1={-54} x2={0} y2={58} stroke={color} strokeWidth="3" strokeLinecap="round" />
+            <polygon points="0,-72 -9,-50 0,-55 9,-50" fill={color} />
+            <circle cx={0} cy={64} r={5} className="fill-card" stroke={color} strokeWidth="2" />
           </g>
         </g>
-        <circle cx={CX} cy={CY} r={4} fill="#ffffff" />
+        <circle cx={CX} cy={CY} r={4} className="fill-foreground" />
 
         <text
           x={CX} y={H - 16}
           textAnchor="middle"
-          fill={ORANGE}
+          fill={color}
           fontSize="18"
           fontWeight="800"
           letterSpacing="1.5"

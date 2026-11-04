@@ -535,7 +535,7 @@ export default function Index() {
         ) : cardData && (
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
-              <WindVane direction={cardData.wd} />
+              <WindVane direction={cardData.wd} color={windColor(cardData.ws)} />
             </div>
             <NowCard label={t('index.precipCard')} value={cardData.prec.toFixed(1)} unit="mm" sub={t('index.lastHour')} />
             <WindWidget
