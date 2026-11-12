@@ -30,7 +30,10 @@ interface Slot {
   fromArome: boolean;
 }
 
-export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar: MarineData | null; wxDetail?: WeatherData | null }) {
+export function WeekForecastChart({ wx, mar, wxDetail, selectedTime, onSelectTime }: {
+  wx: WeatherData; mar: MarineData | null; wxDetail?: WeatherData | null;
+  selectedTime?: string | null; onSelectTime?: (time: string) => void;
+}) {
   const { t, i18n } = useTranslation();
   const unit = useWindUnit();
   const h = wx.hourly;
@@ -116,7 +119,7 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
       </div>
 
       <div className="overflow-x-auto">
-        <div style={{ width: totalW, minWidth: totalW }}>
+        <div className="relative" style={{ width: totalW, minWidth: totalW }}>
           {/* Day labels */}
           <div className="flex" style={{ height: 17 }}>
             {dayGroups.map(dg => (
@@ -259,6 +262,25 @@ export function WeekForecastChart({ wx, mar, wxDetail }: { wx: WeatherData; mar:
               </div>
             ))}
           </div>
+
+          {onSelectTime && (
+            <div className="absolute inset-x-0 bottom-0 flex" style={{ top: 17 }}>
+              {slots.map(s => {
+                const selected = s.time === selectedTime;
+                return (
+                  <button
+                    key={s.time}
+                    type="button"
+                    onClick={() => onSelectTime(s.time)}
+                    aria-pressed={selected}
+                    aria-label={`${formatDay(s.time.slice(0, 10))} ${s.time.slice(11, 16)}`}
+                    style={{ width: SLOT_W, flexShrink: 0 }}
+                    className={`h-full rounded-sm transition-colors hover:bg-primary/10 focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary ${selected ? 'bg-primary/15 ring-1 ring-inset ring-primary' : ''}`}
+                  />
+                );
+              })}
+            </div>
+          )}
 
           {/* Hour labels at 00/06/12/18 */}
           <div className="flex" style={{ height: 12 }}>

@@ -81,6 +81,8 @@ export default function Index() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const favorites = useMemo(() => getFavorites(), [favKey]);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
+  // Slot picked in the week chart or the hourly table; null = follow the current time
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [tableResolution, setTableResolution] = useState<'1h' | '30min' | '15min'>('1h');
 
   const today = localDateStr(new Date());
@@ -146,6 +148,7 @@ export default function Index() {
 
   const doSearch = useCallback(async (searchName: string, searchLat: number, searchLon: number) => {
     setError('');
+    setSelectedTime(null);
     setLoading(true);
     setWx(null);
     setWxDetail(null);
@@ -221,6 +224,12 @@ export default function Index() {
     }
   }, [lat, lon, fetchWeather, t]);
 
+  const handleSelectTime = (time: string) => {
+    if (time === selectedTime) { setSelectedTime(null); return; }
+    setSelectedTime(time);
+    if (time.slice(0, 10) !== date) handleDateChange(time.slice(0, 10));
+  };
+
   // Active data source: AROME when it covers the selected date, else seamless
   const wxDetailCoversDate = !!wxDetail?.hourly.time.some(t => t.slice(0, 10) === date);
   const activeWx = (wxDetailCoversDate ? wxDetail : wx) ?? null;
@@ -282,7 +291,12 @@ export default function Index() {
       if (diff < minDiff) { minDiff = diff; curRow = j; }
     }
   }
-  const refI = curRow >= 0 ? dayIdxs[curRow] : (dayIdxs.length > 0 ? dayIdxs[0] : 0);
+  // allDayIdxs only holds the selected date, so a selection from another day is ignored
+  const selI = selectedTime && h
+    ? allDayIdxs.find(i => h.time[i] === selectedTime) ?? allDayIdxs.find(i => h.time[i].slice(0, 13) === selectedTime.slice(0, 13))
+    : undefined;
+  const markRow = selI !== undefined ? dayIdxs.indexOf(selI) : curRow;
+  const refI = selI ?? (markRow >= 0 ? dayIdxs[markRow] : (dayIdxs.length > 0 ? dayIdxs[0] : 0));
 
   // Marine value lookup — uses timestamp to align hourly marine with any source resolution
   const marVal = (key: keyof MarineData['hourly'], i: number): number | null => {
@@ -365,7 +379,7 @@ export default function Index() {
       value={date}
       min={minDate}
       max={maxDate}
-      onChange={e => handleDateChange(e.target.value)}
+      onChange={e => { setSelectedTime(null); handleDateChange(e.target.value); }}
       aria-label={t('index.dateLabel')}
       className="h-[42px] w-[132px] rounded-lg border border-border bg-secondary px-2 font-mono text-[0.78rem] text-foreground outline-none focus:border-primary sm:w-auto sm:px-2.5"
     />
@@ -574,7 +588,7 @@ export default function Index() {
             <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={t('index.swell', { value: cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—' })} color={waveColor(cardData.wh)} />
             <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-              <WeekForecastChart wx={wx} mar={mar} wxDetail={wxDetail} />
+              <WeekForecastChart wx={wx} mar={mar} wxDetail={wxDetail} selectedTime={selI !== undefined ? selectedTime : null} onSelectTime={handleSelectTime} />
             </div>
           </div>
         )}
@@ -662,13 +676,13 @@ export default function Index() {
                 const wi = windInfo(wd);
                 const wdir2 = wd2 !== null ? windInfo(wd2).short : '—';
                 const hour = h.time[idx].slice(11, 16);
-                const isCur = ri === curRow;
+                const isCur = ri === markRow;
 
                 const knots = Math.round(kmhToKnots(ws));
                 const rowStyle = windRowStyle(knots, settings.minWindKn);
 
                 return (
-                  <tr key={idx} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
+                  <tr key={idx} onClick={() => handleSelectTime(h.time[idx])} style={rowStyle.backgroundColor ? { backgroundColor: rowStyle.backgroundColor } : undefined} className={`cursor-pointer border-b border-border/40 transition-colors ${!rowStyle.backgroundColor ? 'hover:bg-primary/[0.03]' : ''} ${isCur ? 'ring-1 ring-primary' : ''}`}>
                     <td className={`py-2.5 pl-3.5 text-left ${isCur ? 'border-l-2 border-primary' : ''}`} style={rowStyle.color ? { color: rowStyle.color } : undefined}>{isCur ? '▶ ' : ''}{hour}</td>
                     <td className="text-center" style={{ color: rowStyle.color || undefined }}>{safeNum(temp, 1)}°</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || '#0ea5e9' }}>{safeNum(sst, 1)}°</td>
@@ -706,12 +720,12 @@ export default function Index() {
             const b = bft(ws);
             const wi = windInfo(wd);
             const hour = h.time[idx].slice(11, 16);
-            const isCur = ri === curRow;
+            const isCur = ri === markRow;
             const mobileKnots = Math.round(kmhToKnots(ws));
             const mobileRowStyle = windRowStyle(mobileKnots, settings.minWindKn);
 
             return (
-              <div key={idx} className={`rounded-lg border p-3 ${isCur ? 'border-primary/50' : 'border-border'}`} style={{ backgroundColor: mobileRowStyle.backgroundColor || undefined, color: mobileRowStyle.color || undefined }}>
+              <div key={idx} onClick={() => handleSelectTime(h.time[idx])} className={`cursor-pointer rounded-lg border p-3 ${isCur ? 'border-primary/50' : 'border-border'}`} style={{ backgroundColor: mobileRowStyle.backgroundColor || undefined, color: mobileRowStyle.color || undefined }}>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-display text-sm font-bold text-foreground">{isCur ? '▶ ' : ''}{hour}</span>
                   <span className="text-lg">{WX_ICON[code] || ''}</span>
