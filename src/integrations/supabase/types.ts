@@ -57,30 +57,36 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          kind: string | null
           last_service_at: string | null
           name: string
           photo_url: string | null
           service_interval_h: number | null
+          size: number | null
           user_id: string
         }
         Insert: {
           category_id: string
           created_at?: string
           id?: string
+          kind?: string | null
           last_service_at?: string | null
           name: string
           photo_url?: string | null
           service_interval_h?: number | null
+          size?: number | null
           user_id: string
         }
         Update: {
           category_id?: string
           created_at?: string
           id?: string
+          kind?: string | null
           last_service_at?: string | null
           name?: string
           photo_url?: string | null
           service_interval_h?: number | null
+          size?: number | null
           user_id?: string
         }
         Relationships: [
@@ -113,6 +119,7 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
+          weight_kg: number | null
           whatsapp_alert_enabled: boolean
           whatsapp_alert_lat: number | null
           whatsapp_alert_location: string | null
@@ -145,6 +152,7 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
+          weight_kg?: number | null
           whatsapp_alert_enabled?: boolean
           whatsapp_alert_lat?: number | null
           whatsapp_alert_location?: string | null
@@ -177,6 +185,7 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+          weight_kg?: number | null
           whatsapp_alert_enabled?: boolean
           whatsapp_alert_lat?: number | null
           whatsapp_alert_location?: string | null

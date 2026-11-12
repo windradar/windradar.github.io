@@ -27,6 +27,8 @@ export interface MaterialItem {
   photo_url?: string | null;
   service_interval_h?: number | null;
   last_service_at?: string | null;
+  kind?: string | null;
+  size?: number | null;
 }
 
 interface UsageSession {
@@ -57,7 +59,14 @@ function ItemUsage({ item, total, since, onServiced }: {
   const due = interval !== null && since >= interval;
   return (
     <div className="min-w-0 flex-1">
-      <div className="truncate font-medium">{item.name}</div>
+      <div className="truncate font-medium">
+        {item.name}
+        {item.kind && item.size != null && (
+          <span className="ml-1.5 font-normal text-muted-foreground">
+            {String(item.size).replace('.', ',')} {item.kind === 'sail' ? 'm²' : 'L'}
+          </span>
+        )}
+      </div>
       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.65rem] text-muted-foreground">
         <span>{total > 0 ? t('materials.usage.hoursUsed', { hours: fmtHours(total) }) : t('materials.usage.noUsage')}</span>
         {interval !== null && (
@@ -106,6 +115,8 @@ export default function MaterialsManager() {
   const [editItemName, setEditItemName] = useState('');
   const [newItem, setNewItem] = useState<Record<number, string>>({});
   const [editItemInterval, setEditItemInterval] = useState('');
+  const [editItemKind, setEditItemKind] = useState('');
+  const [editItemSize, setEditItemSize] = useState('');
   const [sessions, setSessions] = useState<UsageSession[]>([]);
 
   const load = useCallback(async () => {
@@ -217,6 +228,8 @@ export default function MaterialsManager() {
     setEditingItemId(it.id);
     setEditItemName(it.name);
     setEditItemInterval(it.service_interval_h ? String(it.service_interval_h) : '');
+    setEditItemKind(it.kind ?? '');
+    setEditItemSize(it.size != null ? String(it.size) : '');
   };
 
   const saveItem = async (id: string) => {
@@ -226,8 +239,12 @@ export default function MaterialsManager() {
     if (!name) { toast.error(t('materials.itemNameEmpty')); return; }
     const intervalNum = Math.round(Number(editItemInterval));
     const interval = editItemInterval.trim() && intervalNum >= 1 && intervalNum <= 10000 ? intervalNum : null;
+    const kind = editItemKind || null;
+    const sizeNum = Math.round(Number(editItemSize.replace(',', '.')) * 10) / 10;
+    if (kind && !(sizeNum > 0 && sizeNum <= 999)) { toast.error(t('materials.sizeRequired')); return; }
+    const size = kind ? sizeNum : null;
     const { error } = await supabase.from('material_items')
-      .update({ name, service_interval_h: interval }).eq('id', id);
+      .update({ name, service_interval_h: interval, kind, size }).eq('id', id);
     if (error) { toast.error(error.message); return; }
 
     // Keep the usage history: past sessions reference the material by name
@@ -245,7 +262,7 @@ export default function MaterialsManager() {
       setSessions(ss => ss.map(s => byId.get(s.id) ?? s));
     }
 
-    setItems(is => is.map(x => x.id === id ? { ...x, name, service_interval_h: interval } : x));
+    setItems(is => is.map(x => x.id === id ? { ...x, name, service_interval_h: interval, kind, size } : x));
     setEditingItemId(null);
     toast.success(t('materials.itemUpdated'));
   };
@@ -353,6 +370,36 @@ export default function MaterialsManager() {
                           />
                           h
                         </label>
+                        <select
+                          value={editItemKind}
+                          onChange={e => setEditItemKind(e.target.value)}
+                          aria-label={t('materials.kindLabel')}
+                          title={t('materials.kindLabel')}
+                          className="rounded border border-border bg-background px-1.5 py-1.5 text-xs outline-none focus:border-primary"
+                        >
+                          <option value="">{t('materials.kindOther')}</option>
+                          <option value="sail">{t('materials.kindSail')}</option>
+                          <option value="board">{t('materials.kindBoard')}</option>
+                        </select>
+                        {editItemKind && (
+                          <label htmlFor={`${intervalIdBase}-size-${it.id}`} className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
+                            <input
+                              id={`${intervalIdBase}-size-${it.id}`}
+                              type="number"
+                              inputMode="decimal"
+                              min={0.1}
+                              max={999}
+                              step={0.1}
+                              value={editItemSize}
+                              onChange={e => setEditItemSize(e.target.value)}
+                              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveItem(it.id); } }}
+                              aria-label={t('materials.sizeLabel')}
+                              placeholder={editItemKind === 'sail' ? '5,3' : '105'}
+                              className="w-16 rounded border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+                            />
+                            {editItemKind === 'sail' ? 'm²' : 'L'}
+                          </label>
+                        )}
                         <button onClick={() => saveItem(it.id)} aria-label={t('common.save')} className="rounded bg-primary p-2 text-primary-foreground">
                           <Check size={13} />
                         </button>

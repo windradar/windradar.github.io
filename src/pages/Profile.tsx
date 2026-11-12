@@ -26,6 +26,7 @@ export default function Profile() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [callmebotApiKey, setCallmebotApiKey] = useState('');
   const [windUnits, setWindUnits] = useState<WindUnit>('kn');
+  const [weightKg, setWeightKg] = useState('');
   // Saving before the profile loads would overwrite it with empty values
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -41,11 +42,14 @@ export default function Profile() {
     if (!user) return;
     supabase
       .from('profiles')
-      .select('display_name, whatsapp_number, callmebot_apikey, wind_units')
+      .select('display_name, whatsapp_number, callmebot_apikey, wind_units, weight_kg')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        // Leave saving disabled: an empty form must not overwrite a profile that failed to load
+        if (error) { toast.error(error.message); return; }
         if (data) {
+          setWeightKg(data.weight_kg != null ? String(data.weight_kg) : '');
           setDisplayName(data.display_name || '');
           setWhatsappNumber(data.whatsapp_number || '');
           setCallmebotApiKey(data.callmebot_apikey || '');
@@ -57,6 +61,9 @@ export default function Profile() {
 
   const saveProfile = async () => {
     if (!user || !profileLoaded) return;
+    const weightText = weightKg.trim().replace(',', '.');
+    const weight = weightText ? Math.round(Number(weightText) * 10) / 10 : null;
+    if (weight !== null && !(weight >= 30 && weight <= 200)) { toast.error(t('profile.weightInvalid')); return; }
     setSavingProfile(true);
     const cleanWa = whatsappNumber.replace(/\D/g, '');
     const { error } = await supabase.from('profiles').update({
@@ -64,6 +71,7 @@ export default function Profile() {
       whatsapp_number: cleanWa || null,
       callmebot_apikey: callmebotApiKey.trim() || null,
       wind_units: windUnits,
+      weight_kg: weight,
     }).eq('user_id', user.id);
     setSavingProfile(false);
     if (error) { toast.error(error.message); return; }
@@ -171,6 +179,23 @@ export default function Profile() {
                 ))}
               </div>
               <p className="mt-1.5 text-[0.65rem] text-muted-foreground">{t('profile.windUnitsHint')}</p>
+            </div>
+
+            <div>
+              <label htmlFor={`${uid}-weight`} className="block text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1">{t('profile.weightLabel')}</label>
+              <input
+                id={`${uid}-weight`}
+                type="number"
+                inputMode="decimal"
+                min={30}
+                max={200}
+                step={0.5}
+                value={weightKg}
+                onChange={e => setWeightKg(e.target.value)}
+                placeholder="75"
+                className="w-28 rounded-md border border-border bg-secondary px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <p className="mt-1.5 text-[0.65rem] text-muted-foreground">{t('profile.weightHint')}</p>
             </div>
 
             <button onClick={saveProfile} disabled={savingProfile || !profileLoaded}

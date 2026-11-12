@@ -101,11 +101,20 @@
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "whatsappNumber": "Numéro (sans + ni espaces)",
     "callmebotApiKey": "Clé API CallMeBot",
-    "callmebotHint": "Envoyez «I allow callmebot to send me messages» au +34 644 91 96 80 sur WhatsApp pour obtenir votre clé API."
+    "callmebotHint": "Envoyez «I allow callmebot to send me messages» au +34 644 91 96 80 sur WhatsApp pour obtenir votre clé API.",
+    "weightLabel": "Poids (kg)",
+    "weightHint": "Sert à vous recommander la voile selon le vent.",
+    "weightInvalid": "Le poids doit être compris entre 30 et 200 kg"
   },
   "materials": {
     "title": "Matériel",
-    "description": "Personnalisez le nom de chaque emplacement (Voiles, Planches...) et ajoutez votre matériel. Il apparaîtra en liste déroulante lors de l'enregistrement d'une session."
+    "description": "Personnalisez le nom de chaque emplacement (Voiles, Planches...) et ajoutez votre matériel. Il apparaîtra en liste déroulante lors de l'enregistrement d'une session.",
+    "kindLabel": "Type de matériel",
+    "kindOther": "Autre",
+    "kindSail": "Voile",
+    "kindBoard": "Planche",
+    "sizeLabel": "Taille",
+    "sizeRequired": "Indiquez la taille (m² de la voile ou litres de la planche)"
   },
   "storyCard": {
     "button": "Carte",
@@ -277,6 +286,23 @@
     "cookies": "Cookies",
     "terms": "Conditions",
     "configureCookies": "Paramètres des cookies"
+  },
+  "index": {
+    "gear": {
+      "title": "🏄 Matériel recommandé",
+      "sail": "Voile",
+      "board": "Planche",
+      "summary": "{{kn}} kn · idéal {{ideal}} m²",
+      "gusty": "Vent rafaleux",
+      "gustyAlt": "Vent rafaleux · alternative : {{name}} ({{size}} m²)",
+      "lightWind": "Pas assez de vent pour planer",
+      "overpowered": "Trop de vent pour votre matériel",
+      "addWeight": "Ajoutez votre poids dans le profil pour affiner la recommandation",
+      "disclaimer": "Recommandation indicative",
+      "signIn": "Connectez-vous pour voir votre matériel recommandé",
+      "addGear": "Ajoutez votre matériel",
+      "addGearHint": "Indiquez le type et la taille de vos voiles et planches"
+    }
   },
   "help": {
     "title": "Guide d'utilisation",

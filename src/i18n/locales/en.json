@@ -101,11 +101,20 @@
     "passwordMismatch": "Passwords do not match",
     "whatsappNumber": "Number (no + or spaces)",
     "callmebotApiKey": "CallMeBot API Key",
-    "callmebotHint": "Send «I allow callmebot to send me messages» to +34 644 91 96 80 on WhatsApp to get your API Key."
+    "callmebotHint": "Send «I allow callmebot to send me messages» to +34 644 91 96 80 on WhatsApp to get your API Key.",
+    "weightLabel": "Weight (kg)",
+    "weightHint": "Used to recommend a sail for the wind.",
+    "weightInvalid": "Weight must be between 30 and 200 kg"
   },
   "materials": {
     "title": "Materials",
-    "description": "Customise each slot name (Sails, Boards...) and add your equipment. They'll appear as a dropdown when logging a session."
+    "description": "Customise each slot name (Sails, Boards...) and add your equipment. They'll appear as a dropdown when logging a session.",
+    "kindLabel": "Gear type",
+    "kindOther": "Other",
+    "kindSail": "Sail",
+    "kindBoard": "Board",
+    "sizeLabel": "Size",
+    "sizeRequired": "Enter the size (sail m² or board litres)"
   },
   "storyCard": {
     "button": "Card",
@@ -277,6 +286,23 @@
     "cookies": "Cookies",
     "terms": "Terms",
     "configureCookies": "Cookie settings"
+  },
+  "index": {
+    "gear": {
+      "title": "🏄 Recommended gear",
+      "sail": "Sail",
+      "board": "Board",
+      "summary": "{{kn}} kn · ideal {{ideal}} m²",
+      "gusty": "Gusty wind",
+      "gustyAlt": "Gusty wind · alternative: {{name}} ({{size}} m²)",
+      "lightWind": "Too little wind to plane",
+      "overpowered": "Too much wind for your gear",
+      "addWeight": "Add your weight in your profile to fine-tune the recommendation",
+      "disclaimer": "Rough guidance only",
+      "signIn": "Sign in to see your recommended gear",
+      "addGear": "Add your gear",
+      "addGearHint": "Set the type and size of your sails and boards"
+    }
   },
   "help": {
     "title": "User guide",

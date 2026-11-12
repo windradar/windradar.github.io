@@ -233,7 +233,10 @@
     "passwordMismatch": "Les contrasenyes no coincideixen",
     "whatsappNumber": "Número (sense + ni espais)",
     "callmebotApiKey": "API Key CallMeBot",
-    "callmebotHint": "Envia «I allow callmebot to send me messages» al +34 644 91 96 80 per WhatsApp per obtenir la teva API Key."
+    "callmebotHint": "Envia «I allow callmebot to send me messages» al +34 644 91 96 80 per WhatsApp per obtenir la teva API Key.",
+    "weightLabel": "Pes (kg)",
+    "weightHint": "Es fa servir per recomanar-te la vela segons el vent.",
+    "weightInvalid": "El pes ha d'estar entre 30 i 200 kg"
   },
   "materials": {
     "loading": "Carregant materials...",
@@ -268,7 +271,13 @@
       "serviceDueMarkToday": "Revisió pendent · Revisat avui"
     },
     "title": "Materials",
-    "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió."
+    "description": "Personalitza el nom de cada slot (Veles, Taules...) i afegeix els teus materials. Apareixeran com a desplegable en registrar una sessió.",
+    "kindLabel": "Tipus de material",
+    "kindOther": "Altre",
+    "kindSail": "Vela",
+    "kindBoard": "Taula",
+    "sizeLabel": "Mida",
+    "sizeRequired": "Indica la mida (m² de la vela o litres de la taula)"
   },
   "storyCard": {
     "button": "Targeta",
@@ -587,7 +596,22 @@
     "shareFrom": "Des de",
     "shareTo": "Fins a",
     "shareBtn": "Compartir",
-    "copiedMsg": "Missatge copiat. Enganxa'l al WhatsApp Web (Ctrl+V)."
+    "copiedMsg": "Missatge copiat. Enganxa'l al WhatsApp Web (Ctrl+V).",
+    "gear": {
+      "title": "🏄 Material recomanat",
+      "sail": "Vela",
+      "board": "Taula",
+      "summary": "{{kn}} kn · ideal {{ideal}} m²",
+      "gusty": "Vent ratxat",
+      "gustyAlt": "Vent ratxat · alternativa: {{name}} ({{size}} m²)",
+      "lightWind": "Poc vent per planar",
+      "overpowered": "Massa vent per al teu material",
+      "addWeight": "Afegeix el teu pes al perfil per afinar la recomanació",
+      "disclaimer": "Recomanació orientativa",
+      "signIn": "Inicia la sessió per veure el teu material recomanat",
+      "addGear": "Afegeix el teu material",
+      "addGearHint": "Indica el tipus i la mida de les teves veles i taules"
+    }
   },
   "favorites": {
     "add": "Afegir a favorits",

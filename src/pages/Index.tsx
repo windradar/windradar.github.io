@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { WindVane } from '@/components/WindVane';
+import { RecommendedGearCard } from '@/components/RecommendedGearCard';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
 import { WindCharts } from '@/components/WindCharts';
 import { WindCompareChart } from '@/components/WindCompareChart';
@@ -538,6 +539,7 @@ export default function Index() {
               <WindVane direction={cardData.wd} color={windColor(cardData.ws)} />
             </div>
             <NowCard label={t('index.precipCard')} value={cardData.prec.toFixed(1)} unit="mm" sub={t('index.lastHour')} />
+            <RecommendedGearCard windKmh={cardData.ws} gustKmh={h?.wind_gusts_10m[refI] ?? null} />
             <WindWidget
               ws={cardData.ws} wd={cardData.wd} wg={cardData.wg}
               wsMin={h && allDayIdxs.length ? Math.min(...allDayIdxs.map(i => h.wind_speed_10m[i] || 0)) : null}

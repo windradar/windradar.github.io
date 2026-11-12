@@ -233,7 +233,10 @@
     "passwordMismatch": "Las contraseñas no coinciden",
     "whatsappNumber": "Número (sin + ni espacios)",
     "callmebotApiKey": "API Key CallMeBot",
-    "callmebotHint": "Envía «I allow callmebot to send me messages» al +34 644 91 96 80 por WhatsApp para obtener tu API Key."
+    "callmebotHint": "Envía «I allow callmebot to send me messages» al +34 644 91 96 80 por WhatsApp para obtener tu API Key.",
+    "weightLabel": "Peso (kg)",
+    "weightHint": "Se usa para recomendarte la vela según el viento.",
+    "weightInvalid": "El peso debe estar entre 30 y 200 kg"
   },
   "materials": {
     "loading": "Cargando materiales...",
@@ -268,7 +271,13 @@
       "serviceDueMarkToday": "Revisión pendiente · Revisado hoy"
     },
     "title": "Materiales",
-    "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión."
+    "description": "Personaliza el nombre de cada slot (Velas, Tablas...) y añade tus materiales. Aparecerán como desplegable al registrar una sesión.",
+    "kindLabel": "Tipo de material",
+    "kindOther": "Otro",
+    "kindSail": "Vela",
+    "kindBoard": "Tabla",
+    "sizeLabel": "Tamaño",
+    "sizeRequired": "Indica el tamaño (m² de la vela o litros de la tabla)"
   },
   "storyCard": {
     "button": "Tarjeta",
@@ -587,7 +596,22 @@
     "shareFrom": "Desde",
     "shareTo": "Hasta",
     "shareBtn": "Compartir",
-    "copiedMsg": "Mensaje copiado. Pégalo en WhatsApp Web (Ctrl+V)."
+    "copiedMsg": "Mensaje copiado. Pégalo en WhatsApp Web (Ctrl+V).",
+    "gear": {
+      "title": "🏄 Material recomendado",
+      "sail": "Vela",
+      "board": "Tabla",
+      "summary": "{{kn}} kn · ideal {{ideal}} m²",
+      "gusty": "Viento racheado",
+      "gustyAlt": "Viento racheado · alternativa: {{name}} ({{size}} m²)",
+      "lightWind": "Poco viento para planear",
+      "overpowered": "Demasiado viento para tu material",
+      "addWeight": "Añade tu peso en el perfil para afinar la recomendación",
+      "disclaimer": "Recomendación orientativa",
+      "signIn": "Inicia sesión para ver tu material recomendado",
+      "addGear": "Añade tu material",
+      "addGearHint": "Indica el tipo y el tamaño de tus velas y tablas"
+    }
   },
   "favorites": {
     "add": "Añadir a favoritos",
