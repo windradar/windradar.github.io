@@ -26,7 +26,7 @@ import {
   windInfo, bft, windColor, waveColor, dirArrow, kmhToKnots,
   WX_ICON, safeNum, localDateStr, humanDate,
   addToSearchHistory, getLastSearch, setLastSearch,
-  isFavorite, toggleFavorite, getFavorites, LANG_LOCALE, normalizeArome, windIndex,
+  isFavorite, toggleFavorite, getFavorites, LANG_LOCALE, normalizeArome, windIndex, preferWind100,
 } from '@/lib/weather-helpers';
 import { windRowStyle } from '@/lib/wind-row-color';
 import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
@@ -116,7 +116,7 @@ export default function Index() {
       if (signal.aborted) return;
       if (wxRes.error) throw new Error(wxRes.reason || 'Forecast API error');
       setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
-      setWx(wxRes);
+      setWx(preferWind100(wxRes));
       setMar(marRes);
     } else {
       // AROME HD 1.3 km 15 min (fallo silencioso) + seamless 7 días + marine
@@ -131,14 +131,14 @@ export default function Index() {
       if (signal.aborted) return;
       let detail: ReturnType<typeof normalizeArome> | null = null;
       try {
-        detail = aromeRaw && !aromeRaw.error ? normalizeArome(aromeRaw) : null;
+        detail = aromeRaw && !aromeRaw.error ? preferWind100(normalizeArome(aromeRaw)) : null;
       } catch {
         detail = null;
       }
       setWxDetail(detail);
       if (wxRes.error) throw new Error(wxRes.reason || 'Forecast API error');
       setApiUpdateTime(wxRes.generationtime_ms ? t('index.generatedIn', { ms: wxRes.generationtime_ms.toFixed(0) }) : null);
-      setWx(wxRes);
+      setWx(preferWind100(wxRes));
       setMar(marRes);
     }
 
@@ -652,20 +652,18 @@ export default function Index() {
           <table className="w-full min-w-[850px] border-collapse font-mono text-[0.88rem]">
             <thead>
               <tr className="bg-secondary">
-                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind', { unit: unitLabel }),t('index.tableGust', { unit: unitLabel }),t('index.tableWind100', { unit: unitLabel }),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
+                {[t('index.tableHour'),t('index.tableAir'),t('index.tableWater'),t('index.tableWind100', { unit: unitLabel }),t('index.tableGust', { unit: unitLabel }),t('index.tableDir'),t('index.tableName'),t('index.tableWave'),t('index.tableWaveDir'),t('index.tableWeather'),t('index.tablePrecip'),t('index.tableBft')].map(th => (
                   <th key={th} className="whitespace-nowrap border-b border-border px-2.5 py-2.5 text-center text-[0.6rem] font-medium uppercase tracking-widest text-muted-foreground">{th}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {!h || dayIdxs.length === 0 ? (
-                <tr><td colSpan={13} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
+                <tr><td colSpan={12} className="py-7 text-center text-sm text-muted-foreground">{t('index.noDataTable')}</td></tr>
               ) : dayIdxs.map((idx, ri) => {
                 const ws = h.wind_speed_10m[idx] || 0;
                 const wd = h.wind_direction_10m[idx] || 0;
                 const wg = h.wind_gusts_10m[idx] || 0;
-                const ws100 = h.wind_speed_100m?.[idx];
-                const wd100 = h.wind_direction_100m?.[idx];
                 const wh = marVal('wave_height', idx) || 0;
                 const wd2 = marVal('wave_direction', idx);
                 const sst = marVal('sea_surface_temperature', idx);
@@ -688,7 +686,6 @@ export default function Index() {
                     <td className="text-center font-medium" style={{ color: rowStyle.color || '#0ea5e9' }}>{safeNum(sst, 1)}°</td>
                     <td className="text-center font-bold text-[0.95rem]" style={{ color: rowStyle.color || windColor(ws) }}>{fmtWind(ws)}</td>
                     <td className="text-center font-semibold" style={{ color: rowStyle.color || windColor(wg) }}>{fmtWind(wg)}</td>
-                    <td className="text-center" style={{ color: rowStyle.color || (ws100 != null ? windColor(ws100) : undefined) }}>{ws100 != null ? <>{fmtWind(ws100)}{wd100 != null && <span className="ml-1 text-[0.72rem]">{dirArrow(wd100)}</span>}</> : '—'}</td>
                     <td className="text-center" style={rowStyle.color ? { color: rowStyle.color } : undefined}>{dirArrow(wd)} {wi.short} <span className="text-[0.72rem]">{Math.round(wd)}°</span></td>
                     <td className="text-center" style={{ color: rowStyle.color || windColor(ws) }}>{t(`wind.names.${windIndex(wd)}`)}</td>
                     <td className="text-center font-medium" style={{ color: rowStyle.color || waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</td>
@@ -711,7 +708,6 @@ export default function Index() {
             const ws = h.wind_speed_10m[idx] || 0;
             const wd = h.wind_direction_10m[idx] || 0;
             const wg = h.wind_gusts_10m[idx] || 0;
-            const ws100 = h.wind_speed_100m?.[idx];
             const wh = marVal('wave_height', idx) || 0;
             const sst = marVal('sea_surface_temperature', idx);
             const temp = h.temperature_2m[idx];
@@ -743,11 +739,6 @@ export default function Index() {
                     <span className="text-muted-foreground text-[0.7rem]">🧭 </span>
                     <span className="font-medium">{dirArrow(wd)} {wi.short}</span>
                   </div>
-                  {ws100 != null && (
-                    <div className="col-span-3 -mt-1 text-[0.72rem] text-muted-foreground">
-                      100 m: <span className="font-semibold" style={{ color: windColor(ws100) }}>{fmtWind(ws100)} {unitLabel}</span>
-                    </div>
-                  )}
                   <div>
                     <span className="text-muted-foreground text-[0.7rem]">🌊 </span>
                     <span className="font-medium" style={{ color: waveColor(wh) }}>{wh ? wh.toFixed(1) + 'm' : '—'}</span>

@@ -142,7 +142,7 @@
     "arrowLabel": "{{speed}} {{unit}} de {{dir}}",
     "openForecast": "Veure previsió",
     "globalModel": "Model global",
-    "legend": "Vent",
+    "legend": "Vent 100 m",
     "hint": "Les fletxes indiquen cap on bufa. Toca un favorit per veure'n la previsió."
   },
   "nav": {
@@ -471,13 +471,13 @@
     "testPushError": "Error en enviar la notificació de prova."
   },
   "chart": {
-    "windSeries": "Vent ({{unit}})",
+    "windSeries": "Vent 100 m ({{unit}})",
     "gustSeries": "Ratxes ({{unit}})",
     "waveSeries": "Onada (m)",
     "airSeries": "Aire °C",
     "waterSeries": "Aigua °C",
-    "windTitleArome": "💨 Vent i ratxes ({{unit}}) · AROME HD dies 1-2 · Seamless dies 3-4",
-    "windTitle4Days": "💨 Vent i ratxes ({{unit}}) · 4 dies",
+    "windTitleArome": "💨 Vent 100 m i ratxes ({{unit}}) · AROME HD dies 1-2 · Seamless dies 3-4",
+    "windTitle4Days": "💨 Vent 100 m i ratxes ({{unit}}) · 4 dies",
     "waveTitle": "🌊 Alçada d'onada (m)",
     "tempTitle": "🌡️ Temperatura aire / aigua (°C)",
     "aromeDays12": "AROME HD · dies 1-2",
@@ -491,7 +491,7 @@
     "comparePrompt": "Selecciona una data per comparar-la amb avui ({{date}})",
     "compareError": "No s'han pogut carregar les dades d'aquesta data. Torna-ho a provar.",
     "forecast7days": "🌬️ Previsió 7 dies · cada 2h",
-    "wind": "Vent (kn)",
+    "wind": "Vent 100 m (kn)",
     "gust": "Ratxa",
     "direction": "🧭 Direcció"
   },
@@ -558,7 +558,7 @@
     "featureForecast": "Previsió 7 dies hora a hora",
     "featureWave": "Onatge i temperatura del mar",
     "featureShare": "Comparteix la previsió per WhatsApp",
-    "windCard": "💨 Vent",
+    "windCard": "💨 Vent 100 m",
     "precipCard": "☔ Precipitació",
     "waveCard": "🌊 Alçada d'ona",
     "airTempCard": "🌡️ Temp. aire",

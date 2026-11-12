@@ -35,6 +35,18 @@ function kmhToKn(kmh: number): number {
   return kmh * 0.539957
 }
 
+// Same rule as the app: wind at 100 m, or at 10 m for the hours with no 100 m value
+// deno-lint-ignore no-explicit-any
+function preferWind100(h: any): void {
+  const s100 = h?.wind_speed_100m
+  if (!Array.isArray(s100)) return
+  for (let i = 0; i < s100.length; i++) {
+    if (s100[i] == null) continue
+    h.wind_speed_10m[i] = s100[i]
+    if (h.wind_direction_100m?.[i] != null) h.wind_direction_10m[i] = h.wind_direction_100m[i]
+  }
+}
+
 function wmoEmoji(code: number): string {
   if (code === 0) return '☀️'
   if (code <= 2) return '🌤️'
@@ -164,7 +176,7 @@ Deno.serve(async (req) => {
       continue
     }
     try {
-      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${u.whatsapp_alert_lat}&longitude=${u.whatsapp_alert_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,weathercode&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
+      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${u.whatsapp_alert_lat}&longitude=${u.whatsapp_alert_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,weathercode&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${u.whatsapp_alert_lat}&longitude=${u.whatsapp_alert_lon}&hourly=wave_height&timezone=auto&forecast_days=1`
 
       const [wxRes, marRes] = await Promise.all([
@@ -192,6 +204,7 @@ Deno.serve(async (req) => {
       const rangeTo: string    = u.whatsapp_alert_range_to   ?? '20:00'
       const threshold: number  = u.email_notif_min_wind      ?? 10
       const h                  = wxRes.hourly
+      preferWind100(h)
       const todayLocal: string = h.time[0]?.slice(0, 10) ?? nowUtc.toISOString().slice(0, 10)
 
       let hasWind = false

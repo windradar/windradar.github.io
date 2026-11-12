@@ -109,6 +109,32 @@ export interface WeatherData {
   };
 }
 
+interface WindHourly {
+  wind_speed_10m: (number | null)[];
+  wind_direction_10m?: (number | null)[];
+  wind_speed_100m?: (number | null)[];
+  wind_direction_100m?: (number | null)[];
+}
+
+// The app shows wind at 100 m. Where a source has no 100 m value for an hour, the 10 m one
+// stays. Applied once on load, over the 10 m fields, so every card, table and chart reads
+// the same series without each one repeating the fallback.
+export function preferWind100<T extends { hourly: WindHourly }>(data: T): T {
+  const h = data.hourly;
+  const s100 = h.wind_speed_100m;
+  if (!s100) return data;
+  return {
+    ...data,
+    hourly: {
+      ...h,
+      wind_speed_10m: h.wind_speed_10m.map((v, i) => s100[i] ?? v),
+      ...(h.wind_direction_10m && {
+        wind_direction_10m: h.wind_direction_10m.map((v, i) => (s100[i] != null ? h.wind_direction_100m?.[i] ?? v : v)),
+      }),
+    },
+  } as T;
+}
+
 export interface MarineData {
   hourly: {
     time: string[];

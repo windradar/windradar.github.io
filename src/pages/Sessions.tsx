@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { SearchWithSuggestions } from '@/components/SearchSuggestions';
-import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow } from '@/lib/weather-helpers';
+import { kmhToKnots, localDateStr, humanDate, windInfo, dirArrow, preferWind100 } from '@/lib/weather-helpers';
 import MaterialSelect from '@/components/MaterialSelect';
 import SportSelect from '@/components/SportSelect';
 import type { Sport } from '@/components/MaterialsManager';
@@ -109,9 +109,9 @@ export default function Sessions() {
 
       let url: string;
       if (!isPast) {
-        url = `https://api.open-meteo.com/v1/forecast?latitude=${locLat}&longitude=${locLon}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&start_date=${date}&end_date=${date}`;
+        url = `https://api.open-meteo.com/v1/forecast?latitude=${locLat}&longitude=${locLon}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m&wind_speed_unit=kmh&timezone=auto&start_date=${date}&end_date=${date}`;
       } else {
-        url = `https://archive-api.open-meteo.com/v1/archive?latitude=${locLat}&longitude=${locLon}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&start_date=${date}&end_date=${date}`;
+        url = `https://archive-api.open-meteo.com/v1/archive?latitude=${locLat}&longitude=${locLon}&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m&wind_speed_unit=kmh&timezone=auto&start_date=${date}&end_date=${date}`;
       }
       const marUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${locLat}&longitude=${locLon}&hourly=wave_height&timezone=auto&start_date=${date}&end_date=${date}`;
 
@@ -121,21 +121,22 @@ export default function Sessions() {
       ]);
 
       if (!wxRes.hourly) throw new Error(t('sessions.noDataForDate'));
+      const hourly = preferWind100(wxRes).hourly;
 
       const snap: Snapshot[] = [];
-      for (let i = 0; i < wxRes.hourly.time.length; i++) {
-        const t = wxRes.hourly.time[i];
+      for (let i = 0; i < hourly.time.length; i++) {
+        const t = hourly.time[i];
         const hr = t.slice(11, 16);
         if (hr < startH || hr > endH) continue;
-        const wd = wxRes.hourly.wind_direction_10m[i] || 0;
+        const wd = hourly.wind_direction_10m[i] || 0;
         snap.push({
           hour: hr,
-          wind_kn: Math.round(kmhToKnots(wxRes.hourly.wind_speed_10m[i] || 0)),
-          gust_kn: Math.round(kmhToKnots(wxRes.hourly.wind_gusts_10m[i] || 0)),
+          wind_kn: Math.round(kmhToKnots(hourly.wind_speed_10m[i] || 0)),
+          gust_kn: Math.round(kmhToKnots(hourly.wind_gusts_10m[i] || 0)),
           dir_deg: Math.round(wd),
           dir_short: windInfo(wd).short,
           wave_m: marRes?.hourly?.wave_height?.[i] ?? null,
-          temp: wxRes.hourly.temperature_2m[i] ?? null,
+          temp: hourly.temperature_2m[i] ?? null,
         });
       }
       if (!snap.length) throw new Error(t('sessions.noDataForRange'));

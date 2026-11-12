@@ -258,7 +258,7 @@
   },
   "chart": {
     "forecast7days": "🌬️ 7-day forecast · every 2h",
-    "wind": "Wind (kn)",
+    "wind": "Wind 100 m (kn)",
     "gust": "Gust",
     "direction": "🧭 Direction"
   },

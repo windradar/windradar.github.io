@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Star } from 'lucide-react';
-import { type FavoriteSpot, windColor, dirArrow, kmhToKnots } from '@/lib/weather-helpers';
+import { type FavoriteSpot, windColor, dirArrow, kmhToKnots, preferWind100 } from '@/lib/weather-helpers';
 import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 
 interface Props {
@@ -19,6 +19,8 @@ interface SpotHourly {
   wind_speed_10m: (number | null)[];
   wind_gusts_10m: (number | null)[];
   wind_direction_10m: (number | null)[];
+  wind_speed_100m?: (number | null)[];
+  wind_direction_100m?: (number | null)[];
 }
 
 interface DaySummary {
@@ -38,12 +40,12 @@ async function fetchAll(favs: FavoriteSpot[], signal: AbortSignal): Promise<Spot
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL) return hit.data;
   // One request for every favourite: Open-Meteo accepts comma-separated coordinates
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${favs.map(f => f.lat).join(',')}&longitude=${favs.map(f => f.lon).join(',')}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=2`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${favs.map(f => f.lat).join(',')}&longitude=${favs.map(f => f.lon).join(',')}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m&wind_speed_unit=kmh&timezone=auto&forecast_days=2`;
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
   const list = (Array.isArray(json) ? json : [json]) as { hourly: SpotHourly }[];
-  const data = list.map(x => x.hourly);
+  const data = list.map(x => preferWind100(x).hourly);
   cache.set(key, { at: Date.now(), data });
   return data;
 }

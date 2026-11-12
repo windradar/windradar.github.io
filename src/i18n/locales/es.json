@@ -142,7 +142,7 @@
     "arrowLabel": "{{speed}} {{unit}} del {{dir}}",
     "openForecast": "Ver previsión",
     "globalModel": "Modelo global",
-    "legend": "Viento",
+    "legend": "Viento 100 m",
     "hint": "Las flechas indican hacia dónde sopla. Toca un favorito para ver su previsión."
   },
   "nav": {
@@ -471,13 +471,13 @@
     "testPushError": "Error al enviar la notificación de prueba."
   },
   "chart": {
-    "windSeries": "Viento ({{unit}})",
+    "windSeries": "Viento 100 m ({{unit}})",
     "gustSeries": "Ráfagas ({{unit}})",
     "waveSeries": "Ola (m)",
     "airSeries": "Aire °C",
     "waterSeries": "Agua °C",
-    "windTitleArome": "💨 Viento y ráfagas ({{unit}}) · AROME HD días 1-2 · Seamless días 3-4",
-    "windTitle4Days": "💨 Viento y ráfagas ({{unit}}) · 4 días",
+    "windTitleArome": "💨 Viento 100 m y ráfagas ({{unit}}) · AROME HD días 1-2 · Seamless días 3-4",
+    "windTitle4Days": "💨 Viento 100 m y ráfagas ({{unit}}) · 4 días",
     "waveTitle": "🌊 Altura de ola (m)",
     "tempTitle": "🌡️ Temperatura aire / agua (°C)",
     "aromeDays12": "AROME HD · días 1-2",
@@ -491,7 +491,7 @@
     "comparePrompt": "Selecciona una fecha para comparar con hoy ({{date}})",
     "compareError": "No se pudieron cargar los datos de esa fecha. Inténtalo de nuevo.",
     "forecast7days": "🌬️ Previsión 7 días · cada 2h",
-    "wind": "Viento (kn)",
+    "wind": "Viento 100 m (kn)",
     "gust": "Ráfaga",
     "direction": "🧭 Dirección"
   },
@@ -558,7 +558,7 @@
     "featureForecast": "Previsión 7 días hora a hora",
     "featureWave": "Oleaje y temperatura del mar",
     "featureShare": "Comparte la previsión por WhatsApp",
-    "windCard": "💨 Viento",
+    "windCard": "💨 Viento 100 m",
     "precipCard": "☔ Precipitación",
     "waveCard": "🌊 Altura ola",
     "airTempCard": "🌡️ Temp. aire",

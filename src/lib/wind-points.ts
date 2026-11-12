@@ -49,7 +49,7 @@ export async function fetchWindPoints(
   if (hit && Date.now() - hit.at < CACHE_TTL) return hit.data;
 
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lons.join(',')}`
-    + `&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&models=${AROME},${GLOBAL}`
+    + `&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m&models=${AROME},${GLOBAL}`
     + '&wind_speed_unit=kmh&timezone=auto&forecast_days=2';
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -67,8 +67,10 @@ export async function fetchWindPoints(
         const aromeSpeed = pick(h, 'wind_speed_10m', AROME, i);
         const aromeDir = pick(h, 'wind_direction_10m', AROME, i);
         const model = aromeSpeed !== null && aromeDir !== null ? AROME : GLOBAL;
-        const speed = pick(h, 'wind_speed_10m', model, i);
-        const dir = pick(h, 'wind_direction_10m', model, i);
+        // Wind at 100 m, like the rest of the app; 10 m where the model has no 100 m value
+        const speed100 = pick(h, 'wind_speed_100m', model, i);
+        const speed = speed100 ?? pick(h, 'wind_speed_10m', model, i);
+        const dir = (speed100 !== null ? pick(h, 'wind_direction_100m', model, i) : null) ?? pick(h, 'wind_direction_10m', model, i);
         hours.push(speed === null || dir === null ? null : {
           speedKmh: speed,
           gustKmh: pick(h, 'wind_gusts_10m', model, i) ?? speed,

@@ -14,7 +14,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { WeatherData } from '@/lib/weather-helpers';
-import { localDateStr, humanDate, LANG_LOCALE } from '@/lib/weather-helpers';
+import { localDateStr, humanDate, LANG_LOCALE, preferWind100 } from '@/lib/weather-helpers';
 import { useWindUnit, convertKmh, WIND_UNIT_LABEL } from '@/lib/wind-units';
 import { useChartTheme } from '@/hooks/useChartTheme';
 
@@ -22,6 +22,7 @@ interface WindApiResponse {
   hourly: {
     wind_speed_10m: number[];
     wind_gusts_10m: number[];
+    wind_speed_100m?: number[];
   };
   error?: boolean;
   reason?: string;
@@ -81,20 +82,20 @@ export const WindCompareChart = memo(function WindCompareChart({ lat, lon, wxDet
     try {
       const isPast = selectedDate < today;
       const compareUrl = isPast
-        ? `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`
-        : `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`;
+        ? `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_speed_100m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`
+        : `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_speed_100m&wind_speed_unit=kmh&timezone=auto&start_date=${selectedDate}&end_date=${selectedDate}`;
 
       const cRes = await fetch(compareUrl).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
       if (cRes.error) throw new Error(cRes.reason || 'API error');
-      setCompareData(cRes);
+      setCompareData(preferWind100(cRes));
 
       // Today's line: prefer AROME HD if available
       if (wxDetail) {
         setTodayData(aromeToHourlyResponse(wxDetail));
       } else {
-        const todayUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&start_date=${today}&end_date=${today}`;
+        const todayUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_speed_100m&wind_speed_unit=kmh&timezone=auto&start_date=${today}&end_date=${today}`;
         const tRes = await fetch(todayUrl).then(r => r.json());
-        setTodayData(tRes);
+        setTodayData(preferWind100(tRes));
       }
     } catch (e) {
       console.error('Compare chart error:', e);

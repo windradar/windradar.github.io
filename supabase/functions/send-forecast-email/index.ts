@@ -24,6 +24,18 @@ const CORS_HEADERS = {
 
 function kmhToKn(kmh: number) { return kmh / 1.852; }
 
+// Same rule as the app: wind at 100 m, or at 10 m for the hours with no 100 m value
+// deno-lint-ignore no-explicit-any
+function preferWind100(h: any): void {
+  const s100 = h?.wind_speed_100m;
+  if (!Array.isArray(s100)) return;
+  for (let i = 0; i < s100.length; i++) {
+    if (s100[i] == null) continue;
+    h.wind_speed_10m[i] = s100[i];
+    if (h.wind_direction_100m?.[i] != null) h.wind_direction_10m[i] = h.wind_direction_100m[i];
+  }
+}
+
 function wmoEmoji(code: number) {
   if (code === 0) return '☀️';
   if (code <= 2)  return '🌤️';
@@ -255,8 +267,9 @@ Deno.serve(async (req) => {
       continue;
     }
     try {
-      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.email_notif_lat}&longitude=${p.email_notif_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,weathercode&wind_speed_unit=kmh&timezone=Europe%2FMadrid&forecast_days=1`;
+      const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.email_notif_lat}&longitude=${p.email_notif_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m,weathercode&wind_speed_unit=kmh&timezone=Europe%2FMadrid&forecast_days=1`;
       const wx   = await (await fetch(wxUrl)).json();
+      preferWind100(wx.hourly);
       const html = buildHtml(p as ProfileRow, wx.hourly as WxHourly, dateLabel);
       const location = String(p.email_notif_location ?? '').replace(/\s+/g, ' ').slice(0, 80);
       const subject = `💨 Previsión ${location} · ${currentHour}`;

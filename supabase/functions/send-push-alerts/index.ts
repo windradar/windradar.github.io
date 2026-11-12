@@ -38,6 +38,18 @@ function kmhToKn(kmh: number): number {
   return kmh * 0.539957
 }
 
+// Same rule as the app: wind at 100 m, or at 10 m for the hours with no 100 m value
+// deno-lint-ignore no-explicit-any
+function preferWind100(h: any): void {
+  const s100 = h?.wind_speed_100m
+  if (!Array.isArray(s100)) return
+  for (let i = 0; i < s100.length; i++) {
+    if (s100[i] == null) continue
+    h.wind_speed_10m[i] = s100[i]
+    if (h.wind_direction_100m?.[i] != null) h.wind_direction_10m[i] = h.wind_direction_100m[i]
+  }
+}
+
 function hourLabel(hr: string): string {
   return hr.slice(0, 2).replace(/^0/, '')
 }
@@ -121,7 +133,7 @@ async function buildPayload(
       : null
   }
 
-  const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.whatsapp_alert_lat}&longitude=${p.whatsapp_alert_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
+  const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${p.whatsapp_alert_lat}&longitude=${p.whatsapp_alert_lon}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_100m,wind_direction_100m&wind_speed_unit=kmh&timezone=auto&forecast_days=1`
   const wx = await fetch(wxUrl).then(r => r.json())
 
   // Profiles saved before the tz column existed
@@ -141,6 +153,7 @@ async function buildPayload(
   const threshold = p.email_notif_min_wind      ?? 10
   const location  = p.whatsapp_alert_location   ?? 'tu spot'
   const h = wx.hourly
+  preferWind100(h)
 
   let firstWindy: string | null = null
   let lastWindy: string | null = null
