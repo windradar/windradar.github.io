@@ -256,6 +256,28 @@
     "testPushNoDevice": "Aucun appareil n'est activé pour recevoir le test.",
     "testPushError": "Erreur lors de l'envoi de la notification de test."
   },
+  "station": {
+    "realBanner": "Données réelles de {{name}} : vent, rafale, direction, température et pluie. Vagues, eau et ciel sont des prévisions.",
+    "rainNow": "maintenant",
+    "featured": "Spot vedette",
+    "title": "Station en direct",
+    "live": "EN DIRECT",
+    "now": "Mis à jour à l’instant",
+    "updated": "Mis à jour il y a {{ago}}",
+    "offline": "Station hors ligne",
+    "lastSeen": "Dernière mesure il y a {{ago}}",
+    "agoMin": "{{n}} min",
+    "agoHour": "{{n}} h",
+    "wind": "Vent réel",
+    "gust": "Rafale",
+    "vsForecast": "Réel {{real}} {{unit}} · Prévision {{forecast}} {{unit}}",
+    "temp": "Temp.",
+    "rain": "Pluie",
+    "uv": "UV",
+    "chartTitle": "6 dernières heures",
+    "windSeries": "Vent moyen ({{unit}})",
+    "gustSeries": "Rafales ({{unit}})"
+  },
   "chart": {
     "forecast7days": "🌬️ Prévisions 7 jours · toutes les 2h",
     "wind": "Vent 100 m (kn)",

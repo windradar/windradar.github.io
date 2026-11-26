@@ -65,22 +65,22 @@ export function RecommendedGearCard({ windKmh, gustKmh }: { windKmh: number; gus
         : t(`index.gear.${w}`));
     body = (
       <>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {rows.map(r => (
             <div key={r.label} className="flex items-baseline gap-1.5">
-              <span className="text-[0.62rem] uppercase tracking-wide text-muted-foreground/60">{r.label}</span>
-              <span className="min-w-0 truncate font-display text-sm font-bold leading-tight">{r.item!.name}</span>
-              <span className="ml-auto whitespace-nowrap text-[0.7rem] font-semibold text-foreground/80">{num(r.item!.size)} {r.unit}</span>
+              <span className="text-[0.7rem] uppercase tracking-wide text-muted-foreground/60">{r.label}</span>
+              <span className="min-w-0 truncate font-display text-base font-bold leading-tight">{r.item!.name}</span>
+              <span className="ml-auto whitespace-nowrap text-[0.8rem] font-semibold text-foreground/80">{num(r.item!.size)} {r.unit}</span>
             </div>
           ))}
         </div>
-        <div className="mt-1.5 text-[0.62rem] text-muted-foreground">
+        <div className="mt-2 text-[0.72rem] text-muted-foreground">
           {rec.idealSailM2 !== null
             ? t('index.gear.summary', { kn: rec.windKn, ideal: num(rec.idealSailM2) })
             : `${rec.windKn} kn`}
         </div>
         {warnings.map(w => (
-          <div key={w} className="mt-0.5 text-[0.62rem] font-medium text-amber-500">{w}</div>
+          <div key={w} className="mt-0.5 text-[0.72rem] font-medium text-amber-500">{w}</div>
         ))}
         {gear?.weightKg == null && (
           <Link to="/profile" className="mt-0.5 block text-[0.62rem] text-muted-foreground underline-offset-2 hover:text-primary hover:underline">
@@ -96,10 +96,10 @@ export function RecommendedGearCard({ windKmh, gustKmh }: { windKmh: number; gus
     <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
+      className="relative overflow-hidden rounded-lg border border-border bg-card p-3.5 transition-all hover:-translate-y-0.5 hover:border-primary/50"
     >
       <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
-      <div className="mb-1.5 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.gear.title')}</div>
+      <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{t('index.gear.title')}</div>
       {body}
     </m.div>
   );

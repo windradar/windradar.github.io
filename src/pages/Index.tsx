@@ -15,6 +15,9 @@ import { LegalFooter } from '@/components/LegalFooter';
 import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { FavoritesPanel } from '@/components/FavoritesPanel';
+import { LiveStationCard } from '@/components/LiveStationCard';
+import { useLiveStations, useNow } from '@/hooks/useStations';
+import { nearestStation, isFresh, knToKmh, type Station } from '@/lib/stations';
 import { FAVORITES_SYNCED_EVENT } from '@/lib/favorites-sync';
 import { Star, Map as MapIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -167,15 +170,35 @@ export default function Index() {
     }
   }, [fetchWeather, date, t]);
 
-  // Auto-load last search on mount
-  useEffect(() => {
-    const last = getLastSearch();
-    if (last) {
-      doSearch(last.name, last.lat, last.lon);
+  const live = useLiveStations();
+
+  // On entry everyone gets the featured station's spot first. Without one (or if the
+  // station list is slow or offline) it falls back to the last search.
+  const entryDoneRef = useRef(false);
+  const doSearchRef = useRef(doSearch);
+  doSearchRef.current = doSearch;
+  const runEntry = useCallback((featured: Station | undefined) => {
+    if (entryDoneRef.current) return;
+    entryDoneRef.current = true;
+    if (featured) {
+      doSearchRef.current(featured.name, featured.lat, featured.lon);
+      return;
     }
-    return () => fetchAbortRef.current?.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const last = getLastSearch();
+    if (last) doSearchRef.current(last.name, last.lat, last.lon);
   }, []);
+
+  useEffect(() => {
+    if (live.loaded) runEntry(live.stations.find(s => s.is_featured));
+  }, [live.loaded, live.stations, runEntry]);
+
+  useEffect(() => {
+    const id = setTimeout(() => runEntry(undefined), 2500);
+    return () => {
+      clearTimeout(id);
+      fetchAbortRef.current?.abort();
+    };
+  }, [runEntry]);
 
   // Favourites merged from the account after login
   useEffect(() => {
@@ -353,6 +376,30 @@ export default function Index() {
     }) ?? null;
   }, [lat, lon, name, settings.spots]);
 
+  const liveStation = useMemo(
+    () => (lat !== null && lon !== null ? nearestStation(live.stations, lat, lon) : null),
+    [live.stations, lat, lon],
+  );
+  const nowTick = useNow();
+  // The top cards show "now": real station data replaces the forecast only when the
+  // spot has a fresh reading, today is selected and no other hour was picked
+  const liveReading = liveStation ? live.latest[liveStation.id] : undefined;
+  const real = isFresh(liveReading, nowTick) && date === today && selI === undefined ? liveReading : null;
+  const top = cardData ? (() => {
+    if (!real) return { ...cardData, gustKmh: h?.wind_gusts_10m[refI] ?? null, isReal: false };
+    const ws = knToKmh(real.wind_speed_kn ?? 0);
+    const wg = real.wind_gust_kn !== null ? knToKmh(real.wind_gust_kn) : ws;
+    return {
+      ...cardData,
+      ws, wg,
+      wd: real.wind_dir_deg ?? cardData.wd,
+      temp: real.temp_c ?? cardData.temp,
+      prec: real.rain_rate_mm ?? cardData.prec,
+      gustKmh: wg,
+      isReal: true,
+    };
+  })() : null;
+
   const isBigDay = useMemo(() => {
     const hourly = wx?.hourly;
     if (!hourly) return false;
@@ -521,6 +568,7 @@ export default function Index() {
           currentLat={lat}
           currentLon={lon}
           onSelect={doSearch}
+          live={live}
         />
 
         <SectionTitle>{t('index.conditionsTitle')}</SectionTitle>
@@ -547,50 +595,62 @@ export default function Index() {
               </ul>
             </div>
           </div>
-        ) : cardData && (
+        ) : top && (
+          <>
+          {top.isReal && liveStation && (
+            <div className="mb-2 flex items-center gap-2 text-[0.7rem] text-muted-foreground">
+              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#44cc88]" aria-hidden />
+              <span className="font-bold uppercase tracking-wider text-[#44cc88]">{t('station.live')}</span>
+              <span>{t('station.realBanner', { name: liveStation.name })}</span>
+            </div>
+          )}
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
-              <WindVane direction={cardData.wd} color={windColor(cardData.ws)} />
+              <WindVane direction={top.wd} color={windColor(top.ws)} />
             </div>
-            <NowCard label={t('index.precipCard')} value={cardData.prec.toFixed(1)} unit="mm" sub={t('index.lastHour')} />
-            <RecommendedGearCard windKmh={cardData.ws} gustKmh={h?.wind_gusts_10m[refI] ?? null} />
             <WindWidget
-              ws={cardData.ws} wd={cardData.wd} wg={cardData.wg}
-              wsMin={h && allDayIdxs.length ? Math.min(...allDayIdxs.map(i => h.wind_speed_10m[i] || 0)) : null}
-              color={windColor(cardData.ws)}
+              ws={top.ws} wd={top.wd} wg={top.wg}
+              wsMin={!top.isReal && h && allDayIdxs.length ? Math.min(...allDayIdxs.map(i => h.wind_speed_10m[i] || 0)) : null}
+              color={windColor(top.ws)}
             />
+            <RecommendedGearCard windKmh={top.ws} gustKmh={top.gustKmh} />
+            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={t('index.swell', { value: cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—' })} color={waveColor(cardData.wh)} />
             <m.div
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
+              className="relative flex flex-col justify-center overflow-hidden rounded-lg border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 sm:p-5"
             >
               <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
-              <div className="mb-1.5 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.tempCard')}</div>
-              <div className="flex items-end gap-3">
+              <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{t('index.tempCard')}</div>
+              <div className="flex items-end gap-3 sm:gap-5">
                 <div>
-                  <div className="mb-0.5 text-[0.62rem] uppercase tracking-wide text-muted-foreground/60">{t('index.air')}</div>
-                  <div className="font-display text-xl font-bold leading-none">
-                    {safeNum(cardData.temp, 1)}<span className="ml-0.5 text-[0.65rem] font-normal text-muted-foreground"> °C</span>
+                  <div className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground/60">{t('index.air')}</div>
+                  <div className="font-display text-3xl font-bold leading-none sm:text-4xl lg:text-5xl">
+                    {safeNum(top.temp, 1)}<span className="ml-0.5 text-sm font-normal text-muted-foreground sm:text-base"> °C</span>
                   </div>
                 </div>
                 {cardData.sst !== null && (
                   <>
-                    <span className="mb-1 text-muted-foreground/40">·</span>
+                    <span className="mb-1.5 text-xl text-muted-foreground/40">·</span>
                     <div>
-                      <div className="mb-0.5 text-[0.62rem] uppercase tracking-wide text-muted-foreground/60">{t('index.water')}</div>
-                      <div className="font-display text-xl font-bold leading-none" style={{ color: '#4dd9ff' }}>
-                        {safeNum(cardData.sst, 1)}<span className="ml-0.5 text-[0.65rem] font-normal text-muted-foreground"> °C</span>
+                      <div className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground/60">{t('index.water')}</div>
+                      <div className="font-display text-3xl font-bold leading-none sm:text-4xl lg:text-5xl" style={{ color: '#4dd9ff' }}>
+                        {safeNum(cardData.sst, 1)}<span className="ml-0.5 text-sm font-normal text-muted-foreground sm:text-base"> °C</span>
                       </div>
                     </div>
                   </>
                 )}
               </div>
             </m.div>
-            <NowCard label={t('index.waveCard')} value={cardData.wh ? cardData.wh.toFixed(1) : '—'} unit="m" sub={t('index.swell', { value: cardData.swh !== null ? cardData.swh.toFixed(1) + ' m' : '—' })} color={waveColor(cardData.wh)} />
             <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
+            <NowCard
+              label={t('index.precipCard')} value={top.prec.toFixed(1)}
+              unit={top.isReal ? 'mm/h' : 'mm'} sub={top.isReal ? t('station.rainNow') : t('index.lastHour')}
+            />
             <div className="col-span-2 sm:col-span-3 lg:col-span-4">
               <WeekForecastChart wx={wx} mar={mar} wxDetail={wxDetail} selectedTime={selI !== undefined ? selectedTime : null} onSelectTime={handleSelectTime} />
             </div>
           </div>
+          </>
         )}
 
         {/* Actions row */}
@@ -758,6 +818,14 @@ export default function Index() {
           })}
         </div>
 
+        {liveStation && (
+          <LiveStationCard
+            station={liveStation}
+            latest={live.latest[liveStation.id]}
+            forecastKmh={h && date === today && curRow >= 0 ? (h.wind_speed_10m[dayIdxs[curRow]] ?? null) : null}
+          />
+        )}
+
         {/* Charts */}
         {wx && (
           <>
@@ -817,12 +885,12 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
     <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
+      className="relative flex flex-col justify-center overflow-hidden rounded-lg border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 sm:p-5"
     >
       <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
-      <div className="mb-2 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('index.windCard')}</div>
-      <div className="flex items-center gap-3">
-        <svg viewBox="0 0 60 60" width={52} height={52} className="flex-shrink-0">
+      <div className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">{t('index.windCard')}</div>
+      <div className="flex items-center gap-3 sm:gap-4">
+        <svg viewBox="0 0 60 60" className="h-14 w-14 flex-shrink-0 sm:h-16 sm:w-16 lg:h-20 lg:w-20">
           <circle cx={30} cy={30} r={27} stroke={color} strokeWidth="1" fill="none" strokeOpacity="0.2" />
           <g transform="translate(30,30)">
             <m.g
@@ -838,11 +906,11 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
           </g>
         </svg>
         <div className="min-w-0 flex-1">
-          <div className="font-display text-2xl font-bold leading-none" style={{ color }}>
-            {avg}<span className="ml-1 text-[0.65rem] font-normal text-muted-foreground">{unitLabel}</span>
+          <div className="font-display text-3xl font-bold leading-none sm:text-4xl lg:text-5xl" style={{ color }}>
+            {avg}<span className="ml-1 text-sm font-normal text-muted-foreground sm:text-base">{unitLabel}</span>
           </div>
-          <div className="mt-0.5 text-[0.78rem] font-medium text-foreground/80">{wi.short} · {Math.round(wd)}°</div>
-          <div className="mt-1.5 flex items-center gap-2.5 text-[0.65rem] text-muted-foreground">
+          <div className="mt-1.5 text-sm font-medium text-foreground/80 sm:text-base">{wi.short} · {Math.round(wd)}°</div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
             <span>↑ {gust} {unitLabel}</span>
             {min !== null && <span>↓ {min} {unitLabel}</span>}
           </div>
@@ -859,14 +927,14 @@ function NowCard({ label, value, unit, sub, color, highlight, isEmoji }: {
     <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-lg border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:border-primary/50"
+      className="relative flex flex-col justify-center overflow-hidden rounded-lg border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 sm:p-5"
     >
       <div className={`absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent ${highlight ? 'opacity-100' : 'opacity-30'}`} />
-      <div className="mb-1 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`font-display font-bold leading-none ${isEmoji ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`} style={color ? { color } : undefined}>
-        {value}{unit && <span className="text-[0.65rem] font-normal text-muted-foreground sm:text-xs"> {unit}</span>}
+      <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`font-display font-bold leading-none ${isEmoji ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl lg:text-5xl'}`} style={color ? { color } : undefined}>
+        {value}{unit && <span className="text-sm font-normal text-muted-foreground sm:text-base"> {unit}</span>}
       </div>
-      {sub && <div className="mt-1 text-[0.62rem] text-muted-foreground sm:text-[0.62rem]">{sub}</div>}
+      {sub && <div className="mt-2 text-xs text-muted-foreground sm:text-sm">{sub}</div>}
     </m.div>
   );
 }

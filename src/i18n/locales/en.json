@@ -256,6 +256,28 @@
     "testPushNoDevice": "No device is enabled to receive the test.",
     "testPushError": "Error sending the test notification."
   },
+  "station": {
+    "realBanner": "Real data from {{name}}: wind, gust, direction, temperature and rain. Waves, water and sky are forecast.",
+    "rainNow": "now",
+    "featured": "Featured spot",
+    "title": "Live station",
+    "live": "LIVE",
+    "now": "Updated just now",
+    "updated": "Updated {{ago}} ago",
+    "offline": "Station offline",
+    "lastSeen": "Last reading {{ago}} ago",
+    "agoMin": "{{n}} min",
+    "agoHour": "{{n}} h",
+    "wind": "Real wind",
+    "gust": "Gust",
+    "vsForecast": "Real {{real}} {{unit}} · Forecast {{forecast}} {{unit}}",
+    "temp": "Temp.",
+    "rain": "Rain",
+    "uv": "UV",
+    "chartTitle": "Last 6 hours",
+    "windSeries": "Mean wind ({{unit}})",
+    "gustSeries": "Gusts ({{unit}})"
+  },
   "chart": {
     "forecast7days": "🌬️ 7-day forecast · every 2h",
     "wind": "Wind 100 m (kn)",

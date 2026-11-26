@@ -309,6 +309,102 @@ export type Database = {
         }
         Relationships: []
       }
+      station_readings: {
+        Row: {
+          humidity: number | null
+          id: number
+          pressure_hpa: number | null
+          rain_rate_mm: number | null
+          raw: Json | null
+          recorded_at: string
+          station_id: string
+          temp_c: number | null
+          uv_index: number | null
+          wind_dir_deg: number | null
+          wind_gust_kn: number | null
+          wind_speed_kn: number | null
+        }
+        Insert: {
+          humidity?: number | null
+          id?: never
+          pressure_hpa?: number | null
+          rain_rate_mm?: number | null
+          raw?: Json | null
+          recorded_at: string
+          station_id: string
+          temp_c?: number | null
+          uv_index?: number | null
+          wind_dir_deg?: number | null
+          wind_gust_kn?: number | null
+          wind_speed_kn?: number | null
+        }
+        Update: {
+          humidity?: number | null
+          id?: never
+          pressure_hpa?: number | null
+          rain_rate_mm?: number | null
+          raw?: Json | null
+          recorded_at?: string
+          station_id?: string
+          temp_c?: number | null
+          uv_index?: number | null
+          wind_dir_deg?: number | null
+          wind_gust_kn?: number | null
+          wind_speed_kn?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "station_readings_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "station_readings_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "stations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          lat: number
+          lon: number
+          mac: string
+          name: string
+          radius_km: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          lat: number
+          lon: number
+          mac: string
+          name: string
+          radius_km?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          lat?: number
+          lon?: number
+          mac?: string
+          name?: string
+          radius_km?: number
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
           added_at: string
@@ -359,7 +455,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      stations_public: {
+        Row: {
+          id: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          lat: number | null
+          lon: number | null
+          name: string | null
+          radius_km: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       delete_own_account: {

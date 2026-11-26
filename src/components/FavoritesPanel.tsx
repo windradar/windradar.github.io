@@ -2,9 +2,12 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Star } from 'lucide-react';
 import { type FavoriteSpot, windColor, dirArrow, kmhToKnots, preferWind100 } from '@/lib/weather-helpers';
-import { useWindUnit, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
+import { useWindUnit, windFromKmh, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
+import { nearestStation, isFresh } from '@/lib/stations';
+import { useNow, type LiveStations } from '@/hooks/useStations';
 
 interface Props {
+  live?: LiveStations;
   favorites: FavoriteSpot[];
   thresholdKn: number;
   fromHour: string;
@@ -77,10 +80,23 @@ function hourLabel(hr: string) {
 }
 
 export const FavoritesPanel = memo(function FavoritesPanel({
-  favorites, thresholdKn, fromHour, toHour, currentLat, currentLon, onSelect,
+  favorites: userFavorites, thresholdKn, fromHour, toHour, currentLat, currentLon, onSelect, live,
 }: Props) {
   const { t } = useTranslation();
   const unit = useWindUnit();
+  const now = useNow();
+
+  // The featured station's spot is always the first card, for everyone, whether or not
+  // it is in their favourites
+  const featured = live?.stations.find(s => s.is_featured) ?? null;
+  const favorites = useMemo<FavoriteSpot[]>(() => {
+    if (!featured) return userFavorites;
+    const home: FavoriteSpot = { name: featured.name, lat: featured.lat, lon: featured.lon, addedAt: 0 };
+    return [
+      home,
+      ...userFavorites.filter(f => Math.abs(f.lat - featured.lat) > 1e-3 || Math.abs(f.lon - featured.lon) > 1e-3),
+    ];
+  }, [userFavorites, featured]);
   const [data, setData] = useState<SpotHourly[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -151,6 +167,10 @@ export const FavoritesPanel = memo(function FavoritesPanel({
           const isCurrent = currentLat !== null && currentLon !== null
             && Math.abs(f.lat - currentLat) < 1e-4 && Math.abs(f.lon - currentLon) < 1e-4;
           const windyToday = row?.today?.firstWindy != null;
+          const isHome = featured !== null && i === 0;
+          const st = live ? nearestStation(live.stations, f.lat, f.lon) : null;
+          const reading = st ? live!.latest[st.id] : undefined;
+          const liveNow = isFresh(reading, now) ? reading : null;
           return (
             <button
               key={`${f.lat},${f.lon}`}
@@ -158,7 +178,24 @@ export const FavoritesPanel = memo(function FavoritesPanel({
               aria-current={isCurrent ? 'true' : undefined}
               className={`w-[210px] shrink-0 snap-start rounded-lg border bg-card p-3 text-left transition-colors hover:border-primary/60 ${isCurrent ? 'border-primary' : windyToday ? 'border-[#44cc88]/50' : 'border-border'}`}
             >
-              <div className="mb-2 truncate text-sm font-bold text-foreground">{f.name.split(',')[0]}</div>
+              <div className="mb-2 flex items-center gap-1.5">
+                <span className="truncate text-sm font-bold text-foreground">{f.name.split(',')[0]}</span>
+                {isHome && (
+                  <span className="shrink-0 rounded border border-primary/50 px-1 text-[0.55rem] font-bold uppercase tracking-wider text-primary">
+                    {t('station.featured')}
+                  </span>
+                )}
+              </div>
+              {liveNow && (
+                <div className="mb-1.5 flex items-center gap-1.5 text-[0.65rem]">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#44cc88]" aria-hidden />
+                  <span className="font-bold uppercase tracking-wider text-[#44cc88]">{t('station.live')}</span>
+                  <span className="font-mono text-sm font-bold" style={{ color: windColor(liveNow.wind_speed_kn! * 1.852) }}>
+                    {formatWind(windFromKnots(liveNow.wind_speed_kn!, unit), unit)}
+                  </span>
+                  <span className="text-muted-foreground">{unitLabel}</span>
+                </div>
+              )}
               {row ? (
                 <div className="space-y-1">
                   {dayLine(t('favPanel.today'), row.today)}

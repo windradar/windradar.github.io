@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.send-push-alerts]
 verify_jwt = false
+
+[functions.ecowitt-sync]
+verify_jwt = false
