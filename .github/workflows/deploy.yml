@@ -50,5 +50,10 @@ jobs:
         with:
           path: dist
 
+      # The Actions API can take a few seconds to list a just-uploaded artifact;
+      # deploy-pages looks it up immediately and fails with "Found 0 artifact(s)"
+      - name: Wait for the artifact to be listed
+        run: sleep 30
+
       - id: deployment
         uses: actions/deploy-pages@v4
