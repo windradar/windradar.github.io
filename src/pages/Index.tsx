@@ -16,10 +16,11 @@ import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { FavoritesPanel } from '@/components/FavoritesPanel';
 import { LiveStationCard } from '@/components/LiveStationCard';
-import { useLiveStations, useNow } from '@/hooks/useStations';
+import { useLiveStations, useNow, useStationDayStats, useStationHistory } from '@/hooks/useStations';
+import { dayMax, startOfLocalDay } from '@/lib/station-stats';
 import { nearestStation, isFresh, knToKmh, type Station } from '@/lib/stations';
 import { FAVORITES_SYNCED_EVENT } from '@/lib/favorites-sync';
-import { Star, Map as MapIcon } from 'lucide-react';
+import { Star, Map as MapIcon, Radio } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -381,12 +382,16 @@ export default function Index() {
     [live.stations, lat, lon],
   );
   const nowTick = useNow();
+  const featuredStation = useMemo(() => live.stations.find(s => s.is_featured) ?? null, [live.stations]);
+  const featuredOnline = featuredStation ? isFresh(live.latest[featuredStation.id], nowTick) : false;
+  const stationHistory = useStationHistory(liveStation?.id ?? null);
+  const stationDay = useStationDayStats(liveStation?.id ?? null);
   // The top cards show "now": real station data replaces the forecast only when the
   // spot has a fresh reading, today is selected and no other hour was picked
   const liveReading = liveStation ? live.latest[liveStation.id] : undefined;
   const real = isFresh(liveReading, nowTick) && date === today && selI === undefined ? liveReading : null;
   const top = cardData ? (() => {
-    if (!real) return { ...cardData, gustKmh: h?.wind_gusts_10m[refI] ?? null, isReal: false };
+    if (!real) return { ...cardData, gustKmh: h?.wind_gusts_10m[refI] ?? null, isReal: false, humidity: null, uv: null };
     const ws = knToKmh(real.wind_speed_kn ?? 0);
     const wg = real.wind_gust_kn !== null ? knToKmh(real.wind_gust_kn) : ws;
     return {
@@ -397,8 +402,11 @@ export default function Index() {
       prec: real.rain_rate_mm ?? cardData.prec,
       gustKmh: wg,
       isReal: true,
+      humidity: real.humidity,
+      uv: real.uv_index,
     };
   })() : null;
+  const dayTop = real ? dayMax(stationHistory, stationDay, startOfLocalDay(nowTick)) : null;
 
   const isBigDay = useMemo(() => {
     const hourly = wx?.hourly;
@@ -524,9 +532,27 @@ export default function Index() {
             </span>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]">
-              {wx ? t('index.live') : t('index.ready')}
-            </span>
+            {(() => {
+              const pill = 'rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-primary sm:px-2.5 sm:text-[0.65rem]';
+              const label = wx ? t('index.live') : t('index.ready');
+              // With a featured station the pill opens its full-screen live view
+              return featuredStation ? (
+                <Link
+                  to="/live"
+                  title={t('station.liveButton', { name: featuredStation.name })}
+                  aria-label={t('station.liveButton', { name: featuredStation.name })}
+                  className="flex items-center gap-2 rounded-full border border-[#44cc88]/60 bg-[#44cc88]/10 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-widest text-[#44cc88] shadow-[0_0_12px_rgba(68,204,136,0.25)] transition-all hover:border-[#44cc88] hover:bg-[#44cc88]/20 hover:shadow-[0_0_16px_rgba(68,204,136,0.45)] sm:px-3.5 sm:py-1.5 sm:text-xs"
+                >
+                  <span className="relative flex h-4 w-4 items-center justify-center">
+                    <Radio className="h-4 w-4" />
+                    {featuredOnline && <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-[#44cc88]" aria-hidden />}
+                  </span>
+                  {label}
+                </Link>
+              ) : (
+                <span className={pill}>{label}</span>
+              );
+            })()}
             {isBigDay && (
               <m.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -611,6 +637,7 @@ export default function Index() {
             <WindWidget
               ws={top.ws} wd={top.wd} wg={top.wg}
               wsMin={!top.isReal && h && allDayIdxs.length ? Math.min(...allDayIdxs.map(i => h.wind_speed_10m[i] || 0)) : null}
+              extra={dayTop?.windKn != null ? `${t('station.maxShort')} ${fmtWind(knToKmh(dayTop.windKn))} ${unitLabel}` : null}
               color={windColor(top.ws)}
             />
             <RecommendedGearCard windKmh={top.ws} gustKmh={top.gustKmh} />
@@ -640,8 +667,16 @@ export default function Index() {
                   </>
                 )}
               </div>
+              {top.humidity !== null && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  {t('station.humidity')} <span className="font-mono text-foreground">{Math.round(top.humidity)} %</span>
+                </div>
+              )}
             </m.div>
-            <NowCard label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} sub={t(`wmo.${cardData.code}`)} isEmoji />
+            <NowCard
+              label={t('index.weatherCard')} value={WX_ICON[cardData.code] || '🌡️'} isEmoji
+              sub={`${t(`wmo.${cardData.code}`)}${top.uv !== null ? ` · UV ${top.uv.toFixed(0)}` : ''}`}
+            />
             <NowCard
               label={t('index.precipCard')} value={top.prec.toFixed(1)}
               unit={top.isReal ? 'mm/h' : 'mm'} sub={top.isReal ? t('station.rainNow') : t('index.lastHour')}
@@ -822,6 +857,8 @@ export default function Index() {
           <LiveStationCard
             station={liveStation}
             latest={live.latest[liveStation.id]}
+            history={stationHistory}
+            dayStats={stationDay}
             forecastKmh={h && date === today && curRow >= 0 ? (h.wind_speed_10m[dayIdxs[curRow]] ?? null) : null}
           />
         )}
@@ -871,8 +908,8 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function WindWidget({ ws, wd, wg, wsMin, color }: {
-  ws: number; wd: number; wg: number; wsMin: number | null; color: string;
+function WindWidget({ ws, wd, wg, wsMin, color, extra }: {
+  ws: number; wd: number; wg: number; wsMin: number | null; color: string; extra?: string | null;
 }) {
   const { t } = useTranslation();
   const wi = windInfo(wd);
@@ -913,6 +950,7 @@ function WindWidget({ ws, wd, wg, wsMin, color }: {
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
             <span>↑ {gust} {unitLabel}</span>
             {min !== null && <span>↓ {min} {unitLabel}</span>}
+            {extra && <span>{extra}</span>}
           </div>
         </div>
       </div>

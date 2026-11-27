@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,34 +13,36 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { Radio, WifiOff } from 'lucide-react';
+import { Maximize2, Radio, WifiOff } from 'lucide-react';
 import { WindVane } from '@/components/WindVane';
-import { useNow, useStationHistory } from '@/hooks/useStations';
+import { useNow } from '@/hooks/useStations';
 import { useChartTheme } from '@/hooks/useChartTheme';
 import { windColor, LANG_LOCALE } from '@/lib/weather-helpers';
 import { useWindUnit, windFromKnots, windFromKmh, formatWind, WIND_UNIT_LABEL, convertKmh } from '@/lib/wind-units';
-import { STATION_STALE_MIN, readingAgeMin, type Station, type StationReading } from '@/lib/stations';
+import { STATION_STALE_MIN, knToKmh, readingAgeMin, type Station, type StationReading } from '@/lib/stations';
+import { TREND_ARROW, TREND_KEY, dayMax, pressureChange3h, startOfLocalDay, windTrend, type DayStats } from '@/lib/station-stats';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 interface Props {
   station: Station;
   latest: StationReading | undefined;
+  /** Readings of the last 6 h, oldest first */
+  history: StationReading[];
+  /** Highest wind and gust since midnight, from the database */
+  dayStats: DayStats | null;
   /** Forecast wind for the current hour, km/h (same series as the rest of the page) */
   forecastKmh: number | null;
 }
 
 const BUCKET_MS = 5 * 60 * 1000;
 
-const KN_TO_KMH = 1.852;
-
-export const LiveStationCard = memo(function LiveStationCard({ station, latest, forecastKmh }: Props) {
+export const LiveStationCard = memo(function LiveStationCard({ station, latest, history, dayStats, forecastKmh }: Props) {
   const { t, i18n } = useTranslation();
   const locale = LANG_LOCALE[i18n.language] || 'es-ES';
   const unit = useWindUnit();
   const unitLabel = WIND_UNIT_LABEL[unit];
   const now = useNow();
-  const history = useStationHistory(station.id);
   const { text, grid } = useChartTheme();
 
   const reading = useMemo(() => {
@@ -52,10 +55,18 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
   const ageMin = reading ? readingAgeMin(reading, now) : Infinity;
   const online = !!reading && reading.wind_speed_kn !== null && ageMin <= STATION_STALE_MIN;
 
+  const trend = useMemo(() => (online ? windTrend(history, now) : null), [history, now, online]);
+  const pressureDelta = useMemo(() => pressureChange3h(history, now), [history, now]);
+  const dayTop = useMemo(
+    () => dayMax(history, dayStats, startOfLocalDay(now)),
+    [history, dayStats, now],
+  );
+
   const agoLabel = (min: number) => {
     const m = Math.floor(min);
     return m >= 90 ? t('station.agoHour', { n: Math.round(m / 60) }) : t('station.agoMin', { n: m });
   };
+  const clock = (iso: string) => new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 
   const chart = useMemo(() => {
     const buckets = new Map<number, { sum: number; n: number; gust: number | null }>();
@@ -70,7 +81,7 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
       buckets.set(key, b);
     }
     const keys = [...buckets.keys()].sort((a, b) => a - b);
-    const conv = (kn: number) => Math.round(convertKmh(kn * KN_TO_KMH, unit) * 10) / 10;
+    const conv = (kn: number) => Math.round(convertKmh(knToKmh(kn), unit) * 10) / 10;
     return {
       labels: keys.map(k => new Date(k).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })),
       datasets: [
@@ -113,9 +124,10 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
   if (!reading) return null;
 
   const hasWind = reading.wind_speed_kn !== null;
-  const speedKmh = (reading.wind_speed_kn ?? 0) * KN_TO_KMH;
+  const speedKmh = knToKmh(reading.wind_speed_kn ?? 0);
   const accent = online ? windColor(speedKmh) : 'hsl(var(--muted-foreground))';
   const show = (kn: number | null) => (kn === null ? '—' : formatWind(windFromKnots(kn, unit), unit));
+  const pressureDrop = pressureDelta !== null && pressureDelta <= -3;
 
   return (
     <section
@@ -137,6 +149,14 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
             ? (ageMin < 1 ? t('station.now') : t('station.updated', { ago: agoLabel(ageMin) }))
             : t('station.offline')}
         </span>
+        <Link
+          to="/live"
+          className="text-muted-foreground transition-colors hover:text-primary"
+          aria-label={t('station.openLive')}
+          title={t('station.openLive')}
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </Link>
       </div>
 
       <div className={`grid grid-cols-1 items-center gap-4 sm:grid-cols-[170px_1fr] ${online ? '' : 'opacity-60'}`}>
@@ -148,11 +168,16 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
 
         <div>
           <div className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('station.wind')}</div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
             <span className="font-mono text-5xl font-bold leading-none" style={{ color: accent }}>
               {show(reading.wind_speed_kn)}
             </span>
             <span className="pb-1 text-sm text-muted-foreground">{unitLabel}</span>
+            {trend && (
+              <span className="pb-1 text-sm font-semibold text-foreground/80">
+                {TREND_ARROW[trend]} {t(`station.${TREND_KEY[trend]}`)}
+              </span>
+            )}
           </div>
           <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
             <span>
@@ -170,6 +195,20 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
               </span>
             )}
           </div>
+          {dayTop && dayTop.windKn !== null && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              {t('station.maxToday')}{' '}
+              <span className="font-mono font-semibold text-foreground">{show(dayTop.windKn)} {unitLabel}</span>
+              {dayTop.windAt && <> {t('station.at', { time: clock(dayTop.windAt) })}</>}
+              {dayTop.gustKn !== null && (
+                <>
+                  {' · '}{t('station.gust').toLowerCase()}{' '}
+                  <span className="font-mono font-semibold text-foreground">{show(dayTop.gustKn)} {unitLabel}</span>
+                  {dayTop.gustAt && <> {t('station.at', { time: clock(dayTop.gustAt) })}</>}
+                </>
+              )}
+            </div>
+          )}
           {!online && (
             <div className="mt-1 text-[0.65rem] text-muted-foreground">
               {t('station.lastSeen', { ago: agoLabel(ageMin) })}
@@ -179,11 +218,25 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
             {reading.temp_c !== null && (
               <span>{t('station.temp')} <span className="font-mono text-foreground">{reading.temp_c.toFixed(1)}°</span></span>
             )}
+            {reading.humidity !== null && (
+              <span>{t('station.humidity')} <span className="font-mono text-foreground">{Math.round(reading.humidity)} %</span></span>
+            )}
             {reading.rain_rate_mm !== null && (
               <span>{t('station.rain')} <span className="font-mono text-foreground">{reading.rain_rate_mm.toFixed(1)} mm/h</span></span>
             )}
             {reading.uv_index !== null && (
               <span>{t('station.uv')} <span className="font-mono text-foreground">{reading.uv_index.toFixed(0)}</span></span>
+            )}
+            {reading.pressure_hpa !== null && (
+              <span>
+                {t('station.pressure')} <span className="font-mono text-foreground">{Math.round(reading.pressure_hpa)} hPa</span>
+                {pressureDelta !== null && (
+                  <span className={pressureDrop ? 'font-semibold text-amber-500' : ''}>
+                    {' '}{pressureDelta > 0 ? '↑' : pressureDelta < 0 ? '↓' : '→'} {Math.abs(pressureDelta).toFixed(1)}/3 h
+                    {pressureDrop && <> · {t('station.pressureDrop')}</>}
+                  </span>
+                )}
+              </span>
             )}
           </div>
         </div>

@@ -6,6 +6,8 @@ interface Props {
   topLabel?: string;
   bottomLabel?: string;
   color?: string;
+  /** Tailwind size cap for the svg; the default suits the dashboard card */
+  className?: string;
 }
 
 // Ordered N, NE, E, SE, S, SW, W, NW — each covers a 45° sector centred on its bearing.
@@ -47,7 +49,7 @@ const ROSE_POINTS = Array.from({ length: 16 }, (_, i) => {
   return `${x.toFixed(2)},${y.toFixed(2)}`;
 }).join(' ');
 
-export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottomLabel = '', color = 'hsl(var(--primary))' }: Props) {
+export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottomLabel = '', color = 'hsl(var(--primary))', className = 'max-w-[260px]' }: Props) {
   const dir = mod360(direction);
   const target = direction - seaBearing;
 
@@ -69,7 +71,7 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
       <div className="absolute left-0 right-0 top-0 h-0.5 bg-gradient-to-r from-primary to-transparent opacity-30" />
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="h-auto w-full max-w-[260px]"
+        className={`h-auto w-full ${className}`}
         role="img"
         aria-label={`${point} ${degrees}° · ${localName}`}
       >

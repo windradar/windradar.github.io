@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { READING_COLUMNS, type Station, type StationReading } from '@/lib/stations';
+import { startOfLocalDay, type DayStats } from '@/lib/station-stats';
 
 export interface LiveStations {
   stations: Station[];
@@ -170,4 +171,37 @@ export function useStationHistory(stationId: string | null): StationReading[] {
   }, [stationId]);
 
   return readings;
+}
+
+/** Highest wind and gust since local midnight (SQL function), refreshed every 5 min */
+export function useStationDayStats(stationId: string | null): DayStats | null {
+  const [stats, setStats] = useState<DayStats | null>(null);
+
+  useEffect(() => {
+    setStats(null);
+    if (!stationId) return;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data } = await supabase.rpc('station_day_stats', {
+          p_station: stationId,
+          p_since: new Date(startOfLocalDay()).toISOString(),
+        });
+        const r = data?.[0];
+        if (!cancelled && r) {
+          setStats({ windKn: r.max_wind_kn, windAt: r.max_wind_at, gustKn: r.max_gust_kn, gustAt: r.max_gust_at });
+        }
+      } catch {
+        // Without the function the 6 h of readings in memory still give a partial maximum
+      }
+    };
+    load();
+    const id = setInterval(load, 5 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [stationId]);
+
+  return stats;
 }

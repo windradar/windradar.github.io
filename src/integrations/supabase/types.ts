@@ -473,6 +473,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      station_day_stats: {
+        Args: { p_station: string; p_since: string }
+        Returns: {
+          max_wind_kn: number | null
+          max_wind_at: string | null
+          max_gust_kn: number | null
+          max_gust_at: string | null
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
