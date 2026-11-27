@@ -173,6 +173,7 @@
     "savedHint": "Les modifications sont enregistrées automatiquement sur cet appareil."
   },
   "sessions": {
+    "stationApplied": "Vent, rafale et direction réels de la station {{name}} appliqués à {{count}} h",
     "title": "Sessions",
     "newSession": "Nouvelle",
     "editSession": "✏️ Modifier la session",
@@ -257,6 +258,22 @@
     "testPushError": "Erreur lors de l'envoi de la notification de test."
   },
   "station": {
+    "alert_offshoreStrong": "FORT VENT DE TERRE : ne t’éloigne pas de la côte",
+    "alert_offshore": "Vent de terre : risque de t’éloigner de la côte",
+    "alert_gusty": "Fortes rafales (+{{diff}} {{unit}} sur la moyenne) : attention à la voile ou à l’aile",
+    "alert_thermal": "La brise de mer se lève : le vent monte depuis la mer",
+    "share": "Partager le vent maintenant",
+    "shareText": "💨 {{name}} maintenant : {{wind}} {{unit}}, rafale {{gust}} ({{dir}})",
+    "shareCopied": "Copié. Colle-le dans WhatsApp",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié",
+    "statsTitle": "Statistiques du spot",
+    "roseTitle": "Rose des vents",
+    "statsError": "Impossible de charger les statistiques.",
+    "statsNoData": "Pas encore assez de données.",
+    "windyDaysTitle": "Jours avec un vent ≥ {{kn}} {{unit}} pendant plus de 2 h",
+    "windyDaysOf": "sur {{days}} jours avec données",
+    "statsFewData": "Seulement {{days}} jours avec données complètes. La rose des vents et les jours de vent seront plus fiables au fil des semaines.",
     "dirStable": "Direction stable",
     "dirVariable": "Direction oscillante",
     "dirUnstable": "Vent en rafales : direction très instable",

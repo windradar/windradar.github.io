@@ -173,6 +173,7 @@
     "savedHint": "Changes are saved automatically on this device."
   },
   "sessions": {
+    "stationApplied": "Real wind, gust and direction from the {{name}} station applied to {{count}} h",
     "title": "Sessions",
     "newSession": "New",
     "editSession": "✏️ Edit session",
@@ -257,6 +258,22 @@
     "testPushError": "Error sending the test notification."
   },
   "station": {
+    "alert_offshoreStrong": "STRONG OFFSHORE WIND: do not go far from the shore",
+    "alert_offshore": "Offshore wind: risk of being blown away from the coast",
+    "alert_gusty": "Strong gusts (+{{diff}} {{unit}} over the mean): watch your sail or wing",
+    "alert_thermal": "Sea breeze kicking in: wind rising from the sea",
+    "share": "Share the wind now",
+    "shareText": "💨 {{name}} now: {{wind}} {{unit}}, gust {{gust}} ({{dir}})",
+    "shareCopied": "Copied. Paste it in WhatsApp",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "statsTitle": "Spot statistics",
+    "roseTitle": "Wind rose",
+    "statsError": "Could not load the statistics.",
+    "statsNoData": "Not enough data yet.",
+    "windyDaysTitle": "Days with wind ≥ {{kn}} {{unit}} for more than 2 h",
+    "windyDaysOf": "of {{days}} days with data",
+    "statsFewData": "Only {{days}} days with complete data so far. The wind rose and the windy days will get more reliable as weeks go by.",
     "dirStable": "Steady direction",
     "dirVariable": "Shifting direction",
     "dirUnstable": "Gusty wind: very unstable direction",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { READING_COLUMNS, type Station, type StationReading } from '@/lib/stations';
-import { startOfLocalDay, type DayStats } from '@/lib/station-stats';
+import { startOfLocalDay, type DayStats, type ForecastPoint } from '@/lib/station-stats';
 
 export interface LiveStations {
   stations: Station[];
@@ -39,10 +39,10 @@ export function useLiveStations(): LiveStations {
     (async () => {
       try {
         const { data: rows, error } = await supabase
-          .from('stations_public').select('id, name, lat, lon, radius_km, is_featured');
+          .from('stations_public').select('id, name, lat, lon, radius_km, is_featured, sea_bearing');
         if (cancelled) return;
         const stations = (error || !rows ? [] : rows).filter(
-          r => r.id && r.name && r.lat !== null && r.lon !== null && r.radius_km !== null,
+          r => r.id && r.name && r.lat !== null && r.lon !== null && r.radius_km !== null && r.sea_bearing !== null,
         ) as Station[];
         // Spots load only once this is known, so it has to be set even with no stations
         setState({ stations, latest: {}, loaded: true });
@@ -204,4 +204,46 @@ export function useStationDayStats(stationId: string | null): DayStats | null {
   }, [stationId]);
 
   return stats;
+}
+
+/**
+ * Hourly forecast wind (yesterday to tomorrow) of a place, refreshed every 30 min.
+ * Wind at 100 m, 10 m where there is none, like the rest of the app.
+ */
+export function useStationForecast(lat: number | null, lon: number | null): ForecastPoint[] {
+  const [points, setPoints] = useState<ForecastPoint[]>([]);
+
+  useEffect(() => {
+    setPoints([]);
+    if (lat === null || lon === null) return;
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m,wind_speed_100m&wind_speed_unit=kmh&timezone=auto&past_days=1&forecast_days=2`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) return;
+        const h = (await res.json())?.hourly;
+        if (!h?.time) return;
+        const pts: ForecastPoint[] = [];
+        for (let i = 0; i < h.time.length; i++) {
+          const kmh = h.wind_speed_100m?.[i] ?? h.wind_speed_10m?.[i];
+          const t = new Date(h.time[i]).getTime();
+          if (kmh != null && Number.isFinite(t)) pts.push({ t, kmh });
+        }
+        setPoints(pts.sort((a, b) => a.t - b.t));
+      } catch {
+        // Offline or aborted: the chart just has no forecast line
+      }
+    };
+    load();
+    const id = setInterval(load, 30 * 60 * 1000);
+    return () => {
+      controller.abort();
+      clearInterval(id);
+    };
+  }, [lat, lon]);
+
+  return points;
 }

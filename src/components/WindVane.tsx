@@ -8,6 +8,8 @@ interface Props {
   color?: string;
   /** Tailwind size cap for the svg; the default suits the dashboard card */
   className?: string;
+  /** The arrow swings this many degrees each way: gusty or unstable wind */
+  wobbleDeg?: number;
 }
 
 // Ordered N, NE, E, SE, S, SW, W, NW — each covers a 45° sector centred on its bearing.
@@ -49,7 +51,7 @@ const ROSE_POINTS = Array.from({ length: 16 }, (_, i) => {
   return `${x.toFixed(2)},${y.toFixed(2)}`;
 }).join(' ');
 
-export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottomLabel = '', color = 'hsl(var(--primary))', className = 'max-w-[260px]' }: Props) {
+export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottomLabel = '', color = 'hsl(var(--primary))', className = 'max-w-[260px]', wobbleDeg = 0 }: Props) {
   const dir = mod360(direction);
   const target = direction - seaBearing;
 
@@ -150,6 +152,7 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
         )}
 
         <g transform={`translate(${CX}, ${CY})`}>
+          <g className={wobbleDeg > 0 ? 'vane-wobble' : undefined} style={{ ['--wobble' as string]: `${wobbleDeg}deg` }}>
           <g
             style={{
               transform: `rotate(${angleRef.current}deg)`,
@@ -160,6 +163,7 @@ export function WindVane({ direction, seaBearing = 160, topLabel = 'MAR', bottom
             <line x1={0} y1={-54} x2={0} y2={58} stroke={color} strokeWidth="3" strokeLinecap="round" />
             <polygon points="0,-72 -9,-50 0,-55 9,-50" fill={color} />
             <circle cx={0} cy={64} r={5} className="fill-card" stroke={color} strokeWidth="2" />
+          </g>
           </g>
         </g>
         <circle cx={CX} cy={CY} r={4} className="fill-foreground" />

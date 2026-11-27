@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Star } from 'lucide-react';
-import { type FavoriteSpot, windColor, dirArrow, kmhToKnots, preferWind100 } from '@/lib/weather-helpers';
+import { type FavoriteSpot, localDateStr, windColor, dirArrow, kmhToKnots, preferWind100 } from '@/lib/weather-helpers';
 import { useWindUnit, windFromKmh, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 import { nearestStation, isFresh } from '@/lib/stations';
 import { useNow, type LiveStations } from '@/hooks/useStations';
@@ -24,6 +24,33 @@ interface SpotHourly {
   wind_direction_10m: (number | null)[];
   wind_speed_100m?: (number | null)[];
   wind_direction_100m?: (number | null)[];
+}
+
+// Wind of one day from the hourly series, km/h
+function daySeries(h: SpotHourly, day: string): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < h.time.length; i++) {
+    if (h.time[i].slice(0, 10) === day) out.push(h.wind_speed_10m[i] ?? 0);
+  }
+  return out;
+}
+
+// Today's wind curve in miniature, with a dot at the current hour
+function Sparkline({ values, nowHour }: { values: number[]; nowHour: number | null }) {
+  const peak = Math.max(...values);
+  const scale = Math.max(peak, 20);
+  const x = (i: number) => (values.length < 2 ? 0 : (i / (values.length - 1)) * 100);
+  const y = (v: number) => 22 - (v / scale) * 20;
+  const points = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const color = windColor(peak);
+  return (
+    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="mt-2 h-6 w-full" aria-hidden>
+      <polyline points={points} fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      {nowHour !== null && nowHour < values.length && (
+        <circle cx={x(nowHour)} cy={y(values[nowHour])} r="2.2" fill={color} vectorEffect="non-scaling-stroke" />
+      )}
+    </svg>
+  );
 }
 
 interface DaySummary {
@@ -124,6 +151,8 @@ export const FavoritesPanel = memo(function FavoritesPanel({
         fav: f,
         today: days[0] ? summarize(h, days[0], thresholdKn, fromHour, toHour) : null,
         tomorrow: days[1] ? summarize(h, days[1], thresholdKn, fromHour, toHour) : null,
+        spark: days[0] ? daySeries(h, days[0]) : [],
+        sparkIsToday: days[0] === localDateStr(new Date()),
       };
     });
   }, [data, favorites, thresholdKn, fromHour, toHour]);
@@ -200,6 +229,9 @@ export const FavoritesPanel = memo(function FavoritesPanel({
                 <div className="space-y-1">
                   {dayLine(t('favPanel.today'), row.today)}
                   {dayLine(t('favPanel.tomorrow'), row.tomorrow)}
+                  {row.spark.length > 1 && (
+                    <Sparkline values={row.spark} nowHour={row.sparkIsToday ? new Date(now).getHours() : null} />
+                  )}
                 </div>
               ) : (
                 <div className="space-y-1.5" aria-hidden>

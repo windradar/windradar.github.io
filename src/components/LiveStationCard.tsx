@@ -1,31 +1,20 @@
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Legend,
-  Filler,
-  type ChartOptions,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import { Maximize2, Radio, WifiOff } from 'lucide-react';
+import { Maximize2, Radio, Share2, WifiOff } from 'lucide-react';
 import { WindVane } from '@/components/WindVane';
+import { WindAlerts } from '@/components/WindAlerts';
+import { StationWindChart } from '@/components/StationWindChart';
 import { useNow } from '@/hooks/useStations';
-import { useChartTheme } from '@/hooks/useChartTheme';
-import { windColor, LANG_LOCALE } from '@/lib/weather-helpers';
-import { useWindUnit, windFromKnots, windFromKmh, formatWind, WIND_UNIT_LABEL, convertKmh } from '@/lib/wind-units';
+import { windColor, windInfo, LANG_LOCALE } from '@/lib/weather-helpers';
+import { useWindUnit, windFromKnots, windFromKmh, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
 import { STATION_STALE_MIN, knToKmh, readingAgeMin, type Station, type StationReading } from '@/lib/stations';
 import {
-  DIR_CLASS, DIR_KEY, TREND_ARROW, TREND_KEY, dayMax, directionStability, forecastAt, pressureChange3h, startOfLocalDay, windTrend,
+  DIR_CLASS, DIR_KEY, TREND_ARROW, TREND_KEY, dayMax, directionStability, pressureChange3h, startOfLocalDay, windTrend,
   type DayStats, type ForecastPoint,
 } from '@/lib/station-stats';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
+import { windAlerts } from '@/lib/station-alerts';
+import { shareText } from '@/lib/share-text';
 
 interface Props {
   station: Station;
@@ -40,15 +29,12 @@ interface Props {
   forecast: ForecastPoint[];
 }
 
-const BUCKET_MS = 5 * 60 * 1000;
-
 export const LiveStationCard = memo(function LiveStationCard({ station, latest, history, dayStats, forecastKmh, forecast }: Props) {
   const { t, i18n } = useTranslation();
   const locale = LANG_LOCALE[i18n.language] || 'es-ES';
   const unit = useWindUnit();
   const unitLabel = WIND_UNIT_LABEL[unit];
   const now = useNow();
-  const { text, grid } = useChartTheme();
 
   const reading = useMemo(() => {
     // A reading can arrive through Realtime before the history query finishes
@@ -62,6 +48,10 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
 
   const trend = useMemo(() => (online ? windTrend(history, now) : null), [history, now, online]);
   const dirStab = useMemo(() => (online ? directionStability(history, now) : null), [history, now, online]);
+  const alerts = useMemo(
+    () => (online && reading ? windAlerts(reading, history, station.sea_bearing, now) : []),
+    [online, reading, history, station.sea_bearing, now],
+  );
   const pressureDelta = useMemo(() => pressureChange3h(history, now), [history, now]);
   const dayTop = useMemo(
     () => dayMax(history, dayStats, startOfLocalDay(now)),
@@ -74,68 +64,6 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
   };
   const clock = (iso: string) => new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 
-  const chart = useMemo(() => {
-    const buckets = new Map<number, { sum: number; n: number; gust: number | null }>();
-    for (const r of history) {
-      if (r.wind_speed_kn === null) continue;
-      const key = Math.floor(new Date(r.recorded_at).getTime() / BUCKET_MS) * BUCKET_MS;
-      const b = buckets.get(key) ?? { sum: 0, n: 0, gust: null };
-      b.sum += r.wind_speed_kn;
-      b.n += 1;
-      const g = r.wind_gust_kn ?? r.wind_speed_kn;
-      b.gust = b.gust === null ? g : Math.max(b.gust, g);
-      buckets.set(key, b);
-    }
-    const keys = [...buckets.keys()].sort((a, b) => a - b);
-    const conv = (kn: number) => Math.round(convertKmh(knToKmh(kn), unit) * 10) / 10;
-    return {
-      labels: keys.map(k => new Date(k).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })),
-      datasets: [
-        {
-          label: t('station.windSeries', { unit: unitLabel }),
-          data: keys.map(k => conv(buckets.get(k)!.sum / buckets.get(k)!.n)),
-          borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,.08)',
-          fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2,
-        },
-        {
-          label: t('station.gustSeries', { unit: unitLabel }),
-          data: keys.map(k => conv(buckets.get(k)!.gust ?? 0)),
-          borderColor: '#ff8c00', borderDash: [5, 3],
-          fill: false, tension: 0.35, pointRadius: 0, borderWidth: 1.4,
-        },
-        {
-          label: t('station.forecastSeries', { unit: unitLabel }),
-          data: keys.map(k => {
-            const kmh = forecastAt(forecast, k + BUCKET_MS / 2);
-            return kmh === null ? null : Math.round(convertKmh(kmh, unit) * 10) / 10;
-          }),
-          borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,.08)',
-          fill: false, tension: 0.35, pointRadius: 0, borderWidth: 2, spanGaps: false,
-        },
-      ],
-    };
-  }, [history, forecast, unit, unitLabel, locale, t]);
-
-  const options = useMemo<ChartOptions<'line'>>(() => ({
-    responsive: true,
-    maintainAspectRatio: true,
-    aspectRatio: 2.6,
-    plugins: {
-      legend: { labels: { color: text, font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 } },
-      tooltip: { mode: 'index', intersect: false },
-    },
-    scales: {
-      x: { ticks: { color: text, font: { size: 10 }, maxTicksLimit: 8 }, grid: { color: grid } },
-      y: {
-        beginAtZero: true,
-        title: { display: true, text: unitLabel, color: text, font: { size: 9 } },
-        ticks: { color: text, font: { size: 10 } },
-        grid: { color: grid },
-      },
-    },
-    interaction: { mode: 'index', intersect: false },
-  }), [text, grid, unitLabel]);
-
   if (!reading) return null;
 
   const hasWind = reading.wind_speed_kn !== null;
@@ -143,6 +71,18 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
   const accent = online ? windColor(speedKmh) : 'hsl(var(--muted-foreground))';
   const show = (kn: number | null) => (kn === null ? '—' : formatWind(windFromKnots(kn, unit), unit));
   const pressureDrop = pressureDelta !== null && pressureDelta <= -3;
+
+  const handleShare = () => {
+    if (!hasWind) return;
+    const text = t('station.shareText', {
+      name: station.name,
+      wind: show(reading.wind_speed_kn),
+      gust: show(reading.wind_gust_kn ?? reading.wind_speed_kn),
+      unit: unitLabel,
+      dir: reading.wind_dir_deg !== null ? windInfo(reading.wind_dir_deg).short : '—',
+    });
+    void shareText(text, `${window.location.origin}/live`, t('station.shareCopied'));
+  };
 
   return (
     <section
@@ -164,6 +104,17 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
             ? (ageMin < 1 ? t('station.now') : t('station.updated', { ago: agoLabel(ageMin) }))
             : t('station.offline')}
         </span>
+        {hasWind && (
+          <button
+            type="button"
+            onClick={handleShare}
+            className="text-muted-foreground transition-colors hover:text-primary"
+            aria-label={t('station.share')}
+            title={t('station.share')}
+          >
+            <Share2 className="h-3.5 w-3.5" />
+          </button>
+        )}
         <Link
           to="/live"
           className="text-muted-foreground transition-colors hover:text-primary"
@@ -177,7 +128,12 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
       <div className={`grid grid-cols-1 items-center gap-4 sm:grid-cols-[170px_1fr] ${online ? '' : 'opacity-60'}`}>
         <div className="mx-auto w-full max-w-[170px]">
           {reading.wind_dir_deg !== null && (
-            <WindVane direction={reading.wind_dir_deg} color={accent} />
+            <WindVane
+              direction={reading.wind_dir_deg}
+              seaBearing={station.sea_bearing}
+              color={accent}
+              wobbleDeg={dirStab ? Math.min(20, dirStab.sdDeg) : 0}
+            />
           )}
         </div>
 
@@ -216,6 +172,7 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
               <span className="font-normal text-muted-foreground"> · {t('station.dirSpread', { deg: dirStab.sdDeg })}</span>
             </div>
           )}
+          <WindAlerts alerts={alerts} />
           {dayTop && dayTop.windKn !== null && (
             <div className="mt-1 text-xs text-muted-foreground">
               {t('station.maxToday')}{' '}
@@ -263,10 +220,10 @@ export const LiveStationCard = memo(function LiveStationCard({ station, latest, 
         </div>
       </div>
 
-      {chart.labels.length > 1 && (
+      {history.length > 1 && (
         <div className="mt-4">
           <div className="mb-1.5 text-[0.6rem] uppercase tracking-widest text-muted-foreground">{t('station.chartTitle')}</div>
-          <Line data={chart} options={options} />
+          <StationWindChart history={history} forecast={forecast} />
         </div>
       )}
     </section>

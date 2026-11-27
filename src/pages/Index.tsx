@@ -17,8 +17,9 @@ import { FavoritesButton } from '@/components/FavoritesButton';
 import { FavoritesPanel } from '@/components/FavoritesPanel';
 import { LiveStationCard } from '@/components/LiveStationCard';
 import { StationHistoryCard } from '@/components/StationHistoryCard';
+import { StationStatsCard } from '@/components/StationStatsCard';
 import { useLiveStations, useNow, useStationDayStats, useStationHistory } from '@/hooks/useStations';
-import { dayMax, startOfLocalDay, type ForecastPoint } from '@/lib/station-stats';
+import { dayMax, directionStability, startOfLocalDay, type ForecastPoint } from '@/lib/station-stats';
 import { nearestStation, isFresh, knToKmh, type Station } from '@/lib/stations';
 import { FAVORITES_SYNCED_EVENT } from '@/lib/favorites-sync';
 import { Star, Map as MapIcon, Radio } from 'lucide-react';
@@ -419,6 +420,7 @@ export default function Index() {
     };
   })() : null;
   const dayTop = real ? dayMax(stationHistory, stationDay, startOfLocalDay(nowTick)) : null;
+  const dirStabTop = real ? directionStability(stationHistory, nowTick) : null;
 
   const isBigDay = useMemo(() => {
     const hourly = wx?.hourly;
@@ -644,7 +646,12 @@ export default function Index() {
           )}
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 lg:grid-cols-4">
             <div className="col-span-2 sm:col-span-1 lg:row-span-2">
-              <WindVane direction={top.wd} color={windColor(top.ws)} />
+              <WindVane
+                direction={top.wd}
+                color={windColor(top.ws)}
+                seaBearing={top.isReal && liveStation ? liveStation.sea_bearing : undefined}
+                wobbleDeg={top.isReal && dirStabTop ? Math.min(20, dirStabTop.sdDeg) : 0}
+              />
             </div>
             <WindWidget
               ws={top.ws} wd={top.wd} wg={top.wg}
@@ -876,6 +883,7 @@ export default function Index() {
             forecastKmh={h && date === today && curRow >= 0 ? (h.wind_speed_10m[dayIdxs[curRow]] ?? null) : null}
           />
           <StationHistoryCard station={liveStation} />
+          <StationStatsCard station={liveStation} />
           </>
         )}
 

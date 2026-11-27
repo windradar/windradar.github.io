@@ -336,6 +336,7 @@
     "savedHint": "Los cambios se guardan automáticamente en este dispositivo."
   },
   "sessions": {
+    "stationApplied": "Viento, racha y dirección reales de la estación {{name}} aplicados a {{count}} h",
     "showMore": "Mostrar más ({{count}})",
     "loadError": "Error al cargar los datos",
     "editAria": "Editar sesión",
@@ -471,6 +472,22 @@
     "testPushError": "Error al enviar la notificación de prueba."
   },
   "station": {
+    "alert_offshoreStrong": "VIENTO DE TIERRA FUERTE: no te alejes de la costa",
+    "alert_offshore": "Viento de tierra: riesgo de alejarte de la costa",
+    "alert_gusty": "Rachas fuertes (+{{diff}} {{unit}} sobre la media): ojo con la vela o el ala",
+    "alert_thermal": "Entra la térmica: el viento sube desde el mar",
+    "share": "Compartir el viento ahora",
+    "shareText": "💨 {{name}} ahora: {{wind}} {{unit}}, racha {{gust}} ({{dir}})",
+    "shareCopied": "Copiado. Pégalo en WhatsApp",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado",
+    "statsTitle": "Estadísticas del spot",
+    "roseTitle": "Rosa de vientos",
+    "statsError": "No se pudieron cargar las estadísticas.",
+    "statsNoData": "Todavía no hay datos suficientes.",
+    "windyDaysTitle": "Días con viento ≥ {{kn}} {{unit}} durante más de 2 h",
+    "windyDaysOf": "de {{days}} días con datos",
+    "statsFewData": "Solo hay {{days}} días con datos completos. La rosa de vientos y los días con viento serán más fiables según pasen las semanas.",
     "dirStable": "Dirección estable",
     "dirVariable": "Dirección oscilante",
     "dirUnstable": "Viento racheado: dirección muy inestable",

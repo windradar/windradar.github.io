@@ -17,6 +17,7 @@ import { SessionsDashboard } from '@/components/SessionsDashboard';
 import type { Session, Snapshot, SessionMaterial } from '@/lib/session-stats';
 import type { Json } from '@/integrations/supabase/types';
 import { useWindUnit, windFromKnots, formatWind, WIND_UNIT_LABEL } from '@/lib/wind-units';
+import { fillSnapshotFromStation } from '@/lib/station-session';
 
 const PAGE_SIZE = 30;
 
@@ -140,7 +141,12 @@ export default function Sessions() {
         });
       }
       if (!snap.length) throw new Error(t('sessions.noDataForRange'));
-      setSnapshot(snap);
+      // With a weather station near the spot, its measurements replace the forecast
+      const fill = await fillSnapshotFromStation(snap, locLat, locLon, date);
+      setSnapshot(fill.snapshot);
+      if (fill.applied > 0 && fill.stationName) {
+        toast.info(t('sessions.stationApplied', { name: fill.stationName, count: fill.applied }));
+      }
       setOrigKey(`${date}|${startH}|${endH}|${locLat}|${locLon}`);
       toast.success(t('sessions.hoursLoaded', { count: snap.length }));
     } catch (e) {

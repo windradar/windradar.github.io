@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Maximize, Minimize, Radio, WifiOff } from 'lucide-react';
+import { ArrowLeft, Link2, Maximize, Minimize, Radio, WifiOff } from 'lucide-react';
 import { WindVane } from '@/components/WindVane';
-import { useLiveStations, useNow, useStationDayStats, useStationHistory } from '@/hooks/useStations';
+import { WindAlerts } from '@/components/WindAlerts';
+import { StationWindChart } from '@/components/StationWindChart';
+import { useLiveStations, useNow, useStationDayStats, useStationForecast, useStationHistory } from '@/hooks/useStations';
+import { windAlerts } from '@/lib/station-alerts';
+import { copyLink } from '@/lib/share-text';
 import { LANG_LOCALE, windColor } from '@/lib/weather-helpers';
 import { WIND_UNIT_LABEL, formatWind, useWindUnit, windFromKnots } from '@/lib/wind-units';
 import { STATION_STALE_MIN, knToKmh, readingAgeMin } from '@/lib/stations';
@@ -32,6 +36,7 @@ export default function Live() {
   }, [live.stations, params]);
   const history = useStationHistory(station?.id ?? null);
   const dayStats = useStationDayStats(station?.id ?? null);
+  const forecast = useStationForecast(station?.lat ?? null, station?.lon ?? null);
 
   const latest = station ? live.latest[station.id] : undefined;
   const reading = useMemo(() => {
@@ -70,6 +75,7 @@ export default function Live() {
   const online = !!reading && reading.wind_speed_kn !== null && ageMin <= STATION_STALE_MIN;
   const trend = online ? windTrend(history, now) : null;
   const dirStab = online ? directionStability(history, now) : null;
+  const alerts = online && reading && station ? windAlerts(reading, history, station.sea_bearing, now) : [];
   const pressureDelta = pressureChange3h(history, now);
   const top = dayMax(history, dayStats, startOfLocalDay(now));
   const clock = (iso: string) => new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
@@ -89,6 +95,15 @@ export default function Live() {
         {online ? <Radio className="h-5 w-5" /> : <WifiOff className="h-5 w-5" />}
         {online ? t('station.live') : t('station.offline')}
       </span>
+      <button
+        type="button"
+        onClick={() => void copyLink(window.location.href, t('station.linkCopied'))}
+        className="text-muted-foreground transition-colors hover:text-primary"
+        aria-label={t('station.copyLink')}
+        title={t('station.copyLink')}
+      >
+        <Link2 className="h-6 w-6" />
+      </button>
       <button
         type="button"
         onClick={toggleFullscreen}
@@ -121,7 +136,13 @@ export default function Live() {
       <main className="grid flex-1 grid-cols-1 items-center gap-4 px-4 pb-4 sm:px-8 md:grid-cols-2">
         <div className="mx-auto w-full">
           {reading.wind_dir_deg !== null && (
-            <WindVane direction={reading.wind_dir_deg} color={accent} className="mx-auto max-w-[min(70vw,60vh)]" />
+            <WindVane
+              direction={reading.wind_dir_deg}
+              seaBearing={station.sea_bearing}
+              color={accent}
+              wobbleDeg={dirStab ? Math.min(20, dirStab.sdDeg) : 0}
+              className="mx-auto max-w-[min(70vw,60vh)]"
+            />
           )}
         </div>
 
@@ -151,6 +172,7 @@ export default function Live() {
               <span className="font-normal text-muted-foreground"> · {t('station.dirSpread', { deg: dirStab.sdDeg })}</span>
             </div>
           )}
+          <WindAlerts alerts={alerts} big />
           {top && top.windKn !== null && (
             <div className="mt-3 text-[min(3.4vw,3.4vh)] text-muted-foreground">
               {t('station.maxToday')}{' '}
@@ -198,6 +220,12 @@ export default function Live() {
           </div>
         </div>
       </main>
+
+      {history.length > 1 && (
+        <div className="px-4 pb-6 sm:px-8">
+          <StationWindChart history={history} forecast={forecast} aspectRatio={4} big />
+        </div>
+      )}
     </div>
   );
 }

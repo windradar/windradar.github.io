@@ -380,6 +380,7 @@ export type Database = {
           mac: string
           name: string
           radius_km: number
+          sea_bearing: number
         }
         Insert: {
           created_at?: string
@@ -391,6 +392,7 @@ export type Database = {
           mac: string
           name: string
           radius_km?: number
+          sea_bearing?: number
         }
         Update: {
           created_at?: string
@@ -402,6 +404,7 @@ export type Database = {
           mac?: string
           name?: string
           radius_km?: number
+          sea_bearing?: number
         }
         Relationships: []
       }
@@ -464,6 +467,7 @@ export type Database = {
           lon: number | null
           name: string | null
           radius_km: number | null
+          sea_bearing: number | null
         }
         Relationships: []
       }
@@ -472,6 +476,31 @@ export type Database = {
       delete_own_account: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      station_hours: {
+        Args: { p_station: string; p_from: string; p_to: string }
+        Returns: {
+          bucket: string
+          avg_wind_kn: number | null
+          max_gust_kn: number | null
+          avg_temp_c: number | null
+          dir_deg: number | null
+        }[]
+      }
+      station_wind_rose: {
+        Args: { p_station: string; p_days?: number }
+        Returns: { dir_bin: number; speed_class: number; samples: number }[]
+      }
+      station_daily_summary: {
+        Args: { p_station: string; p_days?: number; p_min_kn?: number }
+        Returns: {
+          day: string
+          avg_wind_kn: number | null
+          max_wind_kn: number | null
+          max_gust_kn: number | null
+          minutes_windy: number
+          readings: number
+        }[]
       }
       station_day_series: {
         Args: { p_station: string; p_from: string; p_to: string }

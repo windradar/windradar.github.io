@@ -8,6 +8,8 @@ export interface Snapshot {
   dir_short: string;
   wave_m: number | null;
   temp: number | null;
+  /** Wind, gust, direction and temperature come from a weather station, not the forecast */
+  real?: boolean;
 }
 
 export interface SessionMaterial {

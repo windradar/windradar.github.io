@@ -263,3 +263,16 @@
 .wm-fav .wm-star {
   color: hsl(var(--accent));
 }
+
+/* Wind vane arrow swinging around its direction when the wind is gusty */
+@keyframes vane-wobble {
+  0%, 100% { transform: rotate(calc(var(--wobble) * -1)); }
+  50% { transform: rotate(var(--wobble)); }
+}
+.vane-wobble {
+  animation: vane-wobble 2.4s ease-in-out infinite;
+  transform-origin: 0px 0px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vane-wobble { animation: none; }
+}

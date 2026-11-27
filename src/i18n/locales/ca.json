@@ -336,6 +336,7 @@
     "savedHint": "Els canvis es desen automàticament en aquest dispositiu."
   },
   "sessions": {
+    "stationApplied": "Vent, ratxa i direcció reals de l’estació {{name}} aplicats a {{count}} h",
     "showMore": "Mostra'n més ({{count}})",
     "loadError": "Error en carregar les dades",
     "editAria": "Editar sessió",
@@ -471,6 +472,22 @@
     "testPushError": "Error en enviar la notificació de prova."
   },
   "station": {
+    "alert_offshoreStrong": "VENT DE TERRA FORT: no t’allunyis de la costa",
+    "alert_offshore": "Vent de terra: risc d’allunyar-te de la costa",
+    "alert_gusty": "Ratxes fortes (+{{diff}} {{unit}} sobre la mitjana): compte amb la vela o l’ala",
+    "alert_thermal": "Entra la marinada: el vent puja des del mar",
+    "share": "Compartir el vent ara",
+    "shareText": "💨 {{name}} ara: {{wind}} {{unit}}, ratxa {{gust}} ({{dir}})",
+    "shareCopied": "Copiat. Enganxa’l al WhatsApp",
+    "copyLink": "Copiar l’enllaç",
+    "linkCopied": "Enllaç copiat",
+    "statsTitle": "Estadístiques del spot",
+    "roseTitle": "Rosa dels vents",
+    "statsError": "No s’han pogut carregar les estadístiques.",
+    "statsNoData": "Encara no hi ha dades suficients.",
+    "windyDaysTitle": "Dies amb vent ≥ {{kn}} {{unit}} durant més de 2 h",
+    "windyDaysOf": "de {{days}} dies amb dades",
+    "statsFewData": "Només hi ha {{days}} dies amb dades completes. La rosa dels vents i els dies amb vent seran més fiables a mesura que passin les setmanes.",
     "dirStable": "Direcció estable",
     "dirVariable": "Direcció oscil·lant",
     "dirUnstable": "Vent ratxejat: direcció molt inestable",

@@ -12,6 +12,8 @@ export interface Station {
   radius_km: number;
   /** The app's home spot: loaded first and pinned first in the favourites panel */
   is_featured: boolean;
+  /** Direction of the sea seen from the station, same convention as the vane */
+  sea_bearing: number;
 }
 
 export type StationReading = Omit<Database['public']['Tables']['station_readings']['Row'], 'raw'>;

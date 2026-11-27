@@ -17,7 +17,7 @@ export const TREND_KEY: Record<Trend, string> = { up: 'trendUp', down: 'trendDow
 const TREND_KN = 2;
 const MIN_SAMPLES = 3;
 
-function meanWind(rows: StationReading[], now: number, fromMin: number, toMin: number): number | null {
+export function meanWind(rows: StationReading[], now: number, fromMin: number, toMin: number): number | null {
   let sum = 0;
   let n = 0;
   for (const r of rows) {
