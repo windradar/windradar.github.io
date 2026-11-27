@@ -257,6 +257,18 @@
     "testPushError": "Error sending the test notification."
   },
   "station": {
+    "dirStable": "Steady direction",
+    "dirVariable": "Shifting direction",
+    "dirUnstable": "Gusty wind: very unstable direction",
+    "dirSpread": "swings ±{{deg}}°",
+    "histTitle": "Daily history",
+    "histDay": "Day",
+    "histNoData": "No station data for that day.",
+    "histError": "Could not load the history.",
+    "histRealMax": "Real max",
+    "histForecastMax": "Forecast max",
+    "histMae": "Mean forecast error",
+    "forecastSeries": "Forecast ({{unit}})",
     "liveButton": "{{name}} Live",
     "openLive": "Club screen (full screen)",
     "humidity": "Humidity",

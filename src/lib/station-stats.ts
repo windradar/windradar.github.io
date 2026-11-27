@@ -80,3 +80,65 @@ export function dayMax(history: StationReading[], stats: DayStats | null, since:
   }
   return windKn === null && gustKn === null ? null : { windKn, windAt, gustKn, gustAt };
 }
+
+export interface ForecastPoint {
+  /** Epoch ms of the forecast hour */
+  t: number;
+  /** Mean wind, km/h */
+  kmh: number;
+}
+
+// Forecast steps further apart than this are not bridged (a missing stretch of data)
+const MAX_FORECAST_GAP = 3 * 3600 * 1000;
+
+/** Forecast wind at time t (km/h), interpolated between the hourly points, or null outside them */
+export function forecastAt(points: ForecastPoint[], t: number): number | null {
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i];
+    const b = points[i + 1];
+    if (t < a.t || t > b.t) continue;
+    if (b.t - a.t > MAX_FORECAST_GAP) return null;
+    return b.t === a.t ? a.kmh : a.kmh + ((b.kmh - a.kmh) * (t - a.t)) / (b.t - a.t);
+  }
+  return null;
+}
+
+export type DirLevel = 'stable' | 'variable' | 'unstable';
+
+export const DIR_KEY: Record<DirLevel, string> = { stable: 'dirStable', variable: 'dirVariable', unstable: 'dirUnstable' };
+export const DIR_CLASS: Record<DirLevel, string> = {
+  stable: 'text-[#44cc88]',
+  variable: 'text-amber-500',
+  unstable: 'text-destructive',
+};
+
+// Below this the direction of a light breeze moves around on its own: it says nothing
+const DIR_MIN_WIND_KN = 3;
+const DIR_WINDOW_MIN = 15;
+const DIR_MIN_SAMPLES = 5;
+const DIR_VARIABLE_DEG = 12;
+const DIR_UNSTABLE_DEG = 25;
+
+/**
+ * How much the direction swings over the last 15 minutes: circular standard deviation
+ * of the readings with some wind. null when there is too little wind or too few readings.
+ */
+export function directionStability(history: StationReading[], now: number): { level: DirLevel; sdDeg: number } | null {
+  let sin = 0;
+  let cos = 0;
+  let n = 0;
+  for (const r of history) {
+    if (r.wind_dir_deg === null || r.wind_speed_kn === null || r.wind_speed_kn < DIR_MIN_WIND_KN) continue;
+    const age = (now - new Date(r.recorded_at).getTime()) / 60000;
+    if (age < 0 || age > DIR_WINDOW_MIN) continue;
+    const rad = (r.wind_dir_deg * Math.PI) / 180;
+    sin += Math.sin(rad);
+    cos += Math.cos(rad);
+    n++;
+  }
+  if (n < DIR_MIN_SAMPLES) return null;
+  const R = Math.min(1, Math.hypot(sin / n, cos / n));
+  const sdDeg = R <= 0 ? 180 : Math.min(180, (Math.sqrt(-2 * Math.log(R)) * 180) / Math.PI);
+  const level: DirLevel = sdDeg >= DIR_UNSTABLE_DEG ? 'unstable' : sdDeg >= DIR_VARIABLE_DEG ? 'variable' : 'stable';
+  return { level, sdDeg: Math.round(sdDeg) };
+}

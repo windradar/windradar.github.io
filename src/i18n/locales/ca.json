@@ -471,6 +471,18 @@
     "testPushError": "Error en enviar la notificació de prova."
   },
   "station": {
+    "dirStable": "Direcció estable",
+    "dirVariable": "Direcció oscil·lant",
+    "dirUnstable": "Vent ratxejat: direcció molt inestable",
+    "dirSpread": "oscil·la ±{{deg}}°",
+    "histTitle": "Històric de dies",
+    "histDay": "Dia",
+    "histNoData": "Sense dades de l’estació aquell dia.",
+    "histError": "No s’ha pogut carregar l’històric.",
+    "histRealMax": "Màx. real",
+    "histForecastMax": "Màx. previsió",
+    "histMae": "Error mitjà de la previsió",
+    "forecastSeries": "Previsió ({{unit}})",
     "liveButton": "{{name}} Directe",
     "openLive": "Pantalla de club (pantalla completa)",
     "humidity": "Humitat",

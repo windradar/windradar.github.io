@@ -471,6 +471,18 @@
     "testPushError": "Error al enviar la notificación de prueba."
   },
   "station": {
+    "dirStable": "Dirección estable",
+    "dirVariable": "Dirección oscilante",
+    "dirUnstable": "Viento racheado: dirección muy inestable",
+    "dirSpread": "oscila ±{{deg}}°",
+    "histTitle": "Histórico de días",
+    "histDay": "Día",
+    "histNoData": "Sin datos de la estación ese día.",
+    "histError": "No se pudo cargar el histórico.",
+    "histRealMax": "Máx. real",
+    "histForecastMax": "Máx. previsión",
+    "histMae": "Error medio de la previsión",
+    "forecastSeries": "Previsión ({{unit}})",
     "liveButton": "{{name}} Directo",
     "openLive": "Pantalla de club (pantalla completa)",
     "humidity": "Humedad",

@@ -473,6 +473,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      station_day_series: {
+        Args: { p_station: string; p_from: string; p_to: string }
+        Returns: {
+          bucket: string
+          avg_wind_kn: number | null
+          max_gust_kn: number | null
+        }[]
+      }
       station_day_stats: {
         Args: { p_station: string; p_since: string }
         Returns: {

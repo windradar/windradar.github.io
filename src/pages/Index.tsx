@@ -16,8 +16,9 @@ import { WhatsAppShareModal } from '@/components/WhatsAppShareModal';
 import { FavoritesButton } from '@/components/FavoritesButton';
 import { FavoritesPanel } from '@/components/FavoritesPanel';
 import { LiveStationCard } from '@/components/LiveStationCard';
+import { StationHistoryCard } from '@/components/StationHistoryCard';
 import { useLiveStations, useNow, useStationDayStats, useStationHistory } from '@/hooks/useStations';
-import { dayMax, startOfLocalDay } from '@/lib/station-stats';
+import { dayMax, startOfLocalDay, type ForecastPoint } from '@/lib/station-stats';
 import { nearestStation, isFresh, knToKmh, type Station } from '@/lib/stations';
 import { FAVORITES_SYNCED_EVENT } from '@/lib/favorites-sync';
 import { Star, Map as MapIcon, Radio } from 'lucide-react';
@@ -386,6 +387,17 @@ export default function Index() {
   const featuredOnline = featuredStation ? isFresh(live.latest[featuredStation.id], nowTick) : false;
   const stationHistory = useStationHistory(liveStation?.id ?? null);
   const stationDay = useStationDayStats(liveStation?.id ?? null);
+  const forecastPoints = useMemo<ForecastPoint[]>(() => {
+    if (!h) return [];
+    const pts: ForecastPoint[] = [];
+    for (let i = 0; i < h.time.length; i++) {
+      // Open-Meteo times have no zone: they are the spot's local time
+      const t = new Date(h.time[i]).getTime();
+      const kmh = h.wind_speed_10m[i];
+      if (Number.isFinite(t) && kmh != null) pts.push({ t, kmh });
+    }
+    return pts.sort((a, b) => a.t - b.t);
+  }, [h]);
   // The top cards show "now": real station data replaces the forecast only when the
   // spot has a fresh reading, today is selected and no other hour was picked
   const liveReading = liveStation ? live.latest[liveStation.id] : undefined;
@@ -854,13 +866,17 @@ export default function Index() {
         </div>
 
         {liveStation && (
+          <>
           <LiveStationCard
             station={liveStation}
             latest={live.latest[liveStation.id]}
             history={stationHistory}
             dayStats={stationDay}
+            forecast={forecastPoints}
             forecastKmh={h && date === today && curRow >= 0 ? (h.wind_speed_10m[dayIdxs[curRow]] ?? null) : null}
           />
+          <StationHistoryCard station={liveStation} />
+          </>
         )}
 
         {/* Charts */}

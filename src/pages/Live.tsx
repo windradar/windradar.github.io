@@ -8,7 +8,7 @@ import { LANG_LOCALE, windColor } from '@/lib/weather-helpers';
 import { WIND_UNIT_LABEL, formatWind, useWindUnit, windFromKnots } from '@/lib/wind-units';
 import { STATION_STALE_MIN, knToKmh, readingAgeMin } from '@/lib/stations';
 import {
-  TREND_ARROW, TREND_KEY, dayMax, pressureChange3h, startOfLocalDay, windTrend,
+  DIR_CLASS, DIR_KEY, TREND_ARROW, TREND_KEY, dayMax, directionStability, pressureChange3h, startOfLocalDay, windTrend,
 } from '@/lib/station-stats';
 
 // Full-screen view for a club or beach monitor: one station, very large numbers,
@@ -69,6 +69,7 @@ export default function Live() {
   const ageMin = reading ? readingAgeMin(reading, now) : Infinity;
   const online = !!reading && reading.wind_speed_kn !== null && ageMin <= STATION_STALE_MIN;
   const trend = online ? windTrend(history, now) : null;
+  const dirStab = online ? directionStability(history, now) : null;
   const pressureDelta = pressureChange3h(history, now);
   const top = dayMax(history, dayStats, startOfLocalDay(now));
   const clock = (iso: string) => new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
@@ -144,6 +145,12 @@ export default function Live() {
             )}
           </div>
 
+          {dirStab && (
+            <div className={`mt-2 text-[min(3.6vw,3.6vh)] font-semibold ${DIR_CLASS[dirStab.level]}`}>
+              {t(`station.${DIR_KEY[dirStab.level]}`)}
+              <span className="font-normal text-muted-foreground"> · {t('station.dirSpread', { deg: dirStab.sdDeg })}</span>
+            </div>
+          )}
           {top && top.windKn !== null && (
             <div className="mt-3 text-[min(3.4vw,3.4vh)] text-muted-foreground">
               {t('station.maxToday')}{' '}
